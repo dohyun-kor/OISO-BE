@@ -1,5 +1,4 @@
-//예시 @ApplicationModule(allowedDependencies = {"user", "order", "product", "common"})
-@ApplicationModule(allowedDependencies = {"common", "user"})
+@ApplicationModule(allowedDependencies = {"common", "user", "tourdata"})
 package com.nigahae.api;
 
 import org.springframework.modulith.ApplicationModule;
