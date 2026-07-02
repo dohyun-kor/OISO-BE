@@ -12,7 +12,10 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
-
+//    public User loginOrRegister(String email, String nickname) {
+//        return userRepository.findByEmail(email)
+//                .orElseGet(() -> userRepository.save(new User(email, nickname)));
+//    }
 
     public List<User> getUsers() {
         return userRepository.findAll();
