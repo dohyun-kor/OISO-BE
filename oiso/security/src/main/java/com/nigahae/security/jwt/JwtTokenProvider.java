@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
+import static com.nigahae.common.constant.CommonConstant.NICKNAME;
+
 @Component
 public class JwtTokenProvider {
 
@@ -43,7 +45,7 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(now)
                 .setExpiration(validity)
-                .claim("nickname", nickname);
+                .claim(NICKNAME, nickname);
 
         return builder.signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
     }
@@ -68,6 +70,6 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .get("nickname", String.class);
+                .get(NICKNAME, String.class);
     }
 }

@@ -1,14 +1,17 @@
 package com.nigahae.security.controller;
 
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.security.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.nigahae.common.constant.CommonConstant.*;
 import static com.nigahae.security.util.CookieUtil.addCookie;
 import static com.nigahae.security.util.CookieUtil.getCookie;
 
@@ -18,16 +21,22 @@ import static com.nigahae.security.util.CookieUtil.getCookie;
 @RequiredArgsConstructor
 public class AuthController {
 
+    @Value("${JWT_ACCESS_TOKEN_VALIDITY_SEC}")
+    private int jwtAccessTokenValiditySec;
+
+    @Value("${JWT_COOKIE_DELETE_VALIDITY_SEC}")
+    private int jwtCookieDeleteValiditySec;
+
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = getCookie(request, "refreshToken")
+        String refreshToken = getCookie(request, REFRESH_TOKEN)
                 .map(Cookie::getValue)
-                .orElseThrow(() -> new RuntimeException("Refresh Token이 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NO_REFRESH_TOKEN));
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("만료되거나 유효하지 않은 Refresh Token입니다.");
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         String email = jwtTokenProvider.getEmail(refreshToken);
@@ -35,16 +44,16 @@ public class AuthController {
 
         String newAccessToken = jwtTokenProvider.createAccessToken(email, nickname);
 
-        addCookie(response, "accessToken", newAccessToken, 1800, false);
+        addCookie(response, ACCESS_TOKEN, newAccessToken, jwtAccessTokenValiditySec, false);
 
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        addCookie(response, "accessToken", "", 0, false);
-        addCookie(response, "refreshToken", "", 0, false);
+        addCookie(response, ACCESS_TOKEN, EMPTY_VALUE, jwtCookieDeleteValiditySec, false);
+        addCookie(response, REFRESH_TOKEN, EMPTY_VALUE, jwtCookieDeleteValiditySec, false);
 
-        return ResponseEntity.ok().body("로그아웃 되었습니다.");
+        return ResponseEntity.ok().body(SUCCESS_LOGOUT_MESSAGE);
     }
 }

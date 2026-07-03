@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -16,9 +17,20 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Map;
 
+import static com.nigahae.common.constant.CommonConstant.*;
+
 @Component
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${OAUTH2_REDIRECT_URI}")
+    private String redirectUri;
+
+    @Value("${JWT_ACCESS_TOKEN_VALIDITY_SEC}")
+    private int accessTokenValiditySec;
+
+    @Value("${JWT_REFRESH_TOKEN_VALIDITY_SEC}")
+    private int refreshTokenValiditySec;
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -30,31 +42,31 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
 
         String provider = authToken.getAuthorizedClientRegistrationId(); // google 또는 kakao
-        String email = "";
-        String nickname = "";
-        String profileImageUrl = ""; // 프로필 이미지 URL을 담을 변수 추가
+        String email = EMPTY_VALUE;
+        String nickname = EMPTY_VALUE;
+        String profileImageUrl = EMPTY_VALUE;
 
-        if ("kakao".equals(provider)) {
-            Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
-            Map<String, Object> properties = oAuth2User.getAttribute("properties");
+        if (KAKAO.equals(provider)) {
+            Map<String, Object> kakaoAccount = oAuth2User.getAttribute(KAKAO_ACCOUNT);
+            Map<String, Object> properties = oAuth2User.getAttribute(PROPERTIES);
 
-            email = (String) kakaoAccount.get("email");
-            nickname = (String) properties.get("nickname");
+            email = (String) kakaoAccount.get(EMAIL);
+            nickname = (String) properties.get(NICKNAME);
 
             // 💡 카카오 프로필 이미지 추출 (properties 구조 내부 혹은 kakao_account.profile 내부에 존재)
-            if (properties != null && properties.containsKey("profile_image")) {
-                profileImageUrl = (String) properties.get("profile_image");
-            } else if (kakaoAccount != null && kakaoAccount.containsKey("profile")) {
-                Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-                profileImageUrl = (String) profile.get("profile_image_url");
+            if (properties != null && properties.containsKey(PROFILE_IMAGE)) {
+                profileImageUrl = (String) properties.get(PROFILE_IMAGE);
+            } else if (kakaoAccount != null && kakaoAccount.containsKey(PROFILE)) {
+                Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get(PROFILE);
+                profileImageUrl = (String) profile.get(PROFILE_IMAGE_URL);
             }
 
-        } else if ("google".equals(provider)) {
-            email = oAuth2User.getAttribute("email");
-            nickname = oAuth2User.getAttribute("name");
+        } else if (GOOGLE.equals(provider)) {
+            email = oAuth2User.getAttribute(EMAIL);
+            nickname = oAuth2User.getAttribute(NAME);
 
-            // 💡 구글 프로필 이미지 추출 (구글은 'picture'라는 키값으로 제공합니다)ㄴ
-            profileImageUrl = oAuth2User.getAttribute("picture");
+            // 💡 구글 프로필 이미지 추출 (구글은 'picture'라는 키값으로 제공합니다)
+            profileImageUrl = oAuth2User.getAttribute(PICTURE);
         }
 
         log.info("{} {} {} {}", provider, email, nickname, profileImageUrl);
@@ -67,9 +79,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = jwtTokenProvider.createRefreshToken(email, nickname);
 
         // 💡 CookieUtil을 사용한 초간단 쿠키 생성
-        CookieUtil.addCookie(response, "accessToken", accessToken, 1800, false);
-        CookieUtil.addCookie(response, "refreshToken", refreshToken, 1209600, true);
+        CookieUtil.addCookie(response, ACCESS_TOKEN, accessToken, accessTokenValiditySec, false);
+        CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken, refreshTokenValiditySec, true);
 
-        response.sendRedirect("http://localhost:3000/");
+        response.sendRedirect(redirectUri);
     }
 }

@@ -23,7 +23,7 @@ public class OAuth2UserService implements org.springframework.security.oauth2.cl
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
         //카카오 인증 코드
-        log.info("카카오 인증 코드: " + userRequest.getAccessToken().getTokenValue());
+        log.info("카카오 인증 코드: {}", userRequest.getAccessToken().getTokenValue());
 
         // 구글인지 카카오인지 구분자 확인 (google, kakao)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
