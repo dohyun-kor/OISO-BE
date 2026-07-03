@@ -1,10 +1,15 @@
-package com.nigahae.api.config;
+package com.nigahae.security.util;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
+
+/**
+ * 쿠키 생성 관련 util 클래스
+ * common에 하지 않은 이유는 다른 모듈에서는 쿠키와 관련된 설정을 사용할 필요가 없음
+ */
 public class CookieUtil {
 
     /**
@@ -13,10 +18,9 @@ public class CookieUtil {
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isHttpOnly) {
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
-        cookie.setSecure(true);                  // HTTPS 환경 강제
+        cookie.setSecure(true);
         cookie.setMaxAge(maxAge);
-        cookie.setHttpOnly(isHttpOnly);          // 💡 매개변수로 받은 값 설정
-        // cookie.setAttribute("SameSite", "Lax"); // 필요한 경우 활성화
+        cookie.setHttpOnly(isHttpOnly);
 
         response.addCookie(cookie);
     }
@@ -34,22 +38,5 @@ public class CookieUtil {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * 쿠키 삭제 (만료시간을 0으로 설정)
-     */
-    public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null && cookies.length > 0) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name)) {
-                    cookie.setValue("");
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                }
-            }
-        }
     }
 }

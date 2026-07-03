@@ -1,3 +1,4 @@
 rootProject.name = 'oiso'
 
 include 'api', 'common', 'user'
+include 'security'

@@ -1,6 +1,7 @@
-package com.nigahae.api.security;
+package com.nigahae.security.oauth;
 
-import com.nigahae.api.config.CookieUtil;
+import com.nigahae.security.jwt.JwtTokenProvider;
+import com.nigahae.security.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String profileImageUrl = ""; // 프로필 이미지 URL을 담을 변수 추가
 
         if ("kakao".equals(provider)) {
-            Map<String, Object> kakaoAccount = (Map<String, Object>) oAuth2User.getAttribute("kakao_account");
-            Map<String, Object> properties = (Map<String, Object>) oAuth2User.getAttribute("properties");
+            Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
+            Map<String, Object> properties = oAuth2User.getAttribute("properties");
 
             email = (String) kakaoAccount.get("email");
             nickname = (String) properties.get("nickname");
@@ -52,18 +53,18 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             email = oAuth2User.getAttribute("email");
             nickname = oAuth2User.getAttribute("name");
 
-            // 💡 구글 프로필 이미지 추출 (구글은 'picture'라는 키값으로 제공합니다)
+            // 💡 구글 프로필 이미지 추출 (구글은 'picture'라는 키값으로 제공합니다)ㄴ
             profileImageUrl = oAuth2User.getAttribute("picture");
         }
 
         log.info("{} {} {} {}", provider, email, nickname, profileImageUrl);
 
-        // 💡 추출한 회원 정보를 바탕으로 회원가입 또는 정보 업데이트 처리를 진행합니다.
+        // 회원가입 처리
         // userModuleService.loginOrRegister(email, nickname, profileImageUrl);
 
         // JWT 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(email, nickname);
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken(email, nickname);
 
         // 💡 CookieUtil을 사용한 초간단 쿠키 생성
         CookieUtil.addCookie(response, "accessToken", accessToken, 1800, false);

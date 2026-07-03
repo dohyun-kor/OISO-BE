@@ -1,4 +1,4 @@
-package com.nigahae.api.security;
+package com.nigahae.security.oauth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

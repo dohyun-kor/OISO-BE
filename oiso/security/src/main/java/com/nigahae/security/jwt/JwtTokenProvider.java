@@ -1,4 +1,4 @@
-package com.nigahae.api.security;
+package com.nigahae.security.jwt;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -18,10 +18,10 @@ public class JwtTokenProvider {
     private String secretKey;
 
     @Value("${jwt.access-token-validity}")
-    private long accessTokenValidity; // 30분
+    private long accessTokenValidity;
 
     @Value("${jwt.refresh-token-validity}")
-    private long refreshTokenValidity; // 14일
+    private long refreshTokenValidity;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -31,8 +31,8 @@ public class JwtTokenProvider {
         return createToken(email, nickname, accessTokenValidity);
     }
 
-    public String createRefreshToken(String email) {
-        return createToken(email, null, refreshTokenValidity);
+    public String createRefreshToken(String email, String nickname) {
+        return createToken(email, nickname, refreshTokenValidity);
     }
 
     private String createToken(String email, String nickname, long validityPeriod) {
@@ -42,11 +42,8 @@ public class JwtTokenProvider {
         var builder = Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(now)
-                .setExpiration(validity);
-
-        if (nickname != null) {
-            builder.claim("nickname", nickname);
-        }
+                .setExpiration(validity)
+                .claim("nickname", nickname);
 
         return builder.signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
     }
@@ -63,5 +60,14 @@ public class JwtTokenProvider {
     public String getEmail(String token) {
         return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
                 .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public String getNickname(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("nickname", String.class);
     }
 }
