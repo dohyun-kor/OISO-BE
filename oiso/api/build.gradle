@@ -30,3 +30,7 @@ repositories {
 test {
     useJUnitPlatform()
 }
+
+springBoot {
+    mainClass = 'com.nigahae.api.OisoApplication'
+}
