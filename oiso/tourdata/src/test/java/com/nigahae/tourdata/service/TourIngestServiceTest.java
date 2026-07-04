@@ -52,6 +52,7 @@ class TourIngestServiceTest {
         TourDataExecution execution = execution();
         when(executionRepository.save(any(TourDataExecution.class))).thenReturn(execution);
         when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("100")));
+        when(publicTourDataClient.fetchTourContentDetail(100L)).thenReturn(payload("100", "12", "Overview", "https://example.com"));
         when(tourSpotRepository.findByContentId(100L)).thenReturn(Optional.empty());
 
         TourDataResult result = tourIngestService.refreshAll();
@@ -69,6 +70,7 @@ class TourIngestServiceTest {
         TourSpot existing = new TourSpot(100L);
         when(executionRepository.save(any(TourDataExecution.class))).thenReturn(execution);
         when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("100")));
+        when(publicTourDataClient.fetchTourContentDetail(100L)).thenReturn(payload("100", "12", "Overview", "https://example.com"));
         when(tourSpotRepository.findByContentId(100L)).thenReturn(Optional.of(existing));
 
         tourIngestService.refreshAll();
@@ -84,6 +86,7 @@ class TourIngestServiceTest {
         TourDataExecution execution = execution();
         when(executionRepository.save(any(TourDataExecution.class))).thenReturn(execution);
         when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("200", "32")));
+        when(publicTourDataClient.fetchTourContentDetail(200L)).thenReturn(payload("200", "32", "Overview", "https://example.com"));
         when(tourSpotRepository.findByContentId(200L)).thenReturn(Optional.empty());
         when(publicTourDataClient.fetchAccommodationRooms(200L, 32L)).thenReturn(List.of(
                 room("A", "Room A"),
@@ -110,6 +113,7 @@ class TourIngestServiceTest {
         TourDataExecution execution = execution();
         when(executionRepository.save(any(TourDataExecution.class))).thenReturn(execution);
         when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("100", "12")));
+        when(publicTourDataClient.fetchTourContentDetail(100L)).thenReturn(payload("100", "12", "Overview", "https://example.com"));
         when(tourSpotRepository.findByContentId(100L)).thenReturn(Optional.empty());
 
         tourIngestService.refreshAll();
@@ -123,6 +127,7 @@ class TourIngestServiceTest {
         TourDataExecution execution = execution();
         when(executionRepository.save(any(TourDataExecution.class))).thenReturn(execution);
         when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("200", "32")));
+        when(publicTourDataClient.fetchTourContentDetail(200L)).thenReturn(payload("200", "32", "Overview", "https://example.com"));
         when(tourSpotRepository.findByContentId(200L)).thenReturn(Optional.empty());
         when(publicTourDataClient.fetchAccommodationRooms(200L, 32L)).thenThrow(new TourApiException("detail boom"));
 
@@ -156,7 +161,11 @@ class TourIngestServiceTest {
     }
 
     private TourContentPayload payload(String contentId, String contentTypeId) {
-        return new TourContentPayload(contentId, contentTypeId, "Place", "1", "2", "Address", "127", "37", null, null, null, "{}");
+        return payload(contentId, contentTypeId, null, null);
+    }
+
+    private TourContentPayload payload(String contentId, String contentTypeId, String overview, String homepage) {
+        return new TourContentPayload(contentId, contentTypeId, "Place", "1", "2", "Address", "127", "37", null, overview, homepage, null, "{}");
     }
 
     private AccommodationRoomPayload room(String roomCode, String roomTitle) {

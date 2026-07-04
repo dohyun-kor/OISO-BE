@@ -39,9 +39,11 @@ public class TourDataService {
                 TourSpot tourSpot = tourSpotRepository.findByContentId(contentId)
                         .orElseGet(() -> new TourSpot(contentId));
                 tourSpot.updateFrom(payload);
+                TourContentPayload detailPayload = publicTourDataClient.fetchTourContentDetail(contentId);
+                tourSpot.updateFrom(detailPayload);
                 tourSpotRepository.save(tourSpot);
 
-                replaceAccommodationRoomsIfNeeded(payload, tourSpot.getSpotId());
+                replaceAccommodationRoomsIfNeeded(detailPayload, tourSpot.getSpotId());
             }
 
             execution.succeed(payloads.size(), LocalDateTime.now());

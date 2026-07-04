@@ -20,6 +20,7 @@ public class TourDataProperties {
     public static class Api {
         private String baseUrl = "http://apis.data.go.kr";
         private String operationPath = "/B551011/KorService2/areaBasedList2";
+        private String detailCommonOperationPath = "/B551011/KorService2/detailCommon2";
         private String detailInfoOperationPath = "/B551011/KorService2/detailInfo2";
         private String serviceKey = "";
         private int pageSize = 1000;

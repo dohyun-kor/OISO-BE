@@ -93,6 +93,50 @@ class DefaultPublicTourDataClientTest {
     }
 
     @Test
+    void fetchTourContentDetailReadsOverviewAndHomepage() {
+        TourDataProperties properties = properties();
+        RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(requestTo(containsString("/detailCommon2")))
+                .andExpect(requestTo(containsString("contentId=126216")))
+                .andRespond(withSuccess("""
+                        {
+                          "response": {
+                            "header": {"resultCode": "0000", "resultMsg": "OK"},
+                            "body": {
+                              "totalCount": 1,
+                              "items": {
+                                "item": [
+                                  {
+                                    "contentid": "126216",
+                                    "contenttypeid": "12",
+                                    "title": "Seokguram",
+                                    "homepage": "http://seokguram.org",
+                                    "firstimage": "https://example.com/image.jpg",
+                                    "addr1": "Gyeongju",
+                                    "mapx": "129.3504717269",
+                                    "mapy": "35.7952411789",
+                                    "overview": "Long overview"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        DefaultPublicTourDataClient client = new DefaultPublicTourDataClient(builder.build(), properties, objectMapper);
+
+        TourContentPayload result = client.fetchTourContentDetail(126216L);
+
+        assertThat(result.contentId()).isEqualTo("126216");
+        assertThat(result.overview()).isEqualTo("Long overview");
+        assertThat(result.homepage()).isEqualTo("http://seokguram.org");
+        server.verify();
+    }
+
+    @Test
     void fetchAccommodationRoomsReadsArrayItems() {
         TourDataProperties properties = properties();
         RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
@@ -273,6 +317,7 @@ class DefaultPublicTourDataClientTest {
         TourDataProperties properties = new TourDataProperties();
         properties.getApi().setBaseUrl("http://example.com");
         properties.getApi().setOperationPath("/areaBasedList2");
+        properties.getApi().setDetailCommonOperationPath("/detailCommon2");
         properties.getApi().setDetailInfoOperationPath("/detailInfo2");
         properties.getApi().setServiceKey("secret");
         properties.getApi().setPageSize(10);

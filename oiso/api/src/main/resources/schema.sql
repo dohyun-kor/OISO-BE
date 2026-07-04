@@ -4,7 +4,7 @@
 
 -- DROP TABLE public."AccommodationDetail";
 
-CREATE TABLE public."AccommodationDetail"
+CREATE TABLE IF NOT EXISTS public."AccommodationDetail"
 (
     temp_room_id                int8 NOT NULL,
     spot_id                     int8 NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE public."AccommodationDetail"
 
 -- DROP TABLE public."HashTag";
 
-CREATE TABLE public."HashTag"
+CREATE TABLE IF NOT EXISTS public."HashTag"
 (
     hashtag_id int8 NOT NULL,
     "name"     varchar NULL,
@@ -58,7 +58,7 @@ CREATE TABLE public."HashTag"
 
 -- DROP TABLE public."Memo";
 
-CREATE TABLE public."Memo"
+CREATE TABLE IF NOT EXISTS public."Memo"
 (
     history_id     int8 NOT NULL,
     user_id        int8 NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE public."Memo"
 
 -- DROP TABLE public."Mission";
 
-CREATE TABLE public."Mission"
+CREATE TABLE IF NOT EXISTS public."Mission"
 (
     mission_id int8 NOT NULL,
     spot_id    int8 NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE public."Mission"
 
 -- DROP TABLE public."NearbyPlaceDetail";
 
-CREATE TABLE public."NearbyPlaceDetail"
+CREATE TABLE IF NOT EXISTS public."NearbyPlaceDetail"
 (
     tour_spot_nearby_course_id int8 NOT NULL,
     spot_id                    int8 NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE public."NearbyPlaceDetail"
 
 -- DROP TABLE public."StoryCard_HashTag";
 
-CREATE TABLE public."StoryCard_HashTag"
+CREATE TABLE IF NOT EXISTS public."StoryCard_HashTag"
 (
     hashtag_id int8 NOT NULL,
     story_id   int8 NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE public."StoryCard_HashTag"
 
 -- DROP TABLE public."TourCourse";
 
-CREATE TABLE public."TourCourse"
+CREATE TABLE IF NOT EXISTS public."TourCourse"
 (
     tour_course_id int8 NOT NULL,
     user_id        int8 NOT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE public."TourCourse"
 
 -- DROP TABLE public."TourCourseItem";
 
-CREATE TABLE public."TourCourseItem"
+CREATE TABLE IF NOT EXISTS public."TourCourseItem"
 (
     item_id                     int8 NOT NULL,
     tour_spot_nearby_course_id2 int8 NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE public."TourCourseItem"
 
 -- DROP TABLE public."TourSpot";
 
-CREATE TABLE public."TourSpot"
+CREATE TABLE IF NOT EXISTS public."TourSpot"
 (
     spot_id         int8 NOT NULL,
     "name"          varchar NULL,
@@ -188,10 +188,9 @@ CREATE TABLE public."TourSpot"
     address         varchar NULL,
     can_parking     bool NULL,
     can_pet         bool NULL,
-    "like"          bool NULL,
     crowd_level     int4 NULL,
-    overview        varchar NULL,
-    homepage        varchar NULL,
+    overview        text NULL,
+    homepage        text NULL,
     map_x           float8 NULL,
     map_y           float8 NULL,
     content_id      int8 NULL,
@@ -199,7 +198,7 @@ CREATE TABLE public."TourSpot"
     tel             varchar NULL,
     CONSTRAINT "PK_TOURSPOT" PRIMARY KEY (spot_id)
 );
-CREATE UNIQUE INDEX ux_tour_spot_content_id ON public."TourSpot" USING btree (content_id) WHERE (content_id IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_spot_content_id ON public."TourSpot" USING btree (content_id) WHERE (content_id IS NOT NULL);
 
 
 -- public."TourSpotNearbyPlace" definition
@@ -208,7 +207,7 @@ CREATE UNIQUE INDEX ux_tour_spot_content_id ON public."TourSpot" USING btree (co
 
 -- DROP TABLE public."TourSpotNearbyPlace";
 
-CREATE TABLE public."TourSpotNearbyPlace"
+CREATE TABLE IF NOT EXISTS public."TourSpotNearbyPlace"
 (
     tour_spot_nearby_course_id int8 NOT NULL,
     spot_id                    int8 NOT NULL,
@@ -231,7 +230,7 @@ CREATE TABLE public."TourSpotNearbyPlace"
 
 -- DROP TABLE public."TourStory";
 
-CREATE TABLE public."TourStory"
+CREATE TABLE IF NOT EXISTS public."TourStory"
 (
     story_id  int8 NOT NULL,
     spot_id   int8 NOT NULL,
@@ -252,7 +251,7 @@ CREATE TABLE public."TourStory"
 
 -- DROP TABLE public."User";
 
-CREATE TABLE public."User"
+CREATE TABLE IF NOT EXISTS public."User"
 (
     user_id                int8 NOT NULL,
     has_travel_plan        bool NULL,
@@ -274,7 +273,7 @@ CREATE TABLE public."User"
 
 -- DROP TABLE public.tour_ingest_execution;
 
-CREATE TABLE public.tour_ingest_execution
+CREATE TABLE IF NOT EXISTS public.tour_ingest_execution
 (
     id              bigserial   NOT NULL,
     status          varchar(20) NOT NULL,

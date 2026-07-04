@@ -48,6 +48,24 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
     }
 
     @Override
+    public TourContentPayload fetchTourContentDetail(Long contentId) {
+        validateServiceKey();
+
+        JsonNode body = requestPage(buildDetailCommonUri(contentId));
+        JsonNode items = body.path("items").path("item");
+        if (items == null || items.isMissingNode() || items.isNull()) {
+            throw new TourApiException("Tour detail common API returned no item. contentId=" + contentId);
+        }
+        if (items.isArray()) {
+            if (items.isEmpty()) {
+                throw new TourApiException("Tour detail common API returned no item. contentId=" + contentId);
+            }
+            return TourContentPayload.from(items.get(0), objectMapper);
+        }
+        return TourContentPayload.from(items, objectMapper);
+    }
+
+    @Override
     public List<AccommodationRoomPayload> fetchAccommodationRooms(Long contentId, Long contentTypeId) {
         validateServiceKey();
 
@@ -130,6 +148,19 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
                 .queryParam("contentTypeId", contentTypeId)
                 .queryParam("lDongRegnCd", properties.getApi().getLDongRegnCd())
                 .queryParam("lDongSignguCd", properties.getApi().getLDongSignguCd())
+                .build();
+    }
+
+    private Function<UriBuilder, URI> buildDetailCommonUri(Long contentId) {
+        return uriBuilder -> uriBuilder
+                .path(properties.getApi().getDetailCommonOperationPath())
+                .queryParam("serviceKey", properties.getApi().getServiceKey())
+                .queryParam("MobileOS", properties.getApi().getMobileOs())
+                .queryParam("MobileApp", properties.getApi().getMobileApp())
+                .queryParam("_type", "json")
+                .queryParam("contentId", contentId)
+                .queryParam("numOfRows", properties.getApi().getPageSize())
+                .queryParam("pageNo", 1)
                 .build();
     }
 

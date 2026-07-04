@@ -15,6 +15,7 @@ public record TourContentPayload(
         String mapY,
         String firstImage,
         String overview,
+        String homepage,
         String tel,
         String rawPayload
 ) {
@@ -39,6 +40,7 @@ public record TourContentPayload(
                 firstText(item, "mapy", "mapY", "latitude"),
                 firstText(item, "firstimage", "firstImage", "firstimage2", "firstImage2"),
                 firstText(item, "overview"),
+                firstText(item, "homepage"),
                 firstText(item, "tel"),
                 toJson(item, objectMapper)
         );

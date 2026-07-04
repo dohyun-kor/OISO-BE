@@ -34,16 +34,13 @@ public class TourSpot {
     @Column(name = "can_pet")
     private Boolean canPet;
 
-    @Column(name = "`like`")
-    private Boolean like;
-
     @Column(name = "crowd_level")
     private Integer crowdLevel;
 
-    @Column(name = "overview")
+    @Column(name = "overview", columnDefinition = "TEXT")
     private String overview;
 
-    @Column(name = "homepage")
+    @Column(name = "homepage", columnDefinition = "TEXT")
     private String homepage;
 
     @Column(name = "map_x")
@@ -78,6 +75,7 @@ public class TourSpot {
         this.mapY = payload.mapYAsDouble();
         this.tel = payload.tel();
         this.overview = payload.overview();
+        this.homepage = payload.homepage();
     }
 
 }
