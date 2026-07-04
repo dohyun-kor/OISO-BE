@@ -5,8 +5,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 @Entity
+@Getter
 @Table(name = "`TourSpot`")
 public class TourSpot {
 
@@ -78,7 +80,4 @@ public class TourSpot {
         this.overview = payload.overview();
     }
 
-    public Long getSpotId() {
-        return spotId;
-    }
 }

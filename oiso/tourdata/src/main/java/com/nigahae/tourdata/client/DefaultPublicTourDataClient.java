@@ -33,9 +33,7 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
 
     @Override
     public List<TourContentPayload> fetchAllTourContents() {
-        if (properties.getApi().getServiceKey() == null || properties.getApi().getServiceKey().isBlank()) {
-            throw new TourApiException("tour-data.api.service-key is required");
-        }
+        validateServiceKey();
 
         List<TourContentPayload> results = new ArrayList<>();
         List<String> contentTypeIds = properties.getApi().getContentTypeIds();
@@ -49,13 +47,36 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         return results;
     }
 
+    @Override
+    public List<AccommodationRoomPayload> fetchAccommodationRooms(Long contentId, Long contentTypeId) {
+        validateServiceKey();
+
+        List<AccommodationRoomPayload> results = new ArrayList<>();
+        int pageNo = 1;
+        int totalCount = Integer.MAX_VALUE;
+
+        while (results.size() < totalCount) {
+            JsonNode body = requestPage(buildDetailInfoUri(contentId, contentTypeId, pageNo));
+            totalCount = body.path("totalCount").asInt(results.size());
+
+            JsonNode items = body.path("items").path("item");
+            int itemCount = appendAccommodationRooms(results, items);
+            if (itemCount == 0 || pageNo * properties.getApi().getPageSize() >= totalCount) {
+                break;
+            }
+            pageNo++;
+        }
+
+        return results;
+    }
+
     private List<TourContentPayload> fetchByContentType(String contentTypeId) {
         List<TourContentPayload> results = new ArrayList<>();
         int pageNo = 1;
         int totalCount = Integer.MAX_VALUE;
 
         while (results.size() < totalCount) {
-            JsonNode body = requestPage(contentTypeId, pageNo);
+            JsonNode body = requestPage(buildAreaBasedListUri(contentTypeId, pageNo));
             totalCount = body.path("totalCount").asInt(results.size());
 
             JsonNode items = body.path("items").path("item");
@@ -69,9 +90,15 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         return results;
     }
 
-    private JsonNode requestPage(String contentTypeId, int pageNo) {
+    private void validateServiceKey() {
+        if (properties.getApi().getServiceKey() == null || properties.getApi().getServiceKey().isBlank()) {
+            throw new TourApiException("tour-data.api.service-key is required");
+        }
+    }
+
+    private JsonNode requestPage(Function<UriBuilder, URI> uriFunction) {
         JsonNode root = restClient.get()
-                .uri(buildUri(contentTypeId, pageNo))
+                .uri(uriFunction)
                 .retrieve()
                 .body(JsonNode.class);
 
@@ -90,7 +117,7 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         return response.path("body");
     }
 
-    private Function<UriBuilder, URI> buildUri(String contentTypeId, int pageNo) {
+    private Function<UriBuilder, URI> buildAreaBasedListUri(String contentTypeId, int pageNo) {
         return uriBuilder -> uriBuilder
                 .path(properties.getApi().getOperationPath())
                 .queryParam("serviceKey", properties.getApi().getServiceKey())
@@ -103,6 +130,20 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
                 .queryParam("contentTypeId", contentTypeId)
                 .queryParam("lDongRegnCd", properties.getApi().getLDongRegnCd())
                 .queryParam("lDongSignguCd", properties.getApi().getLDongSignguCd())
+                .build();
+    }
+
+    private Function<UriBuilder, URI> buildDetailInfoUri(Long contentId, Long contentTypeId, int pageNo) {
+        return uriBuilder -> uriBuilder
+                .path(properties.getApi().getDetailInfoOperationPath())
+                .queryParam("serviceKey", properties.getApi().getServiceKey())
+                .queryParam("MobileOS", properties.getApi().getMobileOs())
+                .queryParam("MobileApp", properties.getApi().getMobileApp())
+                .queryParam("_type", "json")
+                .queryParam("contentId", contentId)
+                .queryParam("contentTypeId", contentTypeId)
+                .queryParam("numOfRows", properties.getApi().getPageSize())
+                .queryParam("pageNo", pageNo)
                 .build();
     }
 
@@ -121,6 +162,24 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         }
 
         results.add(TourContentPayload.from(items, objectMapper));
+        return 1;
+    }
+
+    private int appendAccommodationRooms(List<AccommodationRoomPayload> results, JsonNode items) {
+        if (items == null || items.isMissingNode() || items.isNull()) {
+            return 0;
+        }
+
+        int count = 0;
+        if (items.isArray()) {
+            for (JsonNode item : items) {
+                results.add(AccommodationRoomPayload.from(item));
+                count++;
+            }
+            return count;
+        }
+
+        results.add(AccommodationRoomPayload.from(items));
         return 1;
     }
 }

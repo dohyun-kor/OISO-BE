@@ -14,6 +14,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @Table(name = "tour_ingest_execution")
 public class TourDataExecution {
 

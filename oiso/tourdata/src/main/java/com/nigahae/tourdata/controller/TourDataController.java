@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Tour Ingest", description = "Development APIs for refreshing tour data")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/tour-ingest")
+@RequestMapping("/internal/tour-data")
 public class TourDataController {
 
     private final TourDataRunner tourIngestRunner;

@@ -14,7 +14,7 @@ public class TourDataScheduler {
 
     private final TourDataRunner tourIngestRunner;
 
-    @Scheduled(cron = "${tour-ingest.schedule.cron}", zone = "Asia/Seoul")
+    @Scheduled(cron = "${tour-data.schedule.cron}", zone = "Asia/Seoul")
     public void refreshTourContents() {
         TourDataResult result = tourIngestRunner.run("schedule");
         if (!result.success() && !result.skipped()) {
