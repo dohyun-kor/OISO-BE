@@ -79,7 +79,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = jwtTokenProvider.createRefreshToken(email, nickname);
 
         // 💡 CookieUtil을 사용한 초간단 쿠키 생성
-        CookieUtil.addCookie(response, ACCESS_TOKEN, accessToken, accessTokenValiditySec, false);
+        CookieUtil.addCookie(response, ACCESS_TOKEN, accessToken, accessTokenValiditySec, true);
         CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken, refreshTokenValiditySec, true);
 
         response.sendRedirect(redirectUri);
