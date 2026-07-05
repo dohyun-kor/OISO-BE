@@ -38,6 +38,6 @@ jobs:
           script: |
             cd /home/ec2-user/oiso
 
-            docker compose pull oiso-backend
+            docker compose pull backend
 
-            docker compose up -d oiso-backend
+            docker compose up -d backend
