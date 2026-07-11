@@ -7,7 +7,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/oiso" />
-            <option value="$PROJECT_DIR$/oiso/api" />
+            <option value="$PROJECT_DIR$/oiso/app" />
             <option value="$PROJECT_DIR$/oiso/common" />
             <option value="$PROJECT_DIR$/oiso/user" />
           </set>
