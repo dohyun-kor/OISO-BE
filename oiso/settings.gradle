@@ -1,4 +1,3 @@
 rootProject.name = 'oiso'
 
-include 'app', 'common', 'user'
-include 'security'
+include 'app', 'common', 'user', 'security', 'tourdata'
