@@ -5,9 +5,11 @@ plugins {
 dependencies {
     implementation project(':common')
     implementation project(':user')
+    implementation project(':tourdata')
 
     testImplementation project(':common')
     testImplementation project(':user')
+    testImplementation project(':tourdata')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -17,6 +19,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // spring modulith docs
