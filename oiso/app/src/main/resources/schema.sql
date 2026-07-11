@@ -266,6 +266,18 @@ CREATE TABLE IF NOT EXISTS public."User"
     CONSTRAINT "PK_USER" PRIMARY KEY (user_id)
 );
 
+-- Existing server User data is preserved. OAuth columns are an additive extension.
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS provider varchar(30);
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS provider_user_id varchar(100);
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS email varchar(320);
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS profile_image_url varchar(2048);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_user_provider_subject
+    ON public."User" (provider, provider_user_id)
+    WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;
+
+CREATE SEQUENCE IF NOT EXISTS public.user_id_seq;
+SELECT setval('public.user_id_seq', COALESCE((SELECT MAX(user_id) FROM public."User"), 0) + 1, false);
+
 
 -- public.tour_ingest_execution definition
 

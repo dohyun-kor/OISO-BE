@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OISO 카카오 소셜 로그인 로컬 테스트 페이지">
+  <title>OISO 로그인 테스트</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="login-card" aria-labelledby="page-title">
+      <div class="brand-mark" aria-hidden="true">오</div>
+      <p class="eyebrow">OISO · LOCAL AUTH TEST</p>
+      <h1 id="page-title">카카오 로그인 연결 확인</h1>
+      <p class="description">
+        로컬 백엔드의 OAuth 로그인 흐름과 쿠키 발급을 간단하게 확인하는 페이지입니다.
+      </p>
+
+      <button id="kakao-login" class="kakao-button" type="button">
+        <span class="chat-icon" aria-hidden="true"></span>
+        카카오로 로그인
+      </button>
+
+      <div class="actions" aria-label="인증 테스트 작업">
+        <button id="refresh-token" class="secondary-button" type="button">토큰 재발급 테스트</button>
+        <button id="logout" class="text-button" type="button">로그아웃</button>
+      </div>
+
+      <div id="status" class="status" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>백엔드를 실행한 후 로그인을 시작하세요.</span>
+      </div>
+
+      <dl class="connection-info">
+        <div>
+          <dt>프론트</dt>
+          <dd>http://localhost:3000</dd>
+        </div>
+        <div>
+          <dt>백엔드</dt>
+          <dd>http://localhost:8080</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

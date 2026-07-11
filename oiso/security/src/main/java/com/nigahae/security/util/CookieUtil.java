@@ -1,42 +1,41 @@
 package com.nigahae.security.util;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
+
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 
-
-/**
- * 쿠키 생성 관련 util 클래스
- * common에 하지 않은 이유는 다른 모듈에서는 쿠키와 관련된 설정을 사용할 필요가 없음
- */
+@Component
 public class CookieUtil {
+    public static final String ACCESS_TOKEN = "accessToken";
+    public static final String REFRESH_TOKEN = "refreshToken";
 
-    /**
-     * 쿠키 생성 및 Response 추가
-     */
-    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isHttpOnly) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setSecure(true);
-        cookie.setMaxAge(maxAge);
-        cookie.setHttpOnly(isHttpOnly);
+    @Value("${app.cookie.secure}") private boolean secure;
+    @Value("${app.cookie.same-site:Lax}") private String sameSite;
+    @Value("${app.cookie.access-token-max-age}") private int accessTokenMaxAge;
+    @Value("${app.cookie.refresh-token-max-age}") private int refreshTokenMaxAge;
 
-        response.addCookie(cookie);
+    public void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        ResponseCookie cookie = ResponseCookie.from(name, value).httpOnly(true).secure(secure)
+                .sameSite(sameSite).path("/").maxAge(Duration.ofSeconds(maxAge)).build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
-    /**
-     * 이름으로 쿠키 조회
-     */
-    public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null && cookies.length > 0) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name)) {
-                    return Optional.of(cookie);
-                }
-            }
-        }
-        return Optional.empty();
+    public void deleteCookie(HttpServletResponse response, String name) { addCookie(response, name, "", 0); }
+
+    public Optional<String> getCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return Optional.empty();
+        return Arrays.stream(request.getCookies()).filter(cookie -> name.equals(cookie.getName()))
+                .map(Cookie::getValue).findFirst();
     }
+
+    public int getAccessTokenMaxAge() { return accessTokenMaxAge; }
+    public int getRefreshTokenMaxAge() { return refreshTokenMaxAge; }
 }
