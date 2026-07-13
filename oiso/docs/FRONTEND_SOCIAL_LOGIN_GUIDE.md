@@ -47,7 +47,7 @@ POST /api/auth/refresh
 - 요청 body: 없음
 - refresh token: 브라우저 쿠키로 자동 전송
 - 성공: `200 OK`, 새 access token 쿠키 발급
-- refresh 쿠키 없음: `400 Bad Request`
+- refresh 쿠키 없음: `401 Unauthorized`, 오류 코드 `4002`
 - 만료·변조·잘못된 타입: `401 Unauthorized`
 
 ### 로그아웃
