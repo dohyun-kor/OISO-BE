@@ -8,8 +8,11 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 @Component
@@ -63,6 +66,30 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
             return TourContentPayload.from(items.get(0), objectMapper);
         }
         return TourContentPayload.from(items, objectMapper);
+    }
+
+    @Override
+    public List<FestivalPayload> fetchAllFestivals(LocalDate eventStartDate) {
+        validateServiceKey();
+        Objects.requireNonNull(eventStartDate, "eventStartDate is required");
+
+        List<FestivalPayload> results = new ArrayList<>();
+        int pageNo = 1;
+        int totalCount = Integer.MAX_VALUE;
+
+        while (results.size() < totalCount) {
+            JsonNode body = requestPage(buildFestivalListUri(eventStartDate, pageNo));
+            totalCount = body.path("totalCount").asInt(results.size());
+
+            JsonNode items = body.path("items").path("item");
+            int itemCount = appendFestivalItems(results, items);
+            if (itemCount == 0 || pageNo * properties.getApi().getPageSize() >= totalCount) {
+                break;
+            }
+            pageNo++;
+        }
+
+        return results;
     }
 
     @Override
@@ -164,6 +191,22 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
                 .build();
     }
 
+    private Function<UriBuilder, URI> buildFestivalListUri(LocalDate eventStartDate, int pageNo) {
+        return uriBuilder -> uriBuilder
+                .path(properties.getApi().getFestivalOperationPath())
+                .queryParam("serviceKey", properties.getApi().getServiceKey())
+                .queryParam("MobileOS", properties.getApi().getMobileOs())
+                .queryParam("MobileApp", properties.getApi().getMobileApp())
+                .queryParam("_type", "json")
+                .queryParam("arrange", properties.getApi().getArrange())
+                .queryParam("numOfRows", properties.getApi().getPageSize())
+                .queryParam("pageNo", pageNo)
+                .queryParam("eventStartDate", eventStartDate.format(DateTimeFormatter.BASIC_ISO_DATE))
+                .queryParam("lDongRegnCd", properties.getApi().getLDongRegnCd())
+                .queryParam("lDongSignguCd", properties.getApi().getLDongSignguCd())
+                .build();
+    }
+
     private Function<UriBuilder, URI> buildDetailInfoUri(Long contentId, Long contentTypeId, int pageNo) {
         return uriBuilder -> uriBuilder
                 .path(properties.getApi().getDetailInfoOperationPath())
@@ -211,6 +254,24 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         }
 
         results.add(AccommodationRoomPayload.from(items));
+        return 1;
+    }
+
+    private int appendFestivalItems(List<FestivalPayload> results, JsonNode items) {
+        if (items == null || items.isMissingNode() || items.isNull()) {
+            return 0;
+        }
+
+        int count = 0;
+        if (items.isArray()) {
+            for (JsonNode item : items) {
+                results.add(FestivalPayload.from(item, objectMapper));
+                count++;
+            }
+            return count;
+        }
+
+        results.add(FestivalPayload.from(items, objectMapper));
         return 1;
     }
 }

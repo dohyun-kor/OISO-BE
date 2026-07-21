@@ -7,11 +7,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -89,6 +91,119 @@ class DefaultPublicTourDataClientTest {
         assertThatThrownBy(client::fetchAllTourContents)
                 .isInstanceOf(TourApiException.class)
                 .hasMessageContaining("99");
+        server.verify();
+    }
+
+    @Test
+    void fetchAllFestivalsReadsSingleItemAndDates() {
+        TourDataProperties properties = properties();
+        RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(requestTo(containsString("/searchFestival2")))
+                .andExpect(requestTo(containsString("eventStartDate=20260721")))
+                .andExpect(requestTo(containsString("lDongRegnCd=47")))
+                .andExpect(requestTo(containsString("lDongSignguCd=130")))
+                .andExpect(requestTo(not(containsString("eventEndDate"))))
+                .andRespond(withSuccess("""
+                        {
+                          "response": {
+                            "header": {"resultCode": "0000", "resultMsg": "OK"},
+                            "body": {
+                              "totalCount": 1,
+                              "items": {
+                                "item": {
+                                  "contentid": "300",
+                                  "contenttypeid": "15",
+                                  "title": "Gyeongju Festival",
+                                  "addr1": "Gyeongju",
+                                  "addr2": "Bomun",
+                                  "mapx": "129.2",
+                                  "mapy": "35.8",
+                                  "firstimage": "",
+                                  "firstimage2": "https://example.com/festival.jpg",
+                                  "tel": "054-000-0000",
+                                  "eventstartdate": "20260815",
+                                  "eventenddate": "20260823"
+                                }
+                              }
+                            }
+                          }
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        DefaultPublicTourDataClient client = new DefaultPublicTourDataClient(builder.build(), properties, objectMapper);
+
+        List<FestivalPayload> results = client.fetchAllFestivals(LocalDate.of(2026, 7, 21));
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).content().contentId()).isEqualTo("300");
+        assertThat(results.get(0).content().address()).isEqualTo("Gyeongju Bomun");
+        assertThat(results.get(0).content().firstImage()).isEqualTo("https://example.com/festival.jpg");
+        assertThat(results.get(0).eventStartDate()).isEqualTo(LocalDate.of(2026, 8, 15));
+        assertThat(results.get(0).eventEndDate()).isEqualTo(LocalDate.of(2026, 8, 23));
+        server.verify();
+    }
+
+    @Test
+    void fetchAllFestivalsReadsMultiplePagesAndArrayItems() {
+        TourDataProperties properties = properties();
+        properties.getApi().setPageSize(1);
+        RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(requestTo(containsString("pageNo=1")))
+                .andRespond(withSuccess(festivalPage("301", "20260801", "20260802", 2), MediaType.APPLICATION_JSON));
+        server.expect(requestTo(containsString("pageNo=2")))
+                .andRespond(withSuccess(festivalPage("302", "", "", 2), MediaType.APPLICATION_JSON));
+
+        DefaultPublicTourDataClient client = new DefaultPublicTourDataClient(builder.build(), properties, objectMapper);
+
+        List<FestivalPayload> results = client.fetchAllFestivals(LocalDate.of(2026, 7, 21));
+
+        assertThat(results).extracting(result -> result.content().contentId()).containsExactly("301", "302");
+        assertThat(results.get(1).eventStartDate()).isNull();
+        assertThat(results.get(1).eventEndDate()).isNull();
+        server.verify();
+    }
+
+    @Test
+    void fetchAllFestivalsReturnsEmptyWhenItemsAreMissing() {
+        TourDataProperties properties = properties();
+        RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(requestTo(containsString("/searchFestival2")))
+                .andRespond(withSuccess("""
+                        {
+                          "response": {
+                            "header": {"resultCode": "0000", "resultMsg": "OK"},
+                            "body": {"totalCount": 0, "items": ""}
+                          }
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        DefaultPublicTourDataClient client = new DefaultPublicTourDataClient(builder.build(), properties, objectMapper);
+
+        assertThat(client.fetchAllFestivals(LocalDate.of(2026, 7, 21))).isEmpty();
+        server.verify();
+    }
+
+    @Test
+    void fetchAllFestivalsThrowsOnInvalidEventDate() {
+        TourDataProperties properties = properties();
+        RestClient.Builder builder = RestClient.builder().baseUrl(properties.getApi().getBaseUrl());
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(requestTo(containsString("/searchFestival2")))
+                .andRespond(withSuccess(festivalPage("303", "20260230", "20260301", 1), MediaType.APPLICATION_JSON));
+
+        DefaultPublicTourDataClient client = new DefaultPublicTourDataClient(builder.build(), properties, objectMapper);
+
+        assertThatThrownBy(() -> client.fetchAllFestivals(LocalDate.of(2026, 7, 21)))
+                .isInstanceOf(TourApiException.class)
+                .hasMessageContaining("eventStartDate")
+                .hasMessageContaining("20260230");
         server.verify();
     }
 
@@ -317,11 +432,36 @@ class DefaultPublicTourDataClientTest {
         TourDataProperties properties = new TourDataProperties();
         properties.getApi().setBaseUrl("http://example.com");
         properties.getApi().setOperationPath("/areaBasedList2");
+        properties.getApi().setFestivalOperationPath("/searchFestival2");
         properties.getApi().setDetailCommonOperationPath("/detailCommon2");
         properties.getApi().setDetailInfoOperationPath("/detailInfo2");
         properties.getApi().setServiceKey("secret");
         properties.getApi().setPageSize(10);
         properties.getApi().setContentTypeIds(List.of(""));
         return properties;
+    }
+
+    private String festivalPage(String contentId, String eventStartDate, String eventEndDate, int totalCount) {
+        return """
+                {
+                  "response": {
+                    "header": {"resultCode": "0000", "resultMsg": "OK"},
+                    "body": {
+                      "totalCount": %d,
+                      "items": {
+                        "item": [
+                          {
+                            "contentid": "%s",
+                            "contenttypeid": "15",
+                            "title": "Festival %s",
+                            "eventstartdate": "%s",
+                            "eventenddate": "%s"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.formatted(totalCount, contentId, contentId, eventStartDate, eventEndDate);
     }
 }

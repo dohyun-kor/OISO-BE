@@ -65,7 +65,7 @@ public class TourSpot {
         this.spotId = spotId;
     }
 
-    public void updateFrom(TourContentPayload payload) {
+    public void updateFromList(TourContentPayload payload) {
         this.contentId = payload.contentIdAsLong();
         this.contentTypeId = payload.contentTypeIdAsLong();
         this.name = payload.title();
@@ -74,6 +74,10 @@ public class TourSpot {
         this.mapX = payload.mapXAsDouble();
         this.mapY = payload.mapYAsDouble();
         this.tel = payload.tel();
+    }
+
+    public void updateFromDetail(TourContentPayload payload) {
+        updateFromList(payload);
         this.overview = payload.overview();
         this.homepage = payload.homepage();
     }

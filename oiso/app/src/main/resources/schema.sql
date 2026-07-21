@@ -173,6 +173,31 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
 );
 
 
+-- public."FestivalInfo" definition
+
+-- Drop table
+
+-- DROP TABLE public."FestivalInfo";
+
+CREATE TABLE IF NOT EXISTS public."FestivalInfo"
+(
+    spot_id          int8 NOT NULL,
+    "name"           varchar NULL,
+    img              varchar NULL,
+    address          varchar NULL,
+    overview         text NULL,
+    homepage         text NULL,
+    map_x            float8 NULL,
+    map_y            float8 NULL,
+    content_id       int8 NULL,
+    content_type_id  int8 NULL,
+    tel              varchar NULL,
+    event_start_date date NULL,
+    event_end_date   date NULL,
+    CONSTRAINT "PK_FestivalInfo" PRIMARY KEY (spot_id)
+);
+
+
 -- public."TourSpot" definition
 
 -- Drop table
@@ -288,10 +313,17 @@ SELECT setval('public.user_id_seq', COALESCE((SELECT MAX(user_id) FROM public."U
 CREATE TABLE IF NOT EXISTS public.tour_ingest_execution
 (
     id              bigserial   NOT NULL,
+    job_type        varchar(30) NOT NULL,
     status          varchar(20) NOT NULL,
     started_at      timestamp   NOT NULL,
     finished_at     timestamp NULL,
     processed_count int4        NOT NULL,
+    failed_count    int4        NOT NULL,
     failure_message text NULL,
     CONSTRAINT tour_ingest_execution_pkey PRIMARY KEY (id)
 );
+
+ALTER TABLE public.tour_ingest_execution ADD COLUMN IF NOT EXISTS job_type varchar(30);
+UPDATE public.tour_ingest_execution SET job_type = 'LEGACY_FULL_REFRESH' WHERE job_type IS NULL;
+ALTER TABLE public.tour_ingest_execution ALTER COLUMN job_type SET NOT NULL;
+ALTER TABLE public.tour_ingest_execution ADD COLUMN IF NOT EXISTS failed_count int4 NOT NULL DEFAULT 0;
