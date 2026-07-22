@@ -3,6 +3,7 @@ package com.nigahae.security.controller;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.security.jwt.JwtTokenProvider;
 import com.nigahae.security.util.CookieUtil;
+import com.nigahae.user.AuthenticatedUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -46,6 +47,13 @@ class AuthControllerTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         controller.refreshToken(request, response);
         assertThat(response.getHeader("Set-Cookie")).contains("accessToken=new.jwt", "HttpOnly");
+    }
+
+    @Test
+    void returnsCurrentAuthenticatedUser() {
+        var response = controller.me(new AuthenticatedUser(3L, "사용자"));
+
+        assertThat(response.getBody()).isEqualTo(new AuthController.MeResponse(3L, "사용자"));
     }
 
     @Test

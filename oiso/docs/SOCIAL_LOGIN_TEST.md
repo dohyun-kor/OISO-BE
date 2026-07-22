@@ -31,7 +31,8 @@ $env:LOCAL_JWT_SECRET_KEY='32바이트 이상의 임의 문자열'
 - 이메일 제공에 동의하지 않은 계정도 로그인된다.
 - `POST /api/auth/refresh`는 refresh 쿠키로 새 access 쿠키를 발급한다.
 - `POST /api/auth/logout`은 두 쿠키를 모두 만료시킨다.
-- access 쿠키가 있으면 `GET /users` 같은 보호 API가 성공하고 없으면 401/403 응답을 반환한다.
+- access 쿠키가 있으면 `GET /api/auth/me`가 현재 사용자 정보를 반환하고, 없으면 `401 Unauthorized`를 반환한다.
+- 전체 회원 조회 경로는 `GET /api/users`이며 로그인 여부 확인 용도로 사용하지 않는다.
 
 자동 테스트는 다음 명령으로 실행한다.
 

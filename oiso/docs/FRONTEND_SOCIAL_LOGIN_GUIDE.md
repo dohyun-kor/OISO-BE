@@ -8,10 +8,10 @@
 - 회원 식별 기준: `provider=kakao` + 카카오 사용자 ID
 - 이메일: 선택 정보이며 카카오 계정이 제공하지 않아도 로그인 가능
 - 토큰 전달 방식: 응답 body나 URL이 아닌 HttpOnly 쿠키
-- 로그인 성공 후 이동 주소: 환경변수 `OAUTH2_REDIRECT_URI`
+- 로그인 성공 후 이동 주소: 운영 환경변수 `PROD_OAUTH2_REDIRECT_URI`
 - 로컬 프론트 주소: `http://localhost:3000`
 - 로컬 백엔드 주소: `http://localhost:8080`
-- 운영 프론트 주소: `https://oiso-fe.vercel.app`
+- 운영 프로필 연동 테스트 프론트 주소: `http://localhost:5173`
 - 운영 백엔드 주소: `https://oiso.duckdns.org`
 
 프론트엔드는 access token이나 refresh token 값을 직접 읽거나 저장하지 않는다. 브라우저가 쿠키를 자동으로 전송하도록 요청에 credentials 옵션만 설정한다.
@@ -60,11 +60,22 @@ POST /api/auth/logout
 - access token 인증 필요
 - 성공: `200 OK`, access/refresh 쿠키 만료
 
-### 보호 API
+### 로그인 상태 및 현재 사용자 확인
 
-로그인 여부는 보호 API 호출 결과로 확인한다. access token이 유효하면 정상 응답하고, 없거나 유효하지 않으면 인증 실패 응답을 반환한다.
+```http
+GET /api/auth/me
+```
 
-현재 별도의 `/api/users/me` API는 구현되어 있지 않다. 따라서 로그인한 회원의 프로필을 화면에 표시해야 한다면 백엔드에 `/api/users/me` API 추가가 필요하다.
+access token이 유효하면 `200 OK`와 현재 사용자를 반환하고, 없거나 유효하지 않으면 로그인 페이지 리다이렉트가 아닌 `401 Unauthorized`를 반환한다.
+
+```json
+{
+  "userId": 3,
+  "nickname": "사용자"
+}
+```
+
+전체 회원 목록은 `GET /api/users`이며 로그인 상태 확인 용도로 사용하지 않는다.
 
 ## 3. 프론트엔드 구현 예시
 
@@ -217,13 +228,13 @@ ORDER BY user_id DESC;
 
 ## 6. 운영 환경 체크리스트
 
-운영에서는 다음 값을 실제 도메인으로 변경한다.
+현재 운영 프로필은 로컬 Vite 프론트와 연동 테스트하기 위해 다음 값을 사용한다.
 
 ```env
 SPRING_PROFILES_ACTIVE=prod
 PROD_KAKAO_REDIRECT_URI=https://oiso.duckdns.org/login/oauth2/code/kakao
-PROD_OAUTH2_REDIRECT_URI=https://oiso-fe.vercel.app/
-PROD_CORS_ALLOWED_ORIGIN=https://oiso-fe.vercel.app
+PROD_OAUTH2_REDIRECT_URI=http://localhost:5173
+PROD_CORS_ALLOWED_ORIGIN=http://localhost:5173
 PROD_COOKIE_SECURE=true
 PROD_COOKIE_SAME_SITE=None
 ```
@@ -234,9 +245,9 @@ PROD_COOKIE_SAME_SITE=None
 https://oiso.duckdns.org/login/oauth2/code/kakao
 ```
 
-Vercel 프론트와 DuckDNS API는 서로 다른 사이트이므로 `PROD_COOKIE_SAME_SITE=None`과 `PROD_COOKIE_SECURE=true`가 필요하다. 브라우저의 서드파티 쿠키 차단 정책에 따라 쿠키 인증이 제한될 수 있으므로 Chrome, Safari 모바일 환경을 포함해 실제 브라우저에서 확인한다.
+localhost 프론트와 DuckDNS API는 서로 다른 사이트이므로 `PROD_COOKIE_SAME_SITE=None`과 `PROD_COOKIE_SECURE=true`가 필요하다. 브라우저의 서드파티 쿠키 차단 정책에 따라 쿠키 인증이 제한될 수 있으므로 Chrome, Safari 모바일 환경을 포함해 실제 브라우저에서 확인한다.
 
-Vercel 프로젝트 환경변수에는 다음 값을 등록한다.
+Vite 프론트 환경변수에는 다음 값을 등록한다.
 
 ```env
 VITE_API_BASE_URL=https://oiso.duckdns.org
@@ -248,7 +259,7 @@ VITE_API_BASE_URL=https://oiso.duckdns.org
 
 ### 로그인 후 잘못된 프론트 주소로 이동
 
-백엔드의 `OAUTH2_REDIRECT_URI`를 확인하고 백엔드를 재시작한다.
+백엔드의 `PROD_OAUTH2_REDIRECT_URI`를 확인하고 백엔드를 재시작한다.
 
 ### `redirect_uri_mismatch` 또는 카카오 `KOE006`
 

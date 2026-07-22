@@ -1,6 +1,7 @@
 package com.nigahae.security.jwt;
 
 import com.nigahae.security.util.CookieUtil;
+import com.nigahae.user.AuthenticatedUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,8 +29,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.validateToken(token, JwtTokenProvider.ACCESS)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Long userId = jwtTokenProvider.getUserId(token);
+                String nickname = jwtTokenProvider.getNickname(token);
                 var authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                        new AuthenticatedUser(userId, nickname),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         });
