@@ -57,7 +57,7 @@ POST /api/auth/logout
 ```
 
 - 요청 body: 없음
-- access token 인증 필요
+- access token이 만료된 상태에서도 호출 가능
 - 성공: `200 OK`, access/refresh 쿠키 만료
 
 ### 로그인 상태 및 현재 사용자 확인

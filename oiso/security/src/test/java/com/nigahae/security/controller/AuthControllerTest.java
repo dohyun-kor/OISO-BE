@@ -57,6 +57,12 @@ class AuthControllerTest {
     }
 
     @Test
+    void rejectsUnexpectedAuthenticationPrincipal() {
+        assertThatThrownBy(() -> controller.me(null))
+                .isInstanceOf(CustomException.class);
+    }
+
+    @Test
     void logoutExpiresBothCookies() {
         MockHttpServletResponse response = new MockHttpServletResponse();
         controller.logout(response);

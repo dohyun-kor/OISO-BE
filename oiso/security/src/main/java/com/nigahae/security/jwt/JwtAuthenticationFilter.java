@@ -25,9 +25,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        cookieUtil.getCookie(request, CookieUtil.ACCESS_TOKEN).ifPresent(token -> {
-            if (jwtTokenProvider.validateToken(token, JwtTokenProvider.ACCESS)
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (request.getRequestURI().startsWith("/api/")) {
+            cookieUtil.getCookie(request, CookieUtil.ACCESS_TOKEN)
+                    .filter(token -> jwtTokenProvider.validateToken(token, JwtTokenProvider.ACCESS))
+                    .ifPresentOrElse(token -> {
                 Long userId = jwtTokenProvider.getUserId(token);
                 String nickname = jwtTokenProvider.getNickname(token);
                 var authentication = new UsernamePasswordAuthenticationToken(
@@ -35,8 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         null,
                         List.of(new SimpleGrantedAuthority("ROLE_USER")));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        });
+                    }, SecurityContextHolder::clearContext);
+        }
         chain.doFilter(request, response);
     }
 }

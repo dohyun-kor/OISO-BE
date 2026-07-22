@@ -41,6 +41,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(@AuthenticationPrincipal AuthenticatedUser user) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
         return ResponseEntity.ok(new MeResponse(user.userId(), user.nickname()));
     }
 
