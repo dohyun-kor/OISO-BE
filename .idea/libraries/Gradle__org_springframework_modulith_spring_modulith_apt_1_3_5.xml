@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.springframework.modulith:spring-modulith-apt:1.3.5" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.springframework.modulith" artifactId="spring-modulith-apt" version="1.3.5" baseVersion="1.3.5" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.modulith/spring-modulith-apt/1.3.5/34b58c06c6125037ba3359b2868103111d9988e3/spring-modulith-apt-1.3.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.modulith/spring-modulith-apt/1.3.5/74965d9cc64c2f60e1c7dffe749e57ee250edc18/spring-modulith-apt-1.3.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.structurizr:structurizr-core:3.1.0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="com.structurizr" artifactId="structurizr-core" version="3.1.0" baseVersion="3.1.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.structurizr/structurizr-core/3.1.0/38e3755754df15c6d93d8e1c9e93c5749a3b203c/structurizr-core-3.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.structurizr/structurizr-core/3.1.0/c5c957ed76b63853e0cd1a2c194347f5e4d202c1/structurizr-core-3.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.springframework.modulith:spring-modulith-events-core:1.3.5" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.springframework.modulith" artifactId="spring-modulith-events-core" version="1.3.5" baseVersion="1.3.5" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.modulith/spring-modulith-events-core/1.3.5/3eb8e9594c5e74b04ac77d7cd6476a161fc00a61/spring-modulith-events-core-1.3.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.modulith/spring-modulith-events-core/1.3.5/bf2ca6fa011d88fa4404235c0260cc3d1b1f1ec7/spring-modulith-events-core-1.3.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
