@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OISO 카카오 로그인과 쿠키 인증 진단 페이지">
+  <title>OISO 인증 진단</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="auth-card" aria-labelledby="page-title">
+      <header class="hero">
+        <div class="brand-mark" aria-hidden="true">오</div>
+        <div>
+          <p class="eyebrow">OISO · AUTH DIAGNOSTICS</p>
+          <h1 id="page-title">카카오 로그인 진단</h1>
+        </div>
+      </header>
+
+      <p class="description">
+        <code>localhost:5173</code>에서 배포 백엔드의 OAuth callback, JWT 쿠키 전송,
+        로그인 확인과 재발급을 순서대로 검사합니다.
+      </p>
+
+      <label class="field-label" for="api-base-url">백엔드 API URL</label>
+      <div class="url-field">
+        <input id="api-base-url" type="url" value="https://oiso.duckdns.org" spellcheck="false">
+        <button id="save-api-url" class="small-button" type="button">적용</button>
+      </div>
+
+      <button id="kakao-login" class="kakao-button" type="button">
+        <span class="chat-icon" aria-hidden="true"></span>
+        카카오로 로그인
+      </button>
+
+      <div class="actions" aria-label="인증 테스트 작업">
+        <button id="check-me" class="secondary-button" type="button">로그인 상태 확인</button>
+        <button id="refresh-token" class="secondary-button" type="button">Access Token 재발급</button>
+        <button id="logout" class="danger-button" type="button">로그아웃</button>
+      </div>
+
+      <div id="status" class="status pending" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>확인 대기</strong>
+          <span>페이지가 열리면 로그인 상태를 자동 확인합니다.</span>
+        </div>
+      </div>
+
+      <section class="diagnostics" aria-labelledby="diagnostics-title">
+        <div class="section-heading">
+          <h2 id="diagnostics-title">요청 기록</h2>
+          <button id="clear-log" class="text-button" type="button">기록 지우기</button>
+        </div>
+        <ol id="request-log" class="request-log">
+          <li class="empty-log">아직 실행한 요청이 없습니다.</li>
+        </ol>
+      </section>
+
+      <aside class="checklist">
+        <h2>판정 기준</h2>
+        <ul>
+          <li><strong>로그인 확인 200</strong> — accessToken 전송 및 검증 성공</li>
+          <li><strong>로그인 확인 401</strong> — accessToken 없음·차단·만료</li>
+          <li><strong>재발급 200</strong> — refreshToken 전송 및 검증 성공</li>
+          <li><strong>재발급 4002</strong> — 요청에 refreshToken 쿠키가 없음</li>
+        </ul>
+        <p>HttpOnly 쿠키 값은 이 페이지에서 읽을 수 없습니다. F12 Network의 Request Headers와 Cookies 탭에서 확인하세요.</p>
+      </aside>
+
+      <dl class="connection-info">
+        <div><dt>프론트 origin</dt><dd id="frontend-origin"></dd></div>
+        <div><dt>credentials</dt><dd>include</dd></div>
+        <div><dt>예상 쿠키</dt><dd>SameSite=None · Secure</dd></div>
+      </dl>
+    </section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

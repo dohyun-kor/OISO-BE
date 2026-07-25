@@ -1,11 +1,11 @@
 package com.nigahae.tourspot.service;
 
-import com.nigahae.common.exception.CustomCommonException;
-import com.nigahae.common.exception.ErrorCode;
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
-import com.nigahae.tourspot.repository.TourSpotRepository;
+import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +20,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class TourSpotService {
 
-    private final TourSpotRepository tourSpotRepository;
+    private final TourSpotQueryRepository tourSpotQueryRepository;
 
     public TourSpotListResponse getTourSpots(String keyword, int page, int size) {
         PageRequest pageRequest = PageRequest.of(
@@ -31,11 +31,11 @@ public class TourSpotService {
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
 
         Page<TourSpot> result = normalizedKeyword.isEmpty()
-                ? tourSpotRepository.findAll(pageRequest)
-                : tourSpotRepository.searchByKeyword(normalizedKeyword, pageRequest);
+                ? tourSpotQueryRepository.findAll(pageRequest)
+                : tourSpotQueryRepository.searchByKeyword(normalizedKeyword, pageRequest);
 
         if (result.isEmpty()) {
-            throw new CustomCommonException(ErrorCode.SEARCH_RESULT_NOT_FOUND);
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
         List<TourSpotSummary> tourSpots = result.getContent().stream()

@@ -12,7 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
+@Entity(name = "TourSpotReadModel")
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

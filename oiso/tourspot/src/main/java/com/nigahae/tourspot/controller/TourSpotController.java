@@ -1,6 +1,6 @@
 package com.nigahae.tourspot.controller;
 
-import com.nigahae.common.response.ApiResponse;
+import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.service.TourSpotService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,9 +38,9 @@ public class TourSpotController {
                             description = "잘못된 페이지 요청",
                             content = @Content(examples = @ExampleObject(value = """
                                     {
-                                      "code": 4000,
-                                      "message": "잘못된 요청입니다.",
-                                      "data": { "field": "page" }
+                                      "code": 1001,
+                                      "message": "요청 값이 올바르지 않습니다.",
+                                      "data": null
                                     }
                                     """))
                     ),
@@ -49,8 +49,8 @@ public class TourSpotController {
                             description = "검색 결과 없음",
                             content = @Content(examples = @ExampleObject(value = """
                                     {
-                                      "code": 4004,
-                                      "message": "검색 결과가 존재하지 않습니다.",
+                                      "code": 3001,
+                                      "message": "요청한 리소스를 찾을 수 없습니다.",
                                       "data": null
                                     }
                                     """))
@@ -58,15 +58,19 @@ public class TourSpotController {
             }
     )
     @GetMapping
-    public ApiResponse<TourSpotListResponse> getTourSpots(
+    public CommonResponse<TourSpotListResponse> getTourSpots(
             @Parameter(description = "관광지 이름, 주소, 요약 검색")
             @RequestParam(required = false) String keyword,
             @Parameter(description = "페이지 번호", example = "0")
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page") int page,
             @Parameter(description = "페이지 크기(최대 100)", example = "20")
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
+            @RequestParam(defaultValue = "20")
+            @Min(value = 1, message = "size")
+            @Max(value = 100, message = "size")
+            int size
     ) {
-        return ApiResponse.success(
+        return new CommonResponse<>(
+                CommonResponse.SUCCESS_CODE,
                 SUCCESS_MESSAGE,
                 tourSpotService.getTourSpots(keyword, page, size)
         );

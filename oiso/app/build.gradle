@@ -1,0 +1,44 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':user')
+    implementation project(':security')
+    implementation project(':tourdata')
+    implementation project(':tourspot')
+
+    testImplementation project(':common')
+    testImplementation project(':user')
+    testImplementation project(':security')
+    testImplementation project(':tourdata')
+    testImplementation project(':tourspot')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // spring modulith docs
+    testImplementation "org.springframework.modulith:spring-modulith-docs:1.4.0-SNAPSHOT"
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/snapshot" }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+springBoot {
+    mainClass = 'com.nigahae.app.OisoApplication'
+}

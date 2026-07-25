@@ -1,10 +1,10 @@
 package com.nigahae.tourspot.service;
 
-import com.nigahae.common.exception.CustomCommonException;
-import com.nigahae.common.exception.ErrorCode;
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
-import com.nigahae.tourspot.repository.TourSpotRepository;
+import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,20 +29,20 @@ import static org.mockito.Mockito.when;
 class TourSpotServiceTest {
 
     @Mock
-    private TourSpotRepository tourSpotRepository;
+    private TourSpotQueryRepository tourSpotQueryRepository;
 
     private TourSpotService tourSpotService;
 
     @BeforeEach
     void setUp() {
-        tourSpotService = new TourSpotService(tourSpotRepository);
+        tourSpotService = new TourSpotService(tourSpotQueryRepository);
     }
 
     @Test
     @DisplayName("키워드가 없으면 전체 관광지를 페이지 단위로 조회한다")
     void getTourSpotsWithoutKeyword() {
         TourSpot tourSpot = tourSpot(1L, "불국사");
-        when(tourSpotRepository.findAll(any(Pageable.class)))
+        when(tourSpotQueryRepository.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(tourSpot), PageRequest.of(0, 20), 1));
 
         TourSpotListResponse response = tourSpotService.getTourSpots(null, 0, 20);
@@ -59,24 +59,24 @@ class TourSpotServiceTest {
     @DisplayName("앞뒤 공백을 제거한 키워드로 관광지를 검색한다")
     void searchTourSpotsByNormalizedKeyword() {
         TourSpot tourSpot = tourSpot(1L, "불국사");
-        when(tourSpotRepository.searchByKeyword(eq("불국사"), any(Pageable.class)))
+        when(tourSpotQueryRepository.searchByKeyword(eq("불국사"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(tourSpot), PageRequest.of(0, 20), 1));
 
         tourSpotService.getTourSpots("  불국사  ", 0, 20);
 
-        verify(tourSpotRepository).searchByKeyword(eq("불국사"), any(Pageable.class));
+        verify(tourSpotQueryRepository).searchByKeyword(eq("불국사"), any(Pageable.class));
     }
 
     @Test
     @DisplayName("조회된 관광지가 없으면 검색 결과 없음 예외를 던진다")
     void throwExceptionWhenResultIsEmpty() {
-        when(tourSpotRepository.findAll(any(Pageable.class)))
+        when(tourSpotQueryRepository.findAll(any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         assertThatThrownBy(() -> tourSpotService.getTourSpots(null, 0, 20))
-                .isInstanceOf(CustomCommonException.class)
+                .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.SEARCH_RESULT_NOT_FOUND);
+                .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     private TourSpot tourSpot(Long id, String name) {

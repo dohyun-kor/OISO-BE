@@ -1,67 +1,93 @@
 package com.nigahae.common.exception;
 
-import com.nigahae.common.response.ApiResponse;
-import com.nigahae.common.response.ErrorDetail;
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.error.CommonError;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CustomCommonException.class)
-    public ResponseEntity<ApiResponse<Void>> handleCustomCommonException(
-            CustomCommonException exception
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<CommonError> handleBindException(BindException exception) {
+        String message = exception.getBindingResult().getAllErrors().stream()
+                .findFirst()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(this::hasText)
+                .orElse(ErrorCode.VALIDATION_ERROR.getMessage());
+
+        return errorResponse(ErrorCode.VALIDATION_ERROR, message);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<CommonError> handleMethodValidationException(
+            HandlerMethodValidationException exception
     ) {
-        ErrorCode errorCode = exception.getErrorCode();
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(new ApiResponse<>(errorCode.getCode(), errorCode.getMessage(), null));
+        String message = exception.getAllErrors().stream()
+                .findFirst()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(this::hasText)
+                .orElse(ErrorCode.VALIDATION_ERROR.getMessage());
+
+        return errorResponse(ErrorCode.VALIDATION_ERROR, message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiResponse<ErrorDetail>> handleConstraintViolation(
+    public ResponseEntity<CommonError> handleConstraintViolationException(
             ConstraintViolationException exception
     ) {
-        String field = exception.getConstraintViolations().stream()
+        String message = exception.getConstraintViolations().stream()
                 .findFirst()
-                .map(violation -> {
-                    String path = violation.getPropertyPath().toString();
-                    return path.substring(path.lastIndexOf('.') + 1);
-                })
-                .orElse(null);
-        return invalidRequest(field);
+                .map(violation -> violation.getMessage())
+                .filter(this::hasText)
+                .orElse(ErrorCode.VALIDATION_ERROR.getMessage());
+
+        return errorResponse(ErrorCode.VALIDATION_ERROR, message);
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<ErrorDetail>> handleTypeMismatch(
-            MethodArgumentTypeMismatchException exception
-    ) {
-        return invalidRequest(exception.getName());
+    @ExceptionHandler({
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<CommonError> handleInvalidRequest(Exception exception) {
+        return errorResponse(ErrorCode.VALIDATION_ERROR);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<ErrorDetail>> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException exception
-    ) {
-        String field = exception.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(error -> error.getField())
-                .orElse(null);
-        return invalidRequest(field);
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<CommonError> handleCustomException(CustomException exception) {
+        return errorResponse(exception.getErrorCode());
     }
 
-    private ResponseEntity<ApiResponse<ErrorDetail>> invalidRequest(String field) {
-        ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CommonError> handleUnexpectedException(Exception exception) {
+        log.error("Unhandled exception", exception);
+        return errorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<CommonError> errorResponse(ErrorCode errorCode) {
+        return errorResponse(errorCode, errorCode.getMessage());
+    }
+
+    private ResponseEntity<CommonError> errorResponse(ErrorCode errorCode, String message) {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(new ApiResponse<>(
-                        errorCode.getCode(),
-                        errorCode.getMessage(),
-                        new ErrorDetail(field)
-                ));
+                .body(CommonError.from(errorCode, message));
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

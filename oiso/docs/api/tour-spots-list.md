@@ -96,14 +96,14 @@ GET /tour-spots?keyword=불국사&page=0&size=20
 ### 검색 결과가 없는 경우
 
 - HTTP Status: `404 Not Found`
-- API Code: `4004`
+- API Code: `3001`
 
 요청한 페이지에 데이터가 없거나 키워드 검색 결과가 없을 때 반환합니다.
 
 ```json
 {
-  "code": 4004,
-  "message": "검색 결과가 존재하지 않습니다.",
+  "code": 3001,
+  "message": "요청한 리소스를 찾을 수 없습니다.",
   "data": null
 }
 ```
@@ -111,34 +111,30 @@ GET /tour-spots?keyword=불국사&page=0&size=20
 ### 잘못된 페이지 요청
 
 - HTTP Status: `400 Bad Request`
-- API Code: `4000`
+- API Code: `1001`
 
 `page`가 음수이거나 정수가 아닌 경우 반환합니다.
 
 ```json
 {
-  "code": 4000,
-  "message": "잘못된 요청입니다.",
-  "data": {
-    "field": "page"
-  }
+  "code": 1001,
+  "message": "page",
+  "data": null
 }
 ```
 
 ### 잘못된 페이지 크기 요청
 
 - HTTP Status: `400 Bad Request`
-- API Code: `4000`
+- API Code: `1001`
 
 `size`가 1보다 작거나 100보다 큰 경우, 또는 정수가 아닌 경우 반환합니다.
 
 ```json
 {
-  "code": 4000,
-  "message": "잘못된 요청입니다.",
-  "data": {
-    "field": "size"
-  }
+  "code": 1001,
+  "message": "size",
+  "data": null
 }
 ```
 
