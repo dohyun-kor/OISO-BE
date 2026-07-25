@@ -2,21 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/oiso.iml" filepath="$PROJECT_DIR$/.idea/modules/oiso.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/api/oiso.api.iml" filepath="$PROJECT_DIR$/.idea/modules/api/oiso.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/api/oiso.api.main.iml" filepath="$PROJECT_DIR$/.idea/modules/api/oiso.api.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/api/oiso.api.test.iml" filepath="$PROJECT_DIR$/.idea/modules/api/oiso.api.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/oiso.common.iml" filepath="$PROJECT_DIR$/.idea/modules/common/oiso.common.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/oiso.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/oiso.common.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/oiso.common.test.iml" filepath="$PROJECT_DIR$/.idea/modules/common/oiso.common.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/oiso.main.iml" filepath="$PROJECT_DIR$/.idea/modules/oiso.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/oiso.test.iml" filepath="$PROJECT_DIR$/.idea/modules/oiso.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.iml" filepath="$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.main.iml" filepath="$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.test.iml" filepath="$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/user/oiso.user.iml" filepath="$PROJECT_DIR$/.idea/modules/user/oiso.user.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tourspot/oiso.tourspot.main.iml" filepath="$PROJECT_DIR$/.idea/modules/tourspot/oiso.tourspot.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/user/oiso.user.main.iml" filepath="$PROJECT_DIR$/.idea/modules/user/oiso.user.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/user/oiso.user.test.iml" filepath="$PROJECT_DIR$/.idea/modules/user/oiso.user.test.iml" />
     </modules>
   </component>
 </project>

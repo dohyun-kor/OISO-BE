@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
@@ -9,6 +10,8 @@
         </processorPath>
         <module name="oiso.user.main" />
         <module name="oiso.api.main" />
+        <module name="oiso.tourspot.main" />
+        <module name="oiso.common.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17">
@@ -18,6 +21,19 @@
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-parameters" />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="oiso.api" options="-parameters" />
+      <module name="oiso.api.main" options="-parameters" />
+      <module name="oiso.api.test" options="-parameters" />
+      <module name="oiso.common" options="-parameters" />
+      <module name="oiso.common.main" options="-parameters" />
+      <module name="oiso.common.test" options="-parameters" />
+      <module name="oiso.tourspot" options="-parameters" />
+      <module name="oiso.tourspot.main" options="-parameters" />
+      <module name="oiso.tourspot.test" options="-parameters" />
+      <module name="oiso.user" options="-parameters" />
+      <module name="oiso.user.main" options="-parameters" />
+      <module name="oiso.user.test" options="-parameters" />
+    </option>
   </component>
 </project>
