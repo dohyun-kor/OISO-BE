@@ -286,8 +286,8 @@ CREATE TABLE IF NOT EXISTS public."User"
     transportation_mode    int8 NULL,
     "language"             int8 NULL,
     nickname               varchar NULL,
-    "Field"                varchar(255) NULL,
-    "Field2"               varchar(255) NULL,
+    latitude               varchar(255) NULL,
+    longitude              varchar(255) NULL,
     CONSTRAINT "PK_USER" PRIMARY KEY (user_id)
 );
 

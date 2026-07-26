@@ -23,6 +23,12 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "요청한 리소스를 찾을 수 없습니다."
     ),
+    USER_NOT_FOUND(
+            ErrorCategory.RESOURCE,
+            ErrorDomain.USER,
+            HttpStatus.NOT_FOUND,
+            "존재하지 않는 사용자입니다."
+    ),
     AUTH_ERROR(
             ErrorCategory.AUTH,
             ErrorDomain.COMMON,
