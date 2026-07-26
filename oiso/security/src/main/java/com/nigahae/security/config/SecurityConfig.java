@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/actuator/health",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
                                 "/login/**",
