@@ -25,9 +25,16 @@ class ErrorCodeTest {
     }
 
     @Test
+    void userNotFoundUsesUserDomainNumber() {
+        assertThat(ErrorCode.USER_NOT_FOUND.getCode()).isEqualTo(3003);
+        assertThat(ErrorCode.USER_NOT_FOUND.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     void categoryBuildsCodeFromDomainNumber() {
         assertThat(ErrorCategory.VALIDATION.codeFor(ErrorDomain.COMMON)).isEqualTo(1001);
         assertThat(ErrorCategory.AUTH.codeFor(ErrorDomain.SECURITY)).isEqualTo(4002);
+        assertThat(ErrorCategory.RESOURCE.codeFor(ErrorDomain.USER)).isEqualTo(3003);
         assertThat(ErrorCategory.SERVER.codeFor(ErrorDomain.COMMON)).isEqualTo(5001);
     }
 }

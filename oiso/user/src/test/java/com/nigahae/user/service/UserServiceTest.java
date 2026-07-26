@@ -1,13 +1,23 @@
 package com.nigahae.user.service;
 
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.user.AuthenticatedUser;
+import com.nigahae.user.controller.dto.UserPreferencesRequest;
+import com.nigahae.user.controller.dto.UserPreferencesResponse;
 import com.nigahae.user.domain.User;
+import com.nigahae.user.domain.preference.PreferredTravelTheme;
+import com.nigahae.user.domain.preference.TransportationMode;
+import com.nigahae.user.domain.preference.TravelCompanion;
+import com.nigahae.user.domain.preference.TravelTime;
 import com.nigahae.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest {
@@ -33,5 +43,84 @@ class UserServiceTest {
         assertThat(result).isEqualTo(new AuthenticatedUser(7L, "변경"));
         assertThat(existing.getEmail()).isEqualTo("new@example.com");
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updatesPreferencesUsingFixedDatabaseCodes() {
+        User existing = User.builder().userId(7L).build();
+        UserPreferencesRequest request = new UserPreferencesRequest(
+                true,
+                TravelTime.ONE_DAY,
+                TravelCompanion.PARTNER,
+                PreferredTravelTheme.HISTORY_CULTURE,
+                TransportationMode.WALK_PUBLIC_TRANSIT,
+                new BigDecimal("35.856200"),
+                new BigDecimal("129.224700")
+        );
+        when(repository.findById(7L)).thenReturn(Optional.of(existing));
+
+        UserPreferencesResponse response = service.updatePreferences(7L, request);
+
+        assertThat(existing.getHasTravelPlan()).isTrue();
+        assertThat(existing.getTravelTime()).isEqualTo(2L);
+        assertThat(existing.getTravelCompanion()).isEqualTo(2L);
+        assertThat(existing.getPreferredTravelTheme()).isEqualTo(1L);
+        assertThat(existing.getTransportationMode()).isEqualTo(1L);
+        assertThat(existing.getLatitude()).isEqualTo("35.8562");
+        assertThat(existing.getLongitude()).isEqualTo("129.2247");
+        assertThat(response.travelTime()).isEqualTo(TravelTime.ONE_DAY);
+        assertThat(response.travelCompanion()).isEqualTo(TravelCompanion.PARTNER);
+        assertThat(response.preferredTravelTheme()).isEqualTo(PreferredTravelTheme.HISTORY_CULTURE);
+        assertThat(response.transportationMode()).isEqualTo(TransportationMode.WALK_PUBLIC_TRANSIT);
+        assertThat(response.latitude()).isEqualByComparingTo("35.8562");
+        assertThat(response.longitude()).isEqualByComparingTo("129.2247");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void clearsOptionalPreferenceValuesWhenTheyAreNull() {
+        User existing = User.builder()
+                .userId(7L)
+                .preferredTravelTheme(3L)
+                .latitude("35.1")
+                .longitude("129.1")
+                .build();
+        UserPreferencesRequest request = new UserPreferencesRequest(
+                false,
+                TravelTime.HALF_DAY,
+                TravelCompanion.ALONE,
+                null,
+                TransportationMode.CAR,
+                null,
+                null
+        );
+        when(repository.findById(7L)).thenReturn(Optional.of(existing));
+
+        UserPreferencesResponse response = service.updatePreferences(7L, request);
+
+        assertThat(existing.getPreferredTravelTheme()).isNull();
+        assertThat(existing.getLatitude()).isNull();
+        assertThat(existing.getLongitude()).isNull();
+        assertThat(response.preferredTravelTheme()).isNull();
+        assertThat(response.latitude()).isNull();
+        assertThat(response.longitude()).isNull();
+    }
+
+    @Test
+    void rejectsPreferenceUpdateForUnknownUser() {
+        UserPreferencesRequest request = new UserPreferencesRequest(
+                true,
+                TravelTime.ONE_DAY,
+                TravelCompanion.FRIENDS,
+                null,
+                TransportationMode.BICYCLE,
+                null,
+                null
+        );
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updatePreferences(99L, request))
+                .isInstanceOfSatisfying(CustomException.class,
+                        exception -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND));
     }
 }

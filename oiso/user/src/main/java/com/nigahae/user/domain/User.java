@@ -1,7 +1,13 @@
 package com.nigahae.user.domain;
 
+import com.nigahae.user.domain.preference.PreferredTravelTheme;
+import com.nigahae.user.domain.preference.TransportationMode;
+import com.nigahae.user.domain.preference.TravelCompanion;
+import com.nigahae.user.domain.preference.TravelTime;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @Getter
@@ -61,5 +67,27 @@ public class User {
         this.nickname = nickname;
         this.email = email;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updatePreferences(
+            boolean hasTravelPlan,
+            TravelTime travelTime,
+            TravelCompanion travelCompanion,
+            PreferredTravelTheme preferredTravelTheme,
+            TransportationMode transportationMode,
+            BigDecimal latitude,
+            BigDecimal longitude
+    ) {
+        this.hasTravelPlan = hasTravelPlan;
+        this.travelTime = travelTime.code();
+        this.travelCompanion = travelCompanion.code();
+        this.preferredTravelTheme = preferredTravelTheme == null ? null : preferredTravelTheme.code();
+        this.transportationMode = transportationMode.code();
+        this.latitude = coordinateToString(latitude);
+        this.longitude = coordinateToString(longitude);
+    }
+
+    private String coordinateToString(BigDecimal coordinate) {
+        return coordinate == null ? null : coordinate.stripTrailingZeros().toPlainString();
     }
 }
