@@ -3,7 +3,9 @@ package com.nigahae.tourspot.service;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
+import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +39,28 @@ class TourSpotServiceTest {
     @BeforeEach
     void setUp() {
         tourSpotService = new TourSpotService(tourSpotQueryRepository);
+    }
+
+    @Test
+    @DisplayName("관광지 ID로 상세 정보를 조회한다")
+    void getTourSpot() {
+        TourSpot tourSpot = tourSpot(1L, "불국사");
+        when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
+
+        TourSpotDetailResponse response = tourSpotService.getTourSpot(1L);
+
+        assertThat(response.tourSpot().spotId()).isEqualTo(1L);
+        assertThat(response.tourSpot().name()).isEqualTo("불국사");
+        assertThat(response.tourSpot().like()).isFalse();
+    }
+
+    @Test
+    @DisplayName("관광지가 존재하지 않으면 상세 조회 예외를 던진다")
+    void throwExceptionWhenTourSpotDoesNotExist() {
+        when(tourSpotQueryRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tourSpotService.getTourSpot(999L))
+                .isInstanceOf(TourSpotNotFoundException.class);
     }
 
     @Test

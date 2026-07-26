@@ -31,9 +31,39 @@ public class TourSpot {
     @Column(name = "img", length = 2048)
     private String img;
 
+    @Column(name = "content", columnDefinition = "text")
+    private String content;
+
+    @Column(name = "can_parking")
+    private Boolean canParking;
+
+    @Column(name = "can_pet")
+    private Boolean canPet;
+
+    @Column(name = "crowd_level")
+    private Integer crowdLevel;
+
     @Column(name = "overview", columnDefinition = "text")
     private String overview;
 
     @Column(name = "address", columnDefinition = "text")
     private String address;
+
+    @Column(name = "homepage", columnDefinition = "text")
+    private String homepage;
+
+    @Column(name = "map_x")
+    private Double mapX;
+
+    @Column(name = "map_y")
+    private Double mapY;
+
+    @Column(name = "content_id")
+    private Long contentId;
+
+    @Column(name = "content_type_id")
+    private Long contentTypeId;
+
+    @Column(name = "tel")
+    private String tel;
 }

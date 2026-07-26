@@ -3,8 +3,10 @@ package com.nigahae.tourspot.service;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
+import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
+import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,13 @@ import java.util.List;
 public class TourSpotService {
 
     private final TourSpotQueryRepository tourSpotQueryRepository;
+
+    public TourSpotDetailResponse getTourSpot(Long spotId) {
+        TourSpot tourSpot = tourSpotQueryRepository.findById(spotId)
+                .orElseThrow(() -> new TourSpotNotFoundException(spotId));
+
+        return TourSpotDetailResponse.from(tourSpot);
+    }
 
     public TourSpotListResponse getTourSpots(String keyword, int page, int size) {
         PageRequest pageRequest = PageRequest.of(
