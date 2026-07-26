@@ -30,4 +30,15 @@ class SecurityConfigTest {
         assertThat(configuration).isNotNull();
         assertThat(configuration.getAllowedMethods()).contains("PATCH");
     }
+
+    @Test
+    void festivalListMatcherAllowsOnlyGetOnExactPath() {
+        MockHttpServletRequest getFestival = new MockHttpServletRequest("GET", "/api/v1/event");
+        MockHttpServletRequest postFestival = new MockHttpServletRequest("POST", "/api/v1/event");
+        MockHttpServletRequest getOtherPath = new MockHttpServletRequest("GET", "/api/v1/event/1");
+
+        assertThat(SecurityConfig.festivalListRequestMatcher().matches(getFestival)).isTrue();
+        assertThat(SecurityConfig.festivalListRequestMatcher().matches(postFestival)).isFalse();
+        assertThat(SecurityConfig.festivalListRequestMatcher().matches(getOtherPath)).isFalse();
+    }
 }
