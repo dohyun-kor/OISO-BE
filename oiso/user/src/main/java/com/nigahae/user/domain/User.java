@@ -36,13 +36,13 @@ public class User {
     @Column(name = "language")
     private Long language;
 
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     private String provider;
 
-    @Column(name = "provider_user_id", nullable = false, length = 100)
+    @Column(name = "provider_user_id", length = 100)
     private String providerUserId;
 
-    @Column(nullable = false, length = 100)
+    @Column
     private String nickname;
 
     @Column(length = 320)
@@ -51,11 +51,11 @@ public class User {
     @Column(name = "profile_image_url", length = 2048)
     private String profileImageUrl;
 
-    @Column(name = "\"Field\"", length = 255)
-    private String field;
+    @Column(name = "latitude", length = 255)
+    private String latitude;
 
-    @Column(name = "\"Field2\"", length = 255)
-    private String field2;
+    @Column(name = "longitude", length = 255)
+    private String longitude;
 
     public void updateProfile(String nickname, String email, String profileImageUrl) {
         this.nickname = nickname;
