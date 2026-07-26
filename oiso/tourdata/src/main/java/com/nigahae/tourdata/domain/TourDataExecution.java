@@ -27,6 +27,10 @@ public class TourDataExecution {
     @Column(name = "status", nullable = false, length = 20)
     private TourDataStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "job_type", nullable = false, length = 30)
+    private TourDataJobType jobType;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
 
@@ -37,6 +41,9 @@ public class TourDataExecution {
     @Column(name = "processed_count", nullable = false)
     private int processedCount;
 
+    @Column(name = "failed_count", nullable = false)
+    private int failedCount;
+
     @Lob
     @Column(name = "failure_message")
     private String failureMessage;
@@ -44,24 +51,36 @@ public class TourDataExecution {
     protected TourDataExecution() {
     }
 
-    private TourDataExecution(LocalDateTime startedAt) {
+    private TourDataExecution(TourDataJobType jobType, LocalDateTime startedAt) {
+        this.jobType = jobType;
         this.status = TourDataStatus.RUNNING;
         this.startedAt = startedAt;
         this.processedCount = 0;
+        this.failedCount = 0;
     }
 
-    public static TourDataExecution started(LocalDateTime startedAt) {
-        return new TourDataExecution(startedAt);
+    public static TourDataExecution started(TourDataJobType jobType, LocalDateTime startedAt) {
+        return new TourDataExecution(jobType, startedAt);
     }
 
     public void succeed(int processedCount, LocalDateTime finishedAt) {
         this.status = TourDataStatus.SUCCESS;
         this.processedCount = processedCount;
+        this.failedCount = 0;
         this.finishedAt = finishedAt;
     }
 
-    public void fail(String failureMessage, LocalDateTime finishedAt) {
+    public void partialSuccess(int processedCount, int failedCount, String failureMessage, LocalDateTime finishedAt) {
+        this.status = TourDataStatus.PARTIAL_SUCCESS;
+        this.processedCount = processedCount;
+        this.failedCount = failedCount;
+        this.failureMessage = failureMessage;
+        this.finishedAt = finishedAt;
+    }
+
+    public void fail(int failedCount, String failureMessage, LocalDateTime finishedAt) {
         this.status = TourDataStatus.FAILED;
+        this.failedCount = failedCount;
         this.failureMessage = failureMessage;
         this.finishedAt = finishedAt;
     }

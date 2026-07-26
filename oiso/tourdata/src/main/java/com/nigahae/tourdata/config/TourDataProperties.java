@@ -20,6 +20,7 @@ public class TourDataProperties {
     public static class Api {
         private String baseUrl = "http://apis.data.go.kr";
         private String operationPath = "/B551011/KorService2/areaBasedList2";
+        private String festivalOperationPath = "/B551011/KorService2/searchFestival2";
         private String detailCommonOperationPath = "/B551011/KorService2/detailCommon2";
         private String detailInfoOperationPath = "/B551011/KorService2/detailInfo2";
         private String serviceKey = "";
@@ -38,7 +39,9 @@ public class TourDataProperties {
     @Getter
     @Setter
     public static class Schedule {
-        private String cron = "0 0 3 * * *";
-
+        private String tourSpotsCron = "0 0 3 * * *";
+        private String festivalsCron = "0 10 3 * * *";
+        private String commonDetailsCron = "0 30 3 * * *";
+        private String accommodationsCron = "0 0 5 * * *";
     }
 }
