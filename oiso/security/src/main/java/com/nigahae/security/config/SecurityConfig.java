@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(festivalReadRequestMatcher()).permitAll()
                         .requestMatchers(
                                 "/actuator/health",
+                                "/api/auth/dev-login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
                                 "/login/**",
