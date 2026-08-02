@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,6 +26,8 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private static final String FESTIVAL_API_PATH = "/api/v1/event";
+
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2LoginSuccessHandler successHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -36,6 +40,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(festivalReadRequestMatcher()).permitAll()
                         .requestMatchers(
                                 "/actuator/health",
                                 "/api/auth/refresh",
@@ -56,6 +61,24 @@ public class SecurityConfig {
                         .successHandler(successHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    static RequestMatcher festivalReadRequestMatcher() {
+        return request -> {
+            if (!HttpMethod.GET.matches(request.getMethod())) {
+                return false;
+            }
+
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (FESTIVAL_API_PATH.equals(path)) {
+                return true;
+            }
+
+            int detailIdStart = FESTIVAL_API_PATH.length() + 1;
+            return path.startsWith(FESTIVAL_API_PATH + "/")
+                    && path.length() > detailIdStart
+                    && path.indexOf('/', detailIdStart) == -1;
+        };
     }
 
     @Bean
