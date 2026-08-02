@@ -1,14 +1,17 @@
 package com.nigahae.tourdata.controller;
 
 import com.nigahae.common.response.CommonResponse;
+import com.nigahae.tourdata.controller.dto.FestivalDetailResponse;
 import com.nigahae.tourdata.controller.dto.FestivalResponse;
 import com.nigahae.tourdata.service.FestivalQueryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,5 +38,22 @@ public class FestivalController {
     })
     public CommonResponse<List<FestivalResponse>> getFestivals() {
         return CommonResponse.success(festivalQueryService.getAvailableFestivals());
+    }
+
+    @GetMapping("/{spotId}")
+    @Operation(
+            summary = "단일 축제 상세 조회",
+            description = "경로 변수로 전달한 spotId에 해당하는 축제 상세 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "축제 상세 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "spotId 형식 오류"),
+            @ApiResponse(responseCode = "404", description = "해당 spotId의 축제가 존재하지 않음")
+    })
+    public CommonResponse<FestivalDetailResponse> getFestivalDetail(
+            @Parameter(description = "축제 식별자", example = "300", required = true)
+            @PathVariable Long spotId
+    ) {
+        return CommonResponse.success(festivalQueryService.getFestivalDetail(spotId));
     }
 }

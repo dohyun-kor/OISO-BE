@@ -32,13 +32,17 @@ class SecurityConfigTest {
     }
 
     @Test
-    void festivalListMatcherAllowsOnlyGetOnExactPath() {
+    void festivalReadMatcherAllowsOnlyGetOnCollectionAndSingleResourcePaths() {
         MockHttpServletRequest getFestival = new MockHttpServletRequest("GET", "/api/v1/event");
+        MockHttpServletRequest getFestivalDetail = new MockHttpServletRequest("GET", "/api/v1/event/300");
         MockHttpServletRequest postFestival = new MockHttpServletRequest("POST", "/api/v1/event");
-        MockHttpServletRequest getOtherPath = new MockHttpServletRequest("GET", "/api/v1/event/1");
+        MockHttpServletRequest postFestivalDetail = new MockHttpServletRequest("POST", "/api/v1/event/300");
+        MockHttpServletRequest getNestedPath = new MockHttpServletRequest("GET", "/api/v1/event/300/other");
 
-        assertThat(SecurityConfig.festivalListRequestMatcher().matches(getFestival)).isTrue();
-        assertThat(SecurityConfig.festivalListRequestMatcher().matches(postFestival)).isFalse();
-        assertThat(SecurityConfig.festivalListRequestMatcher().matches(getOtherPath)).isFalse();
+        assertThat(SecurityConfig.festivalReadRequestMatcher().matches(getFestival)).isTrue();
+        assertThat(SecurityConfig.festivalReadRequestMatcher().matches(getFestivalDetail)).isTrue();
+        assertThat(SecurityConfig.festivalReadRequestMatcher().matches(postFestival)).isFalse();
+        assertThat(SecurityConfig.festivalReadRequestMatcher().matches(postFestivalDetail)).isFalse();
+        assertThat(SecurityConfig.festivalReadRequestMatcher().matches(getNestedPath)).isFalse();
     }
 }

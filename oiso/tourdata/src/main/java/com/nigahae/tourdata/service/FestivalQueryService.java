@@ -1,5 +1,8 @@
 package com.nigahae.tourdata.service;
 
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
+import com.nigahae.tourdata.controller.dto.FestivalDetailResponse;
 import com.nigahae.tourdata.controller.dto.FestivalResponse;
 import com.nigahae.tourdata.domain.FestivalInfo;
 import com.nigahae.tourdata.repository.FestivalInfoRepository;
@@ -44,6 +47,12 @@ public class FestivalQueryService {
                 .map(festival -> FestivalResponse.from(festival, today))
                 .sorted(FESTIVAL_ORDER)
                 .toList();
+    }
+
+    public FestivalDetailResponse getFestivalDetail(Long spotId) {
+        return festivalInfoRepository.findById(spotId)
+                .map(FestivalDetailResponse::from)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
     private boolean hasAvailableEventPeriod(FestivalInfo festival, LocalDate today) {

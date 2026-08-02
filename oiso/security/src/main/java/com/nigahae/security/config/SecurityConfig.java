@@ -26,6 +26,8 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private static final String FESTIVAL_API_PATH = "/api/v1/event";
+
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2LoginSuccessHandler successHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -38,7 +40,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(festivalListRequestMatcher()).permitAll()
+                        .requestMatchers(festivalReadRequestMatcher()).permitAll()
                         .requestMatchers(
                                 "/actuator/health",
                                 "/api/auth/refresh",
@@ -61,9 +63,22 @@ public class SecurityConfig {
         return http.build();
     }
 
-    static RequestMatcher festivalListRequestMatcher() {
-        return request -> HttpMethod.GET.matches(request.getMethod())
-                && "/api/v1/event".equals(request.getRequestURI().substring(request.getContextPath().length()));
+    static RequestMatcher festivalReadRequestMatcher() {
+        return request -> {
+            if (!HttpMethod.GET.matches(request.getMethod())) {
+                return false;
+            }
+
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (FESTIVAL_API_PATH.equals(path)) {
+                return true;
+            }
+
+            int detailIdStart = FESTIVAL_API_PATH.length() + 1;
+            return path.startsWith(FESTIVAL_API_PATH + "/")
+                    && path.length() > detailIdStart
+                    && path.indexOf('/', detailIdStart) == -1;
+        };
     }
 
     @Bean

@@ -1,7 +1,10 @@
 package com.nigahae.tourdata.service;
 
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourdata.client.FestivalPayload;
 import com.nigahae.tourdata.client.TourContentPayload;
+import com.nigahae.tourdata.controller.dto.FestivalDetailResponse;
 import com.nigahae.tourdata.controller.dto.FestivalResponse;
 import com.nigahae.tourdata.controller.dto.FestivalStatus;
 import com.nigahae.tourdata.domain.FestivalInfo;
@@ -13,8 +16,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -94,6 +99,56 @@ class FestivalQueryServiceTest {
                 .thenReturn(List.of());
 
         assertThat(festivalQueryService.getAvailableFestivals()).isEmpty();
+    }
+
+    @Test
+    void returnsFestivalDetailBySpotId() {
+        FestivalInfo festival = festival(300L, LocalDate.of(2026, 6, 5), LocalDate.of(2026, 8, 28));
+        festival.updateFromDetail(new TourContentPayload(
+                "300",
+                "15",
+                "2026 Festival",
+                "1",
+                "2",
+                "Gyeongju detail address",
+                "129.2123",
+                "35.8451",
+                "https://example.com/festival.jpg",
+                "Festival overview",
+                "https://festival.example.com",
+                "054-000-0000",
+                "{}"
+        ));
+        when(festivalInfoRepository.findById(300L)).thenReturn(Optional.of(festival));
+
+        FestivalDetailResponse result = festivalQueryService.getFestivalDetail(300L);
+
+        assertThat(result.spotId()).isEqualTo(300L);
+        assertThat(result.name()).isEqualTo("2026 Festival");
+        assertThat(result.img()).isEqualTo("https://example.com/festival.jpg");
+        assertThat(result.address()).isEqualTo("Gyeongju detail address");
+        assertThat(result.overview()).isEqualTo("Festival overview");
+        assertThat(result.homepage()).isEqualTo("https://festival.example.com");
+        assertThat(result.mapX()).isEqualTo(129.2123);
+        assertThat(result.mapY()).isEqualTo(35.8451);
+        assertThat(result.contentId()).isEqualTo(300L);
+        assertThat(result.contentTypeId()).isEqualTo(15L);
+        assertThat(result.tel()).isEqualTo("054-000-0000");
+        assertThat(result.eventStartDate()).isEqualTo(LocalDate.of(2026, 6, 5));
+        assertThat(result.eventEndDate()).isEqualTo(LocalDate.of(2026, 8, 28));
+        verify(festivalInfoRepository).findById(300L);
+    }
+
+    @Test
+    void throwsResourceNotFoundWhenFestivalDoesNotExist() {
+        when(festivalInfoRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> festivalQueryService.getFestivalDetail(999L))
+                .isInstanceOfSatisfying(
+                        CustomException.class,
+                        exception -> assertThat(exception.getErrorCode())
+                                .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND)
+                );
     }
 
     private FestivalInfo festival(Long spotId, LocalDate startDate, LocalDate endDate) {
