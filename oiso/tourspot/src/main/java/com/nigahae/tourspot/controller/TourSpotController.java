@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/tour-spots")
+@RequestMapping("/api/v1/tour-spots")
 public class TourSpotController implements TourSpotControllerDocs {
 
     private static final String SUCCESS_MESSAGE = "관광지 목록 조회에 성공했습니다.";
