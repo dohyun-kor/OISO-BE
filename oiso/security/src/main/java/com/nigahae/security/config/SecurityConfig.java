@@ -15,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,6 +26,8 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private static final String FESTIVAL_API_PATH = "/api/v1/event";
+
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2LoginSuccessHandler successHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -37,8 +40,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/tour-spots", "/tour-spots/**").permitAll()
+                        .requestMatchers(festivalReadRequestMatcher()).permitAll()
                         .requestMatchers(
+                                "/actuator/health",
+                                "/api/auth/dev-login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
                                 "/login/**",
@@ -46,7 +51,8 @@ public class SecurityConfig {
                                 "/error",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/internal/tour-data/**"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception.defaultAuthenticationEntryPointFor(
@@ -58,11 +64,29 @@ public class SecurityConfig {
         return http.build();
     }
 
+    static RequestMatcher festivalReadRequestMatcher() {
+        return request -> {
+            if (!HttpMethod.GET.matches(request.getMethod())) {
+                return false;
+            }
+
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (FESTIVAL_API_PATH.equals(path)) {
+                return true;
+            }
+
+            int detailIdStart = FESTIVAL_API_PATH.length() + 1;
+            return path.startsWith(FESTIVAL_API_PATH + "/")
+                    && path.length() > detailIdStart
+                    && path.indexOf('/', detailIdStart) == -1;
+        };
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(allowedOrigin));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

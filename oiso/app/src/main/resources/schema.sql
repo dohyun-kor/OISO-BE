@@ -173,6 +173,31 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
 );
 
 
+-- public."FestivalInfo" definition
+
+-- Drop table
+
+-- DROP TABLE public."FestivalInfo";
+
+CREATE TABLE IF NOT EXISTS public."FestivalInfo"
+(
+    spot_id          int8 NOT NULL,
+    "name"           varchar NULL,
+    img              varchar NULL,
+    address          varchar NULL,
+    overview         text NULL,
+    homepage         text NULL,
+    map_x            float8 NULL,
+    map_y            float8 NULL,
+    content_id       int8 NULL,
+    content_type_id  int8 NULL,
+    tel              varchar NULL,
+    event_start_date date NULL,
+    event_end_date   date NULL,
+    CONSTRAINT "PK_FestivalInfo" PRIMARY KEY (spot_id)
+);
+
+
 -- public."TourSpot" definition
 
 -- Drop table
@@ -199,6 +224,32 @@ CREATE TABLE IF NOT EXISTS public."TourSpot"
     CONSTRAINT "PK_TOURSPOT" PRIMARY KEY (spot_id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_spot_content_id ON public."TourSpot" USING btree (content_id) WHERE (content_id IS NOT NULL);
+
+
+-- public."UserSavedTourSpot" definition
+
+CREATE TABLE IF NOT EXISTS public."UserSavedTourSpot"
+(
+    user_id  int8        NOT NULL,
+    spot_id  int8        NOT NULL,
+    saved_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS "IDX_USER_SAVED_TOUR_SPOT_USER_SAVED_AT"
+    ON public."UserSavedTourSpot" USING btree (user_id, saved_at DESC);
+
+
+-- public."UserSavedTourStory" definition
+
+CREATE TABLE IF NOT EXISTS public."UserSavedTourStory"
+(
+    user_id  int8        NOT NULL,
+    story_id int8        NOT NULL,
+    saved_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS "IDX_USER_SAVED_TOUR_STORY_USER_SAVED_AT"
+    ON public."UserSavedTourStory" USING btree (user_id, saved_at DESC);
 
 
 -- public."TourSpotNearbyPlace" definition
@@ -261,8 +312,8 @@ CREATE TABLE IF NOT EXISTS public."User"
     transportation_mode    int8 NULL,
     "language"             int8 NULL,
     nickname               varchar NULL,
-    "Field"                varchar(255) NULL,
-    "Field2"               varchar(255) NULL,
+    latitude               varchar(255) NULL,
+    longitude              varchar(255) NULL,
     CONSTRAINT "PK_USER" PRIMARY KEY (user_id)
 );
 
@@ -288,10 +339,17 @@ SELECT setval('public.user_id_seq', COALESCE((SELECT MAX(user_id) FROM public."U
 CREATE TABLE IF NOT EXISTS public.tour_ingest_execution
 (
     id              bigserial   NOT NULL,
+    job_type        varchar(30) NOT NULL,
     status          varchar(20) NOT NULL,
     started_at      timestamp   NOT NULL,
     finished_at     timestamp NULL,
     processed_count int4        NOT NULL,
+    failed_count    int4        NOT NULL,
     failure_message text NULL,
     CONSTRAINT tour_ingest_execution_pkey PRIMARY KEY (id)
 );
+
+ALTER TABLE public.tour_ingest_execution ADD COLUMN IF NOT EXISTS job_type varchar(30);
+UPDATE public.tour_ingest_execution SET job_type = 'LEGACY_FULL_REFRESH' WHERE job_type IS NULL;
+ALTER TABLE public.tour_ingest_execution ALTER COLUMN job_type SET NOT NULL;
+ALTER TABLE public.tour_ingest_execution ADD COLUMN IF NOT EXISTS failed_count int4 NOT NULL DEFAULT 0;
