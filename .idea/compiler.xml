@@ -8,10 +8,11 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.46/a5cfe99fdf320e84955ef653f2ce1bf789d11385/lombok-1.18.46.jar" />
         </processorPath>
+        <module name="oiso.tourcourse.main" />
+        <module name="oiso.tourspot.main" />
         <module name="oiso.app.main" />
         <module name="oiso.user.main" />
         <module name="oiso.security.main" />
-        <module name="oiso.tourspot.main" />
         <module name="oiso.common.main" />
         <module name="oiso.tourdata.main" />
       </profile>
@@ -28,6 +29,9 @@
       <module name="oiso.security" options="-parameters" />
       <module name="oiso.security.main" options="-parameters" />
       <module name="oiso.security.test" options="-parameters" />
+      <module name="oiso.tourcourse" options="-parameters" />
+      <module name="oiso.tourcourse.main" options="-parameters" />
+      <module name="oiso.tourcourse.test" options="-parameters" />
       <module name="oiso.tourdata" options="-parameters" />
       <module name="oiso.tourdata.main" options="-parameters" />
       <module name="oiso.tourdata.test" options="-parameters" />

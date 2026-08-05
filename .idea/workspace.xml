@@ -5,16 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5f23ada-6f61-41da-86e3-82bc8d3b65f6" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/app/oiso.app.main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/security/oiso.security.main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/tourcourse/oiso.tourcourse.main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/tourdata/oiso.tourdata.main.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/TourSpotController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/TourSpotController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/domain/TourSpot.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/domain/TourSpot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/service/TourSpotService.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/service/TourSpotService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/test/java/com/nigahae/tourspot/service/TourSpotServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/test/java/com/nigahae/tourspot/service/TourSpotServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oiso/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oiso/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/settings.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -192,6 +192,7 @@
       <workItem from="1784965727614" duration="3317000" />
       <workItem from="1784969102859" duration="924000" />
       <workItem from="1785045956127" duration="3101000" />
+      <workItem from="1785916735865" duration="3602000" />
     </task>
     <servers />
   </component>

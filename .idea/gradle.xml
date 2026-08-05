@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/oiso/app" />
             <option value="$PROJECT_DIR$/oiso/common" />
             <option value="$PROJECT_DIR$/oiso/security" />
+            <option value="$PROJECT_DIR$/oiso/tourcourse" />
             <option value="$PROJECT_DIR$/oiso/tourdata" />
             <option value="$PROJECT_DIR$/oiso/tourspot" />
             <option value="$PROJECT_DIR$/oiso/user" />
