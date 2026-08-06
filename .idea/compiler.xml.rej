@@ -1,9 +1,0 @@
-diff a/.idea/compiler.xml b/.idea/compiler.xml	(rejected hunks)
-@@ -9,6 +9,7 @@
-         </processorPath>
-         <module name="oiso.user.main" />
-         <module name="oiso.api.main" />
-+        <module name="oiso.tourdata.main" />
-       </profile>
-     </annotationProcessing>
-   </component>
