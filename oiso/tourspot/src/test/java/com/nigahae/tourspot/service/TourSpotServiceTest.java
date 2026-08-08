@@ -69,6 +69,30 @@ class TourSpotServiceTest {
     }
 
     @Test
+    @DisplayName("관광지를 사용자 저장 목록에서 삭제한다")
+    void deleteSavedTourSpot() {
+        when(tourSpotQueryRepository.existsById(1L)).thenReturn(true);
+
+        var response = tourSpotService.deleteSavedTourSpot(7L, 1L);
+
+        assertThat(response.spotId()).isEqualTo(1L);
+        assertThat(response.like()).isFalse();
+        verify(userSavedTourSpotRepository).delete(7L, 1L);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관광지는 저장 목록에서 삭제하지 않는다")
+    void doesNotDeleteMissingTourSpot() {
+        when(tourSpotQueryRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> tourSpotService.deleteSavedTourSpot(7L, 999L))
+                .isInstanceOf(TourSpotNotFoundException.class);
+
+        verify(userSavedTourSpotRepository, org.mockito.Mockito.never())
+                .delete(7L, 999L);
+    }
+
+    @Test
     @DisplayName("관광지 ID로 상세 정보를 조회한다")
     void getTourSpot() {
         TourSpot tourSpot = tourSpot(1L, "불국사");

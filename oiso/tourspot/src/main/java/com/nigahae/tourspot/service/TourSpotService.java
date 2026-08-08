@@ -3,6 +3,7 @@ package com.nigahae.tourspot.service;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
+import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
@@ -29,12 +30,18 @@ public class TourSpotService {
 
     @Transactional
     public SaveTourSpotResponse saveTourSpot(Long userId, Long spotId) {
-        if (!tourSpotQueryRepository.existsById(spotId)) {
-            throw new TourSpotNotFoundException(spotId);
-        }
+        validateTourSpotExists(spotId);
 
         userSavedTourSpotRepository.saveIfAbsent(userId, spotId);
         return new SaveTourSpotResponse(spotId, true);
+    }
+
+    @Transactional
+    public DeleteSavedTourSpotResponse deleteSavedTourSpot(Long userId, Long spotId) {
+        validateTourSpotExists(spotId);
+
+        userSavedTourSpotRepository.delete(userId, spotId);
+        return new DeleteSavedTourSpotResponse(spotId, false);
     }
 
     public TourSpotDetailResponse getTourSpot(Long spotId) {
@@ -70,5 +77,11 @@ public class TourSpotService {
                 result.getSize(),
                 result.getTotalElements()
         );
+    }
+
+    private void validateTourSpotExists(Long spotId) {
+        if (!tourSpotQueryRepository.existsById(spotId)) {
+            throw new TourSpotNotFoundException(spotId);
+        }
     }
 }
