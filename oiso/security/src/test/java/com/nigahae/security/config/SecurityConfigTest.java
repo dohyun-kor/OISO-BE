@@ -45,4 +45,19 @@ class SecurityConfigTest {
         assertThat(SecurityConfig.festivalReadRequestMatcher().matches(postFestivalDetail)).isFalse();
         assertThat(SecurityConfig.festivalReadRequestMatcher().matches(getNestedPath)).isFalse();
     }
+
+    @Test
+    void tourSpotReadMatcherAllowsOnlyGetOnCollectionAndSingleResourcePaths() {
+        MockHttpServletRequest getTourSpots = new MockHttpServletRequest("GET", "/api/v1/tour-spots");
+        MockHttpServletRequest getTourSpotDetail = new MockHttpServletRequest("GET", "/api/v1/tour-spots/300");
+        MockHttpServletRequest postTourSpot = new MockHttpServletRequest("POST", "/api/v1/tour-spots");
+        MockHttpServletRequest postTourSpotDetail = new MockHttpServletRequest("POST", "/api/v1/tour-spots/300");
+        MockHttpServletRequest getNestedPath = new MockHttpServletRequest("GET", "/api/v1/tour-spots/300/other");
+
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getTourSpots)).isTrue();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getTourSpotDetail)).isTrue();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(postTourSpot)).isFalse();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(postTourSpotDetail)).isFalse();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getNestedPath)).isFalse();
+    }
 }

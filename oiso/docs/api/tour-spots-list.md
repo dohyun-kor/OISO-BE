@@ -6,7 +6,7 @@
 ## Endpoint
 
 ```http
-GET /tour-spots
+GET /api/v1/tour-spots
 ```
 
 ## Query Parameter
@@ -27,13 +27,13 @@ Request Body는 없습니다.
 ### 전체 목록 요청
 
 ```http
-GET /tour-spots?page=0&size=20
+GET /api/v1/tour-spots?page=0&size=20
 ```
 
 ### 키워드 검색 요청
 
 ```http
-GET /tour-spots?keyword=불국사&page=0&size=20
+GET /api/v1/tour-spots?keyword=불국사&page=0&size=20
 ```
 
 ## Success Response

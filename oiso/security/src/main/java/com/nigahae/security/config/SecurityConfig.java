@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private static final String FESTIVAL_API_PATH = "/api/v1/event";
+    private static final String TOUR_SPOT_API_PATH = "/api/v1/tour-spots";
 
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2LoginSuccessHandler successHandler;
@@ -41,6 +42,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(festivalReadRequestMatcher()).permitAll()
+                        .requestMatchers(tourSpotReadRequestMatcher()).permitAll()
                         .requestMatchers(
                                 "/actuator/health",
                                 "/api/auth/dev-login",
@@ -65,18 +67,26 @@ public class SecurityConfig {
     }
 
     static RequestMatcher festivalReadRequestMatcher() {
+        return collectionAndDetailGetRequestMatcher(FESTIVAL_API_PATH);
+    }
+
+    static RequestMatcher tourSpotReadRequestMatcher() {
+        return collectionAndDetailGetRequestMatcher(TOUR_SPOT_API_PATH);
+    }
+
+    private static RequestMatcher collectionAndDetailGetRequestMatcher(String apiPath) {
         return request -> {
             if (!HttpMethod.GET.matches(request.getMethod())) {
                 return false;
             }
 
             String path = request.getRequestURI().substring(request.getContextPath().length());
-            if (FESTIVAL_API_PATH.equals(path)) {
+            if (apiPath.equals(path)) {
                 return true;
             }
 
-            int detailIdStart = FESTIVAL_API_PATH.length() + 1;
-            return path.startsWith(FESTIVAL_API_PATH + "/")
+            int detailIdStart = apiPath.length() + 1;
+            return path.startsWith(apiPath + "/")
                     && path.length() > detailIdStart
                     && path.indexOf('/', detailIdStart) == -1;
         };
