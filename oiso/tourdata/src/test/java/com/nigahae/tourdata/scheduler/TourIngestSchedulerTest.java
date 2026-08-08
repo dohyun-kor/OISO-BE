@@ -17,7 +17,6 @@ class TourIngestSchedulerTest {
         for (TourDataJobType jobType : new TourDataJobType[]{
                 TourDataJobType.TOUR_SPOTS,
                 TourDataJobType.FESTIVALS,
-                TourDataJobType.COMMON_DETAILS,
                 TourDataJobType.ACCOMMODATIONS
         }) {
             when(runner.run(jobType, "schedule")).thenReturn(TourDataResult.success(1));
@@ -26,12 +25,10 @@ class TourIngestSchedulerTest {
 
         scheduler.refreshTourSpots();
         scheduler.refreshFestivals();
-        scheduler.refreshCommonDetails();
         scheduler.refreshAccommodations();
 
         verify(runner).run(TourDataJobType.TOUR_SPOTS, "schedule");
         verify(runner).run(TourDataJobType.FESTIVALS, "schedule");
-        verify(runner).run(TourDataJobType.COMMON_DETAILS, "schedule");
         verify(runner).run(TourDataJobType.ACCOMMODATIONS, "schedule");
     }
 }
