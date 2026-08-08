@@ -11,6 +11,7 @@ import com.nigahae.tourcourse.dto.TourCourseListRow;
 import com.nigahae.tourcourse.dto.TourCourseSummaryResponse;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
+import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class TourCourseService {
 
     private final TourCourseRepository tourCourseRepository;
     private final TourSpotReferenceRepository tourSpotReferenceRepository;
+    private final NearbyPlaceReferenceRepository nearbyPlaceReferenceRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -49,14 +51,20 @@ public class TourCourseService {
         List<CreateTourCourseItemRequest> items = request.items();
         validateOrders(items);
         validateTransport(items);
-        List<Long> spotIds = validateAndGetSpotIds(items);
-        validateExistingSpots(spotIds);
+        TargetIds targetIds = validateAndGetTargetIds(items);
+        validateExistingSpots(targetIds.spotIds());
+        validateExistingNearbyPlaces(targetIds.nearbyPlaceIds());
 
         String encodedPassword = request.shareYn()
                 ? passwordEncoder.encode(request.sharedPassword())
                 : null;
         TourCourse course = new TourCourse(userId, request.title().trim(), request.shareYn(), encodedPassword);
-        items.forEach(item -> course.addItem(item.spotId(), item.itemOrder(), item.transportType()));
+        items.forEach(item -> course.addItem(
+                item.spotId(),
+                item.nearbyPlaceId(),
+                item.itemOrder(),
+                item.transportType()
+        ));
 
         return CreateTourCourseResponse.from(tourCourseRepository.save(course));
     }
@@ -177,22 +185,38 @@ public class TourCourseService {
         if (first.transportType() != null) {
             throw validationException();
         }
+        if (items.stream().anyMatch(item -> item.itemOrder() > 1 && item.transportType() == null)) {
+            throw validationException();
+        }
     }
 
-    private List<Long> validateAndGetSpotIds(List<CreateTourCourseItemRequest> items) {
-        Set<Long> uniqueIds = new HashSet<>();
+    private TargetIds validateAndGetTargetIds(List<CreateTourCourseItemRequest> items) {
+        Set<Long> uniqueSpotIds = new HashSet<>();
+        Set<Long> uniqueNearbyPlaceIds = new HashSet<>();
         for (CreateTourCourseItemRequest item : items) {
-            if (item.spotId() == null || item.spotId() < 1) {
+            boolean hasSpot = item.spotId() != null;
+            boolean hasNearbyPlace = item.nearbyPlaceId() != null;
+            if (hasSpot == hasNearbyPlace) {
                 throw validationException();
             }
-            if (!uniqueIds.add(item.spotId())) {
+            if (hasSpot && (item.spotId() < 1 || !uniqueSpotIds.add(item.spotId()))) {
+                throw validationException();
+            }
+            if (hasNearbyPlace && (item.nearbyPlaceId() < 1
+                    || !uniqueNearbyPlaceIds.add(item.nearbyPlaceId()))) {
                 throw validationException();
             }
         }
-        return items.stream().map(CreateTourCourseItemRequest::spotId).toList();
+        return new TargetIds(
+                items.stream().map(CreateTourCourseItemRequest::spotId).filter(java.util.Objects::nonNull).toList(),
+                items.stream().map(CreateTourCourseItemRequest::nearbyPlaceId).filter(java.util.Objects::nonNull).toList()
+        );
     }
 
     private void validateExistingSpots(List<Long> spotIds) {
+        if (spotIds.isEmpty()) {
+            return;
+        }
         Set<Long> existingIds = tourSpotReferenceRepository.findExistingIds(spotIds);
         spotIds.stream()
                 .filter(spotId -> !existingIds.contains(spotId))
@@ -202,7 +226,23 @@ public class TourCourseService {
                 });
     }
 
+    private void validateExistingNearbyPlaces(List<Long> nearbyPlaceIds) {
+        if (nearbyPlaceIds.isEmpty()) {
+            return;
+        }
+        Set<Long> existingIds = nearbyPlaceReferenceRepository.findExistingIds(nearbyPlaceIds);
+        nearbyPlaceIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .findFirst()
+                .ifPresent(id -> {
+                    throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+                });
+    }
+
     private CustomException validationException() {
         return new CustomException(ErrorCode.VALIDATION_ERROR);
+    }
+
+    private record TargetIds(List<Long> spotIds, List<Long> nearbyPlaceIds) {
     }
 }

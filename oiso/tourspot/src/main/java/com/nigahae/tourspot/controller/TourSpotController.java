@@ -1,15 +1,21 @@
 package com.nigahae.tourspot.controller;
 
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.controller.docs.TourSpotControllerDocs;
+import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.exception.InvalidTourSpotIdException;
 import com.nigahae.tourspot.service.TourSpotService;
+import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +28,7 @@ public class TourSpotController implements TourSpotControllerDocs {
 
     private static final String SUCCESS_MESSAGE = "관광지 목록 조회에 성공했습니다.";
     private static final String DETAIL_SUCCESS_MESSAGE = "관광지 상세 조회에 성공했습니다.";
+    private static final String SAVE_SUCCESS_MESSAGE = "관광지 저장에 성공했습니다.";
 
     private final TourSpotService tourSpotService;
 
@@ -47,6 +54,23 @@ public class TourSpotController implements TourSpotControllerDocs {
                 CommonResponse.SUCCESS_CODE,
                 SUCCESS_MESSAGE,
                 tourSpotService.getTourSpots(keyword, page, size)
+        );
+    }
+
+    @PostMapping("/{spotId}/save")
+    @Override
+    public CommonResponse<SaveTourSpotResponse> saveTourSpot(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+
+        return new CommonResponse<>(
+                CommonResponse.SUCCESS_CODE,
+                SAVE_SUCCESS_MESSAGE,
+                tourSpotService.saveTourSpot(user.userId(), parseSpotId(spotId))
         );
     }
 

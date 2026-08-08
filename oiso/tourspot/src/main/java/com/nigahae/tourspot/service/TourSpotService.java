@@ -3,11 +3,13 @@ package com.nigahae.tourspot.service;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.domain.TourSpot;
+import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
+import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,17 @@ import java.util.List;
 public class TourSpotService {
 
     private final TourSpotQueryRepository tourSpotQueryRepository;
+    private final UserSavedTourSpotRepository userSavedTourSpotRepository;
+
+    @Transactional
+    public SaveTourSpotResponse saveTourSpot(Long userId, Long spotId) {
+        if (!tourSpotQueryRepository.existsById(spotId)) {
+            throw new TourSpotNotFoundException(spotId);
+        }
+
+        userSavedTourSpotRepository.saveIfAbsent(userId, spotId);
+        return new SaveTourSpotResponse(spotId, true);
+    }
 
     public TourSpotDetailResponse getTourSpot(Long spotId) {
         TourSpot tourSpot = tourSpotQueryRepository.findById(spotId)

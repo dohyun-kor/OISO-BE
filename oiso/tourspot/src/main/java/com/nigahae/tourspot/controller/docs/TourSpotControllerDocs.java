@@ -1,8 +1,10 @@
 package com.nigahae.tourspot.controller.docs;
 
 import com.nigahae.common.response.CommonResponse;
+import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,9 +14,49 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-@Tag(name = "관광지", description = "관광지 조회 API")
+@Tag(name = "관광지", description = "관광지 조회 및 저장 API")
 public interface TourSpotControllerDocs {
+
+    @Operation(
+            summary = "관광지 저장",
+            description = "인증된 사용자의 저장 목록에 관광지를 추가합니다. 이미 저장한 관광지는 중복 저장하지 않습니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "저장 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            value = """
+                                                    {
+                                                      "code": 0,
+                                                      "message": "관광지 저장에 성공했습니다.",
+                                                      "data": {
+                                                        "spotId": 1,
+                                                        "like": true
+                                                      }
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 관광지 ID"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "관광지 없음")
+            }
+    )
+    CommonResponse<SaveTourSpotResponse> saveTourSpot(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(
+                    description = "저장할 관광지 ID",
+                    required = true,
+                    example = "1",
+                    schema = @Schema(type = "integer", format = "int64", minimum = "1")
+            )
+            String spotId
+    );
 
     @Operation(
             summary = "관광지 상세 조회",

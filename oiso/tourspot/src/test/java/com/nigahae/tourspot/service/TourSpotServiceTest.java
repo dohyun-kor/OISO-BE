@@ -7,6 +7,7 @@ import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
+import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,12 +34,38 @@ class TourSpotServiceTest {
 
     @Mock
     private TourSpotQueryRepository tourSpotQueryRepository;
+    @Mock
+    private UserSavedTourSpotRepository userSavedTourSpotRepository;
 
     private TourSpotService tourSpotService;
 
     @BeforeEach
     void setUp() {
-        tourSpotService = new TourSpotService(tourSpotQueryRepository);
+        tourSpotService = new TourSpotService(tourSpotQueryRepository, userSavedTourSpotRepository);
+    }
+
+    @Test
+    @DisplayName("관광지를 사용자 저장 목록에 추가한다")
+    void saveTourSpot() {
+        when(tourSpotQueryRepository.existsById(1L)).thenReturn(true);
+
+        var response = tourSpotService.saveTourSpot(7L, 1L);
+
+        assertThat(response.spotId()).isEqualTo(1L);
+        assertThat(response.like()).isTrue();
+        verify(userSavedTourSpotRepository).saveIfAbsent(7L, 1L);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관광지는 저장하지 않는다")
+    void doesNotSaveMissingTourSpot() {
+        when(tourSpotQueryRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> tourSpotService.saveTourSpot(7L, 999L))
+                .isInstanceOf(TourSpotNotFoundException.class);
+
+        verify(userSavedTourSpotRepository, org.mockito.Mockito.never())
+                .saveIfAbsent(7L, 999L);
     }
 
     @Test

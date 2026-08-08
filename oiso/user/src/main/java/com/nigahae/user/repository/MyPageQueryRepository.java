@@ -104,7 +104,6 @@ public class MyPageQueryRepository {
                 FROM public."Memo" memo
                 LEFT JOIN public."TourCourse" course
                   ON course.tour_course_id = memo.tour_course_id
-                 AND course.user_id = memo.user_id2
                 WHERE memo.user_id = :userId
                 ORDER BY memo.history_id DESC
                 """;

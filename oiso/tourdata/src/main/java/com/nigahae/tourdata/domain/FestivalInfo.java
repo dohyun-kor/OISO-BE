@@ -1,53 +1,36 @@
 package com.nigahae.tourdata.domain;
 
 import com.nigahae.tourdata.client.FestivalPayload;
-import com.nigahae.tourdata.client.TourContentPayload;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDate;
 
 @Entity
 @Getter
 @Table(name = "`FestivalInfo`")
-public class FestivalInfo {
+public class FestivalInfo implements Persistable<Long> {
 
     @Id
     @Column(name = "spot_id", nullable = false)
     private Long spotId;
 
-    @Column(name = "name")
-    private String name;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "spot_id", nullable = false, insertable = false, updatable = false)
+    private TourSpot tourSpot;
 
-    @Column(name = "img")
-    private String img;
-
-    @Column(name = "address")
-    private String address;
-
-    @Column(name = "overview", columnDefinition = "TEXT")
-    private String overview;
-
-    @Column(name = "homepage", columnDefinition = "TEXT")
-    private String homepage;
-
-    @Column(name = "map_x")
-    private Double mapX;
-
-    @Column(name = "map_y")
-    private Double mapY;
-
-    @Column(name = "content_id")
-    private Long contentId;
-
-    @Column(name = "content_type_id")
-    private Long contentTypeId;
-
-    @Column(name = "tel")
-    private String tel;
+    @Transient
+    private boolean isNew = true;
 
     @Column(name = "event_start_date")
     private LocalDate eventStartDate;
@@ -58,30 +41,77 @@ public class FestivalInfo {
     protected FestivalInfo() {
     }
 
-    public FestivalInfo(Long spotId) {
-        this.spotId = spotId;
+    private FestivalInfo(TourSpot tourSpot) {
+        this.tourSpot = tourSpot;
+        this.spotId = tourSpot.getSpotId();
     }
 
-    public void updateFromList(FestivalPayload payload) {
-        updateListFields(payload.content());
+    public static FestivalInfo forSpot(TourSpot tourSpot) {
+        return new FestivalInfo(tourSpot);
+    }
+
+    public void updateDates(FestivalPayload payload) {
         this.eventStartDate = payload.eventStartDate();
         this.eventEndDate = payload.eventEndDate();
     }
 
-    public void updateFromDetail(TourContentPayload payload) {
-        updateListFields(payload);
-        this.overview = payload.overview();
-        this.homepage = payload.homepage();
+    public Long getSpotId() {
+        return spotId;
     }
 
-    private void updateListFields(TourContentPayload payload) {
-        this.contentId = payload.contentIdAsLong();
-        this.contentTypeId = payload.contentTypeIdAsLong();
-        this.name = payload.title();
-        this.img = payload.firstImage();
-        this.address = payload.address();
-        this.mapX = payload.mapXAsDouble();
-        this.mapY = payload.mapYAsDouble();
-        this.tel = payload.tel();
+    @Override
+    public Long getId() {
+        return spotId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    private void markNotNew() {
+        isNew = false;
+    }
+
+    public String getName() {
+        return tourSpot.getName();
+    }
+
+    public String getImg() {
+        return tourSpot.getImg();
+    }
+
+    public String getAddress() {
+        return tourSpot.getAddress();
+    }
+
+    public String getOverview() {
+        return tourSpot.getOverview();
+    }
+
+    public String getHomepage() {
+        return tourSpot.getHomepage();
+    }
+
+    public Double getMapX() {
+        return tourSpot.getMapX();
+    }
+
+    public Double getMapY() {
+        return tourSpot.getMapY();
+    }
+
+    public Long getContentId() {
+        return tourSpot.getContentId();
+    }
+
+    public Long getContentTypeId() {
+        return tourSpot.getContentTypeId();
+    }
+
+    public String getTel() {
+        return tourSpot.getTel();
     }
 }

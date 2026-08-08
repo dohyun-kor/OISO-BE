@@ -9,6 +9,7 @@ import com.nigahae.tourcourse.dto.CreateTourCourseRequest;
 import com.nigahae.tourcourse.dto.TourCourseListRow;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
+import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,7 @@ class TourCourseServiceTest {
 
     @Mock TourCourseRepository tourCourseRepository;
     @Mock TourSpotReferenceRepository tourSpotReferenceRepository;
+    @Mock NearbyPlaceReferenceRepository nearbyPlaceReferenceRepository;
     @Mock PasswordEncoder passwordEncoder;
 
     private TourCourseService tourCourseService;
@@ -43,6 +45,7 @@ class TourCourseServiceTest {
         tourCourseService = new TourCourseService(
                 tourCourseRepository,
                 tourSpotReferenceRepository,
+                nearbyPlaceReferenceRepository,
                 passwordEncoder
         );
     }
@@ -114,6 +117,33 @@ class TourCourseServiceTest {
                         new CreateTourCourseItemRequest(1L, 1, null),
                         new CreateTourCourseItemRequest(1L, 2, TransportType.BIKE)
                 )
+        );
+
+        assertValidationError(request);
+    }
+
+    @Test
+    void createsCourseContainingNearbyPlace() {
+        CreateTourCourseRequest request = new CreateTourCourseRequest(
+                "코스", false, null,
+                List.of(
+                        new CreateTourCourseItemRequest(1L, null, 1, null),
+                        new CreateTourCourseItemRequest(null, 10L, 2, TransportType.WALK)
+                )
+        );
+        when(tourSpotReferenceRepository.findExistingIds(List.of(1L))).thenReturn(Set.of(1L));
+        when(nearbyPlaceReferenceRepository.findExistingIds(List.of(10L))).thenReturn(Set.of(10L));
+        when(tourCourseRepository.save(any(TourCourse.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(tourCourseService.create(7L, request).itemCount()).isEqualTo(2);
+    }
+
+    @Test
+    void rejectsItemWithBothTargetTypes() {
+        CreateTourCourseRequest request = new CreateTourCourseRequest(
+                "코스", false, null,
+                List.of(new CreateTourCourseItemRequest(1L, 10L, 1, null))
         );
 
         assertValidationError(request);

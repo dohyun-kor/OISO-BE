@@ -64,8 +64,13 @@ public class TourCourse {
         this.sharedPassword = sharedPassword;
     }
 
-    public void addItem(Long spotId, int itemOrder, TransportType transportType) {
-        items.add(new TourCourseItem(this, spotId, itemOrder, transportType));
+    public void addItem(
+            Long spotId,
+            Long nearbyPlaceId,
+            int itemOrder,
+            TransportType transportType
+    ) {
+        items.add(new TourCourseItem(this, spotId, nearbyPlaceId, itemOrder, transportType));
     }
 
     @PrePersist
