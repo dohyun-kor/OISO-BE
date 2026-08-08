@@ -30,8 +30,11 @@ public class TourCourseItem {
     @JoinColumn(name = "tour_course_id", nullable = false)
     private TourCourse tourCourse;
 
-    @Column(name = "spot_id", nullable = false)
+    @Column(name = "spot_id")
     private Long spotId;
+
+    @Column(name = "tour_spot_nearby_course_id")
+    private Long nearbyPlaceId;
 
     @Column(name = "item_order", nullable = false)
     private int itemOrder;
@@ -40,9 +43,16 @@ public class TourCourseItem {
     @Column(name = "transport_type", length = 10)
     private TransportType transportType;
 
-    TourCourseItem(TourCourse tourCourse, Long spotId, int itemOrder, TransportType transportType) {
+    TourCourseItem(
+            TourCourse tourCourse,
+            Long spotId,
+            Long nearbyPlaceId,
+            int itemOrder,
+            TransportType transportType
+    ) {
         this.tourCourse = tourCourse;
         this.spotId = spotId;
+        this.nearbyPlaceId = nearbyPlaceId;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
     }

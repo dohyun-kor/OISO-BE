@@ -4,6 +4,8 @@ import com.nigahae.tourdata.client.TourContentPayload;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 import lombok.Getter;
 
@@ -13,19 +15,20 @@ import lombok.Getter;
 public class TourSpot {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "spot_id", nullable = false)
     private Long spotId;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "img")
+    @Column(name = "img", length = 2048)
     private String img;
 
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "address")
+    @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "can_parking")
@@ -55,14 +58,20 @@ public class TourSpot {
     @Column(name = "content_type_id")
     private Long contentTypeId;
 
-    @Column(name = "tel")
+    @Column(name = "tel", length = 100)
     private String tel;
 
     protected TourSpot() {
     }
 
-    public TourSpot(Long spotId) {
-        this.spotId = spotId;
+    public static TourSpot create() {
+        return new TourSpot();
+    }
+
+    public static TourSpot reference(Long spotId) {
+        TourSpot tourSpot = new TourSpot();
+        tourSpot.spotId = spotId;
+        return tourSpot;
     }
 
     public void updateFromList(TourContentPayload payload) {

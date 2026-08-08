@@ -3,24 +3,27 @@ package com.nigahae.tourdata.domain;
 import com.nigahae.tourdata.client.AccommodationRoomPayload;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 @Entity
-@IdClass(AccommodationDetailId.class)
-@Table(name = "`AccommodationDetail`")
-public class AccommodationDetail {
+@Table(name = "`AccommodationRoom`")
+public class AccommodationRoom {
 
     @Id
-    @Column(name = "temp_room_id", nullable = false)
-    private Long tempRoomId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "room_id", nullable = false)
+    private Long roomId;
 
-    @Id
     @Column(name = "spot_id", nullable = false)
     private Long spotId;
 
-    @Column(name = "room_code", columnDefinition = "TEXT")
+    @Column(name = "room_order", nullable = false)
+    private Integer roomOrder;
+
+    @Column(name = "room_code", length = 100)
     private String roomCode;
 
     @Column(name = "room_title", columnDefinition = "TEXT")
@@ -98,12 +101,12 @@ public class AccommodationDetail {
     @Column(name = "has_hairdryer", columnDefinition = "TEXT")
     private String hasHairdryer;
 
-    protected AccommodationDetail() {
+    protected AccommodationRoom() {
     }
 
-    private AccommodationDetail(Long tempRoomId, Long spotId, AccommodationRoomPayload payload) {
-        this.tempRoomId = tempRoomId;
+    private AccommodationRoom(Long spotId, Integer roomOrder, AccommodationRoomPayload payload) {
         this.spotId = spotId;
+        this.roomOrder = roomOrder;
         this.roomCode = payload.roomCode();
         this.roomTitle = payload.roomTitle();
         this.roomSizePyeong = payload.roomSizePyeong();
@@ -132,16 +135,20 @@ public class AccommodationDetail {
         this.hasHairdryer = payload.hasHairdryer();
     }
 
-    public static AccommodationDetail fromRoomPayload(Long tempRoomId, Long spotId, AccommodationRoomPayload payload) {
-        return new AccommodationDetail(tempRoomId, spotId, payload);
+    public static AccommodationRoom fromRoomPayload(Long spotId, Integer roomOrder, AccommodationRoomPayload payload) {
+        return new AccommodationRoom(spotId, roomOrder, payload);
     }
 
-    public Long getTempRoomId() {
-        return tempRoomId;
+    public Long getRoomId() {
+        return roomId;
     }
 
     public Long getSpotId() {
         return spotId;
+    }
+
+    public Integer getRoomOrder() {
+        return roomOrder;
     }
 
     public String getRoomCode() {

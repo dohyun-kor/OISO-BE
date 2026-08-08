@@ -5,7 +5,7 @@ import com.nigahae.tourdata.client.FestivalPayload;
 import com.nigahae.tourdata.client.PublicTourDataClient;
 import com.nigahae.tourdata.client.TourApiException;
 import com.nigahae.tourdata.client.TourContentPayload;
-import com.nigahae.tourdata.domain.AccommodationDetail;
+import com.nigahae.tourdata.domain.AccommodationRoom;
 import com.nigahae.tourdata.domain.FestivalInfo;
 import com.nigahae.tourdata.domain.TourDataExecution;
 import com.nigahae.tourdata.domain.TourDataJobType;
@@ -47,7 +47,7 @@ class TourIngestServiceTest {
     FestivalInfoRepository festivalInfoRepository;
 
     @Mock
-    AccommodationDetailStore accommodationDetailStore;
+    AccommodationRoomStore accommodationRoomStore;
 
     @Mock
     TourDataExecutionRepository executionRepository;
@@ -81,10 +81,12 @@ class TourIngestServiceTest {
     @Test
     void refreshFestivalsOnlyUpdatesFestivalListAndPreservesDetailFields() {
         FestivalInfo existing = festivalInfo("300");
-        existing.updateFromDetail(payload("300", "15", "Old overview", "https://old.example.com"));
+        existing.getTourSpot().updateFromDetail(payload("300", "15", "Old overview", "https://old.example.com"));
         FestivalPayload festival = festival("300", LocalDate.of(2026, 8, 15), LocalDate.of(2026, 8, 23));
         when(publicTourDataClient.fetchAllFestivals(any(LocalDate.class))).thenReturn(List.of(festival));
-        when(festivalInfoRepository.findByContentId(300L)).thenReturn(Optional.of(existing));
+        when(tourSpotRepository.findByContentId(300L)).thenReturn(Optional.of(existing.getTourSpot()));
+        when(tourSpotRepository.save(existing.getTourSpot())).thenReturn(existing.getTourSpot());
+        when(festivalInfoRepository.findById(300L)).thenReturn(Optional.of(existing));
 
         TourDataResult result = tourDataService.refreshFestivals();
 
@@ -97,11 +99,9 @@ class TourIngestServiceTest {
     }
 
     @Test
-    void refreshCommonDetailsDeduplicatesContentIdAndUpdatesBothTables() {
+    void refreshCommonDetailsUpdatesSharedTourSpotOnce() {
         TourSpot tourSpot = tourSpot("300", "15");
-        FestivalInfo festivalInfo = festivalInfo("300");
         when(tourSpotRepository.findAll()).thenReturn(List.of(tourSpot));
-        when(festivalInfoRepository.findAll()).thenReturn(List.of(festivalInfo));
         when(publicTourDataClient.fetchTourContentDetail(300L))
                 .thenReturn(payload("300", "15", "Shared overview", "https://detail.example.com"));
 
@@ -109,10 +109,8 @@ class TourIngestServiceTest {
 
         assertThat(result).isEqualTo(TourDataResult.success(1));
         assertThat(tourSpot.getOverview()).isEqualTo("Shared overview");
-        assertThat(festivalInfo.getOverview()).isEqualTo("Shared overview");
         verify(publicTourDataClient, times(1)).fetchTourContentDetail(300L);
         verify(tourSpotRepository).save(tourSpot);
-        verify(festivalInfoRepository).save(festivalInfo);
     }
 
     @Test
@@ -120,7 +118,6 @@ class TourIngestServiceTest {
         TourSpot first = tourSpot("100", "12");
         TourSpot second = tourSpot("200", "12");
         when(tourSpotRepository.findAll()).thenReturn(List.of(first, second));
-        when(festivalInfoRepository.findAll()).thenReturn(List.of());
         when(publicTourDataClient.fetchTourContentDetail(100L))
                 .thenReturn(payload("100", "12", "Overview", null));
         when(publicTourDataClient.fetchTourContentDetail(200L))
@@ -141,7 +138,6 @@ class TourIngestServiceTest {
     void refreshCommonDetailsReturnsFailureWhenEveryItemFails() {
         TourSpot tourSpot = tourSpot("100", "12");
         when(tourSpotRepository.findAll()).thenReturn(List.of(tourSpot));
-        when(festivalInfoRepository.findAll()).thenReturn(List.of());
         when(publicTourDataClient.fetchTourContentDetail(100L))
                 .thenThrow(new TourApiException("Read timed out"));
 
@@ -161,7 +157,6 @@ class TourIngestServiceTest {
             tourSpots.add(tourSpot(String.valueOf(contentId), "12"));
         }
         when(tourSpotRepository.findAll()).thenReturn(tourSpots);
-        when(festivalInfoRepository.findAll()).thenReturn(List.of());
         when(publicTourDataClient.fetchTourContentDetail(any()))
                 .thenThrow(new TourApiException("Read timed out"));
 
@@ -188,11 +183,11 @@ class TourIngestServiceTest {
         assertThat(result.partial()).isTrue();
         assertThat(result.processedCount()).isEqualTo(1);
         assertThat(result.failedCount()).isEqualTo(1);
-        ArgumentCaptor<List<AccommodationDetail>> detailsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(accommodationDetailStore).replace(org.mockito.ArgumentMatchers.eq(200L), detailsCaptor.capture());
-        assertThat(detailsCaptor.getValue()).hasSize(2);
-        assertThat(detailsCaptor.getValue().get(0).getTempRoomId()).isEqualTo(1L);
-        verify(accommodationDetailStore, never()).replace(org.mockito.ArgumentMatchers.eq(201L), any());
+        ArgumentCaptor<List<AccommodationRoom>> roomsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(accommodationRoomStore).replace(org.mockito.ArgumentMatchers.eq(200L), roomsCaptor.capture());
+        assertThat(roomsCaptor.getValue()).hasSize(2);
+        assertThat(roomsCaptor.getValue().get(0).getRoomOrder()).isEqualTo(1);
+        verify(accommodationRoomStore, never()).replace(org.mockito.ArgumentMatchers.eq(201L), any());
         assertExecution(TourDataJobType.ACCOMMODATIONS, TourDataStatus.PARTIAL_SUCCESS, 1, 1);
     }
 
@@ -223,14 +218,15 @@ class TourIngestServiceTest {
     }
 
     private TourSpot tourSpot(String contentId, String contentTypeId) {
-        TourSpot tourSpot = new TourSpot(Long.valueOf(contentId));
+        TourSpot tourSpot = TourSpot.reference(Long.valueOf(contentId));
         tourSpot.updateFromList(payload(contentId, contentTypeId));
         return tourSpot;
     }
 
     private FestivalInfo festivalInfo(String contentId) {
-        FestivalInfo festivalInfo = new FestivalInfo(Long.valueOf(contentId));
-        festivalInfo.updateFromList(festival(contentId, null, null));
+        TourSpot tourSpot = tourSpot(contentId, "15");
+        FestivalInfo festivalInfo = FestivalInfo.forSpot(tourSpot);
+        festivalInfo.updateDates(festival(contentId, null, null));
         return festivalInfo;
     }
 
