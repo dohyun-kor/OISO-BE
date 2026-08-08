@@ -1,6 +1,7 @@
 package com.nigahae.tourspot.controller.docs;
 
 import com.nigahae.common.response.CommonResponse;
+import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
@@ -18,6 +19,45 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "관광지", description = "관광지 조회 및 저장 API")
 public interface TourSpotControllerDocs {
+
+    @Operation(
+            summary = "저장한 관광지 삭제",
+            description = "인증된 사용자의 저장 목록에서 관광지를 삭제합니다. 이미 삭제된 관광지에도 동일하게 성공합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "삭제 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            value = """
+                                                    {
+                                                      "code": 0,
+                                                      "message": "저장한 관광지 삭제에 성공했습니다.",
+                                                      "data": {
+                                                        "spotId": 1,
+                                                        "like": false
+                                                      }
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 관광지 ID"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "관광지 없음")
+            }
+    )
+    CommonResponse<DeleteSavedTourSpotResponse> deleteSavedTourSpot(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(
+                    description = "저장 목록에서 삭제할 관광지 ID",
+                    required = true,
+                    example = "1",
+                    schema = @Schema(type = "integer", format = "int64", minimum = "1")
+            )
+            String spotId
+    );
 
     @Operation(
             summary = "관광지 저장",

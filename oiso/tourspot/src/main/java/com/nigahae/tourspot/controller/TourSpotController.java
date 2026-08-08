@@ -4,6 +4,7 @@ import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.controller.docs.TourSpotControllerDocs;
+import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
@@ -13,6 +14,7 @@ import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +31,7 @@ public class TourSpotController implements TourSpotControllerDocs {
     private static final String SUCCESS_MESSAGE = "관광지 목록 조회에 성공했습니다.";
     private static final String DETAIL_SUCCESS_MESSAGE = "관광지 상세 조회에 성공했습니다.";
     private static final String SAVE_SUCCESS_MESSAGE = "관광지 저장에 성공했습니다.";
+    private static final String DELETE_SAVED_SUCCESS_MESSAGE = "저장한 관광지 삭제에 성공했습니다.";
 
     private final TourSpotService tourSpotService;
 
@@ -71,6 +74,23 @@ public class TourSpotController implements TourSpotControllerDocs {
                 CommonResponse.SUCCESS_CODE,
                 SAVE_SUCCESS_MESSAGE,
                 tourSpotService.saveTourSpot(user.userId(), parseSpotId(spotId))
+        );
+    }
+
+    @DeleteMapping("/{spotId}/save")
+    @Override
+    public CommonResponse<DeleteSavedTourSpotResponse> deleteSavedTourSpot(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+
+        return new CommonResponse<>(
+                CommonResponse.SUCCESS_CODE,
+                DELETE_SAVED_SUCCESS_MESSAGE,
+                tourSpotService.deleteSavedTourSpot(user.userId(), parseSpotId(spotId))
         );
     }
 
