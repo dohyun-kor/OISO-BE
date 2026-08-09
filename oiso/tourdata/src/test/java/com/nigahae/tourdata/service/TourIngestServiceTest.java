@@ -1,5 +1,6 @@
 package com.nigahae.tourdata.service;
 
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.client.AccommodationRoomPayload;
 import com.nigahae.tourdata.client.FestivalPayload;
 import com.nigahae.tourdata.client.PublicTourDataClient;
@@ -23,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,72 +99,49 @@ class TourIngestServiceTest {
     }
 
     @Test
-    void refreshCommonDetailsUpdatesSharedTourSpotOnce() {
+    void refreshTourDetailUpdatesOnlyRequestedTourSpot() {
         TourSpot tourSpot = tourSpot("300", "15");
-        when(tourSpotRepository.findAll()).thenReturn(List.of(tourSpot));
+        when(tourSpotRepository.findById(300L)).thenReturn(Optional.of(tourSpot));
         when(publicTourDataClient.fetchTourContentDetail(300L))
                 .thenReturn(payload("300", "15", "Shared overview", "https://detail.example.com"));
 
-        TourDataResult result = tourDataService.refreshCommonDetails();
+        TourDetailRefreshResult result = tourDataService.refresh(300L);
 
-        assertThat(result).isEqualTo(TourDataResult.success(1));
+        assertThat(result.updatedSuccessfully()).isTrue();
         assertThat(tourSpot.getOverview()).isEqualTo("Shared overview");
+        assertThat(tourSpot.getHomepage()).isEqualTo("https://detail.example.com");
         verify(publicTourDataClient, times(1)).fetchTourContentDetail(300L);
         verify(tourSpotRepository).save(tourSpot);
+        verify(executionRepository, never()).save(any());
     }
 
     @Test
-    void refreshCommonDetailsContinuesAfterTimeoutAndMarksPartialSuccess() {
-        TourSpot first = tourSpot("100", "12");
-        TourSpot second = tourSpot("200", "12");
-        when(tourSpotRepository.findAll()).thenReturn(List.of(first, second));
-        when(publicTourDataClient.fetchTourContentDetail(100L))
-                .thenReturn(payload("100", "12", "Overview", null));
+    void refreshTourDetailReturnsFailureWithoutSavingWhenTourApiFails() {
+        TourSpot tourSpot = tourSpot("200", "12");
+        tourSpot.updateFromDetail(payload("200", "12", "Stored overview", null));
+        when(tourSpotRepository.findById(200L)).thenReturn(Optional.of(tourSpot));
         when(publicTourDataClient.fetchTourContentDetail(200L))
                 .thenThrow(new TourApiException("Read timed out"));
 
-        TourDataResult result = tourDataService.refreshCommonDetails();
+        TourDetailRefreshResult result = tourDataService.refresh(200L);
 
-        assertThat(result.partial()).isTrue();
-        assertThat(result.processedCount()).isEqualTo(1);
-        assertThat(result.failedCount()).isEqualTo(1);
-        assertThat(result.failureMessage()).contains("200").contains("Read timed out");
-        verify(tourSpotRepository).save(first);
-        verify(tourSpotRepository, never()).save(second);
-        assertExecution(TourDataJobType.COMMON_DETAILS, TourDataStatus.PARTIAL_SUCCESS, 1, 1);
+        assertThat(result.failed()).isTrue();
+        assertThat(result.failureMessage()).contains("Read timed out");
+        assertThat(tourSpot.getOverview()).isEqualTo("Stored overview");
+        verify(tourSpotRepository, never()).save(any());
+        verify(executionRepository, never()).save(any());
     }
 
     @Test
-    void refreshCommonDetailsReturnsFailureWhenEveryItemFails() {
-        TourSpot tourSpot = tourSpot("100", "12");
-        when(tourSpotRepository.findAll()).thenReturn(List.of(tourSpot));
-        when(publicTourDataClient.fetchTourContentDetail(100L))
-                .thenThrow(new TourApiException("Read timed out"));
+    void refreshTourDetailDoesNotCallTourApiWhenSpotDoesNotExist() {
+        when(tourSpotRepository.findById(999L)).thenReturn(Optional.empty());
 
-        TourDataResult result = tourDataService.refreshCommonDetails();
+        TourDetailRefreshResult result = tourDataService.refresh(999L);
 
-        assertThat(result.success()).isFalse();
-        assertThat(result.partial()).isFalse();
-        assertThat(result.processedCount()).isZero();
-        assertThat(result.failedCount()).isEqualTo(1);
-        assertExecution(TourDataJobType.COMMON_DETAILS, TourDataStatus.FAILED, 0, 1);
-    }
-
-    @Test
-    void refreshCommonDetailsLimitsRecordedFailuresToFirstTwentyItems() {
-        List<TourSpot> tourSpots = new ArrayList<>();
-        for (long contentId = 1; contentId <= 21; contentId++) {
-            tourSpots.add(tourSpot(String.valueOf(contentId), "12"));
-        }
-        when(tourSpotRepository.findAll()).thenReturn(tourSpots);
-        when(publicTourDataClient.fetchTourContentDetail(any()))
-                .thenThrow(new TourApiException("Read timed out"));
-
-        TourDataResult result = tourDataService.refreshCommonDetails();
-
-        assertThat(result.failedCount()).isEqualTo(21);
-        assertThat(result.failureMessage()).contains("20 (Read timed out)").contains("and 1 more");
-        assertThat(result.failureMessage()).doesNotContain("21 (Read timed out)");
+        assertThat(result.targetNotFound()).isTrue();
+        verify(publicTourDataClient, never()).fetchTourContentDetail(any());
+        verify(tourSpotRepository, never()).save(any());
+        verify(executionRepository, never()).save(any());
     }
 
     @Test

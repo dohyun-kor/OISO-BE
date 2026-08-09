@@ -2,6 +2,8 @@ package com.nigahae.tourspot.service;
 
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
+import com.nigahae.tourdata.TourDetailRefresher;
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
@@ -12,21 +14,25 @@ import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TourSpotService {
 
     private final TourSpotQueryRepository tourSpotQueryRepository;
     private final UserSavedTourSpotRepository userSavedTourSpotRepository;
+    private final TourDetailRefresher tourDetailRefresher;
 
     @Transactional
     public SaveTourSpotResponse saveTourSpot(Long userId, Long spotId) {
@@ -44,7 +50,20 @@ public class TourSpotService {
         return new DeleteSavedTourSpotResponse(spotId, false);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public TourSpotDetailResponse getTourSpot(Long spotId) {
+        TourDetailRefreshResult refreshResult = tourDetailRefresher.refresh(spotId);
+        if (refreshResult.targetNotFound()) {
+            throw new TourSpotNotFoundException(spotId);
+        }
+        if (refreshResult.failed()) {
+            log.warn(
+                    "Returning stored tour detail after refresh failure. spotId={}, message={}",
+                    spotId,
+                    refreshResult.failureMessage()
+            );
+        }
+
         TourSpot tourSpot = tourSpotQueryRepository.findById(spotId)
                 .orElseThrow(() -> new TourSpotNotFoundException(spotId));
 

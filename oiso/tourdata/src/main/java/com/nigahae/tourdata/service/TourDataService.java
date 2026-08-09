@@ -1,7 +1,10 @@
 package com.nigahae.tourdata.service;
 
+import com.nigahae.tourdata.TourDetailRefresher;
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.client.FestivalPayload;
 import com.nigahae.tourdata.client.PublicTourDataClient;
+import com.nigahae.tourdata.client.TourApiException;
 import com.nigahae.tourdata.client.TourContentPayload;
 import com.nigahae.tourdata.domain.AccommodationRoom;
 import com.nigahae.tourdata.domain.FestivalInfo;
@@ -19,17 +22,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Supplier;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TourDataService {
+public class TourDataService implements TourDetailRefresher {
 
     private static final Long ACCOMMODATION_CONTENT_TYPE_ID = 32L;
     private static final ZoneId GYEONGJU_TIME_ZONE = ZoneId.of("Asia/Seoul");
@@ -76,29 +75,29 @@ public class TourDataService {
         });
     }
 
-    public TourDataResult refreshCommonDetails() {
-        return execute(TourDataJobType.COMMON_DETAILS, () -> {
-            Map<Long, TourSpot> tourSpotsByContentId = indexTourSpots();
-            Set<Long> contentIds = new TreeSet<>(tourSpotsByContentId.keySet());
+    @Override
+    public TourDetailRefreshResult refresh(Long spotId) {
+        TourSpot tourSpot = tourSpotRepository.findById(spotId).orElse(null);
+        if (tourSpot == null) {
+            return TourDetailRefreshResult.notFound();
+        }
 
-            FailureCollector failures = new FailureCollector();
-            int processedCount = 0;
-            for (Long contentId : contentIds) {
-                try {
-                    TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
-                    TourSpot tourSpot = tourSpotsByContentId.get(contentId);
-                    if (tourSpot != null) {
-                        tourSpot.updateFromDetail(detail);
-                        tourSpotRepository.save(tourSpot);
-                    }
-                    processedCount++;
-                } catch (RuntimeException e) {
-                    failures.add(contentId, e);
-                    log.warn("Common detail ingest failed. contentId={}, message={}", contentId, e.getMessage());
-                }
-            }
-            return failures.toResult(processedCount);
-        });
+        Long contentId = tourSpot.getContentId();
+        try {
+            TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
+            tourSpot.updateFromDetail(detail);
+            tourSpotRepository.save(tourSpot);
+            return TourDetailRefreshResult.updated();
+        } catch (TourApiException exception) {
+            String failureMessage = messageOf(exception);
+            log.warn(
+                    "Tour detail refresh failed. spotId={}, contentId={}, message={}",
+                    spotId,
+                    contentId,
+                    failureMessage
+            );
+            return TourDetailRefreshResult.failed(failureMessage);
+        }
     }
 
     public TourDataResult refreshAccommodations() {
@@ -146,16 +145,6 @@ public class TourDataService {
             log.warn("Tour data job failed. jobType={}, message={}", jobType, e.getMessage(), e);
             return TourDataResult.failure(1, messageOf(e));
         }
-    }
-
-    private Map<Long, TourSpot> indexTourSpots() {
-        Map<Long, TourSpot> result = new HashMap<>();
-        for (TourSpot tourSpot : tourSpotRepository.findAll()) {
-            if (tourSpot.getContentId() != null) {
-                result.put(tourSpot.getContentId(), tourSpot);
-            }
-        }
-        return result;
     }
 
     private List<AccommodationRoom> accommodationRooms(Long contentId, Long spotId) {

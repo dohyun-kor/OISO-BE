@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nigahae.tourdata.config.TourDataProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriBuilder;
 
 import java.net.URI;
@@ -142,10 +143,15 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
     }
 
     private JsonNode requestPage(Function<UriBuilder, URI> uriFunction) {
-        JsonNode root = restClient.get()
-                .uri(uriFunction)
-                .retrieve()
-                .body(JsonNode.class);
+        JsonNode root;
+        try {
+            root = restClient.get()
+                    .uri(uriFunction)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException exception) {
+            throw new TourApiException("Tour API request failed: " + exception.getMessage(), exception);
+        }
 
         if (root == null) {
             throw new TourApiException("Tour API returned an empty response");
