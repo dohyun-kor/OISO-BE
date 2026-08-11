@@ -9,6 +9,12 @@ import com.nigahae.tourcourse.dto.CreateTourCourseResponse;
 import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.TourCourseListRow;
 import com.nigahae.tourcourse.dto.TourCourseSummaryResponse;
+import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
+import com.nigahae.tourcourse.dto.TourCourseItemDetailResponse;
+import com.nigahae.tourcourse.dto.UpdateTourCourseItemRequest;
+import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.domain.TourCourseItem;
+import com.nigahae.tourcourse.domain.TourCourseItemCategory;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -32,6 +39,7 @@ public class TourCourseService {
     private static final int MAX_ITEM_COUNT = 10;
     private static final String PASSWORD_PATTERN = "\\d{1,5}";
     private static final int MAX_PAGE_SIZE = 100;
+    private static final int ITEM_ORDER_OFFSET = 1_000;
     private static final Map<String, String> SORT_PROPERTIES = Map.of(
             "createdAt", "createdAt",
             "updatedAt", "updatedAt",
@@ -49,14 +57,15 @@ public class TourCourseService {
         List<CreateTourCourseItemRequest> items = request.items();
         validateOrders(items);
         validateTransport(items);
-        List<Long> spotIds = validateAndGetSpotIds(items);
-        validateExistingSpots(spotIds);
+        validateCreatePlaces(items);
 
         String encodedPassword = request.shareYn()
                 ? passwordEncoder.encode(request.sharedPassword())
                 : null;
         TourCourse course = new TourCourse(userId, request.title().trim(), request.shareYn(), encodedPassword);
-        items.forEach(item -> course.addItem(item.spotId(), item.itemOrder(), item.transportType()));
+        items.forEach(item -> course.addItem(
+                item.category(), item.spotId(), item.nearbyPlaceId(), item.itemOrder(),
+                item.transportType(), null, null));
 
         return CreateTourCourseResponse.from(tourCourseRepository.save(course));
     }
@@ -86,6 +95,274 @@ public class TourCourseService {
                 .map(TourCourseSummaryResponse::from)
                 .toList();
         return new TourCourseListResponse(courses, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public TourCourseDetailResponse getTourCourseDetail(Long userId, Long tourCourseId) {
+        if (tourCourseId == null || tourCourseId < 1) {
+            throw new CustomException(
+                    ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
+        }
+
+        TourCourse course = tourCourseRepository.findById(tourCourseId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        if (!course.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.TOUR_COURSE_FORBIDDEN);
+        }
+
+        List<TourCourseItemDetailResponse> items = tourCourseRepository
+                .findDetailItems(tourCourseId, userId)
+                .stream()
+                .map(TourCourseItemDetailResponse::from)
+                .toList();
+        return TourCourseDetailResponse.from(course, items);
+    }
+
+    @Transactional
+    public TourCourseDetailResponse updateTourCourse(
+            Long userId,
+            Long tourCourseId,
+            UpdateTourCourseRequest request
+    ) {
+        if (tourCourseId == null || tourCourseId < 1) {
+            throw new CustomException(
+                    ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
+        }
+        TourCourse course = tourCourseRepository.findById(tourCourseId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        if (!course.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.TOUR_COURSE_UPDATE_FORBIDDEN);
+        }
+
+        validateUpdateRequest(request);
+        validateUpdateItems(request.items());
+        validateUpdatePlaces(request.items());
+
+        Map<Long, TourCourseItem> existingItems = new HashMap<>();
+        course.getItems().forEach(item -> existingItems.put(item.getItemId(), item));
+        validateItemOwnership(request.items(), existingItems);
+
+        String encodedPassword = request.shareYn()
+                ? passwordEncoder.encode(request.sharedPassword())
+                : null;
+        course.updateBasicInfo(request.title().trim(), request.shareYn(), encodedPassword);
+
+        Set<Long> retainedItemIds = request.items().stream()
+                .map(UpdateTourCourseItemRequest::itemId)
+                .filter(itemId -> itemId != null)
+                .collect(java.util.stream.Collectors.toSet());
+
+        if (!existingItems.isEmpty()) {
+            tourCourseRepository.offsetItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
+        }
+        course.getItems().removeIf(item ->
+                item.getItemId() != null && !retainedItemIds.contains(item.getItemId()));
+
+        for (UpdateTourCourseItemRequest item : request.items()) {
+            if (item.itemId() == null) {
+                course.addItem(
+                        item.category(), item.spotId(), item.nearbyPlaceId(),
+                        item.itemOrder(), item.transportType(),
+                        item.distanceMeter(), item.durationSecond());
+            } else {
+                existingItems.get(item.itemId()).update(
+                        item.category(), item.spotId(), item.nearbyPlaceId(),
+                        item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType(),
+                        item.distanceMeter(), item.durationSecond());
+            }
+        }
+
+        int totalDistance = request.items().stream()
+                .map(UpdateTourCourseItemRequest::distanceMeter)
+                .filter(value -> value != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+        int totalDuration = request.items().stream()
+                .map(UpdateTourCourseItemRequest::durationSecond)
+                .filter(value -> value != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+        course.updateMovementTotals(totalDistance, totalDuration);
+
+        tourCourseRepository.flush();
+        if (!existingItems.isEmpty()) {
+            tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
+        }
+
+        List<TourCourseItemDetailResponse> items = tourCourseRepository
+                .findDetailItems(tourCourseId, userId)
+                .stream()
+                .map(TourCourseItemDetailResponse::from)
+                .toList();
+        return TourCourseDetailResponse.from(course, items);
+    }
+
+    @Transactional
+    public void deleteTourCourse(Long userId, Long tourCourseId) {
+        if (tourCourseId == null || tourCourseId < 1) {
+            throw new CustomException(
+                    ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
+        }
+        TourCourse course = tourCourseRepository.findById(tourCourseId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        if (!course.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.TOUR_COURSE_DELETE_FORBIDDEN);
+        }
+        tourCourseRepository.delete(course);
+    }
+
+    private void validateUpdateRequest(UpdateTourCourseRequest request) {
+        if (request == null) {
+            throw updateValidationException("request", "요청 본문이 필요합니다.");
+        }
+        if (request.title() == null || request.title().isBlank()) {
+            throw updateValidationException("title", "관광 코스 제목은 필수입니다.");
+        }
+        if (request.title().trim().length() > MAX_TITLE_LENGTH) {
+            throw updateValidationException(
+                    "title", "관광 코스 제목은 " + MAX_TITLE_LENGTH + "자 이하여야 합니다.");
+        }
+        if (request.shareYn() == null) {
+            throw updateValidationException("shareYn", "공유 여부는 필수입니다.");
+        }
+        validateUpdatePassword(request.shareYn(), request.sharedPassword());
+        if (request.items() == null || request.items().isEmpty()) {
+            throw new CustomException(
+                    ErrorCode.TOUR_COURSE_ITEMS_REQUIRED, Map.of("field", "items"));
+        }
+        if (request.items().size() > MAX_ITEM_COUNT) {
+            throw updateValidationException(
+                    "items", "관광지는 최대 " + MAX_ITEM_COUNT + "개까지 설정할 수 있습니다.");
+        }
+    }
+
+    private void validateUpdateItems(List<UpdateTourCourseItemRequest> items) {
+        Set<Integer> orders = new HashSet<>();
+        Set<Long> itemIds = new HashSet<>();
+        Set<String> placeKeys = new HashSet<>();
+        for (int index = 0; index < items.size(); index++) {
+            UpdateTourCourseItemRequest item = items.get(index);
+            String itemPath = "items[" + index + "]";
+            if (item == null) {
+                throw updateValidationException(itemPath, "관광지 항목은 null일 수 없습니다.");
+            }
+            validatePlaceIdentifiers(
+                    item.category(), item.spotId(), item.nearbyPlaceId(), itemPath, false);
+            if (item.itemOrder() == null || item.itemOrder() < 1) {
+                throw updateValidationException(
+                        itemPath + ".itemOrder", "관광지 순서는 1 이상의 값이어야 합니다.");
+            }
+            String placeKey = item.category() + ":"
+                    + (item.category() == TourCourseItemCategory.TOUR_SPOT
+                    ? item.spotId() : item.nearbyPlaceId());
+            if (!placeKeys.add(placeKey)) {
+                throw updateValidationException(
+                        itemPath, "동일한 장소를 중복해서 포함할 수 없습니다.");
+            }
+            if (!orders.add(item.itemOrder())) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_ORDER_DUPLICATED,
+                        Map.of("field", itemPath + ".itemOrder"));
+            }
+            if (item.itemId() != null && (item.itemId() < 1 || !itemIds.add(item.itemId()))) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        Map.of("field", itemPath + ".itemId", "itemId", item.itemId()));
+            }
+            if (item.distanceMeter() != null && item.distanceMeter() < 0) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_NEGATIVE_DISTANCE,
+                        Map.of("field", itemPath + ".distanceMeter"));
+            }
+            if (item.durationSecond() != null && item.durationSecond() < 0) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_NEGATIVE_DURATION,
+                        Map.of("field", itemPath + ".durationSecond"));
+            }
+            boolean hasAnyMovement = item.transportType() != null
+                    || item.distanceMeter() != null || item.durationSecond() != null;
+            boolean hasAllMovement = item.transportType() != null
+                    && item.distanceMeter() != null && item.durationSecond() != null;
+            if (item.itemOrder() == 1 && hasAnyMovement) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_FIRST_ITEM_MOVEMENT,
+                        Map.of("field", itemPath + ".transportType"));
+            }
+            if (item.itemOrder() > 1 && hasAnyMovement && !hasAllMovement) {
+                throw updateValidationException(
+                        itemPath,
+                        "이동 기록은 transportType, distanceMeter, durationSecond를 모두 입력하거나 모두 null이어야 합니다.");
+            }
+        }
+        for (int expected = 1; expected <= items.size(); expected++) {
+            if (!orders.contains(expected)) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_ORDER_NOT_CONSECUTIVE,
+                        Map.of("field", "itemOrder"));
+            }
+        }
+    }
+
+    private void validateUpdatePassword(boolean shareYn, String password) {
+        if (shareYn && (password == null || password.isBlank())) {
+            throw updateValidationException(
+                    "sharedPassword", "공유 코스는 접근 비밀번호가 필요합니다.");
+        }
+        if (!shareYn && password != null) {
+            throw updateValidationException(
+                    "sharedPassword", "공유하지 않는 코스에는 접근 비밀번호를 설정할 수 없습니다.");
+        }
+        if (shareYn && !password.matches(PASSWORD_PATTERN)) {
+            throw updateValidationException(
+                    "sharedPassword", "공유 비밀번호는 최대 5자리 숫자여야 합니다.");
+        }
+    }
+
+    private CustomException updateValidationException(String field, String message) {
+        return new CustomException(
+                ErrorCode.INVALID_TOUR_COURSE_UPDATE,
+                message,
+                Map.of("field", field));
+    }
+
+    private void validateUpdatePlaces(List<UpdateTourCourseItemRequest> items) {
+        List<Long> spotIds = items.stream()
+                .filter(item -> item.category() == TourCourseItemCategory.TOUR_SPOT)
+                .map(UpdateTourCourseItemRequest::spotId)
+                .toList();
+        Set<Long> existingSpotIds = spotIds.isEmpty()
+                ? Set.of() : tourSpotReferenceRepository.findExistingIds(spotIds);
+        for (int index = 0; index < items.size(); index++) {
+            UpdateTourCourseItemRequest item = items.get(index);
+            if (item.category() == TourCourseItemCategory.TOUR_SPOT
+                    && !existingSpotIds.contains(item.spotId())) {
+                throw new CustomException(
+                        ErrorCode.TOUR_SPOT_NOT_FOUND,
+                        Map.of("field", "items[" + index + "].spotId", "spotId", item.spotId()));
+            }
+            if (item.category() != TourCourseItemCategory.TOUR_SPOT
+                    && !tourSpotReferenceRepository.existsNearbyPlace(
+                    item.nearbyPlaceId(), item.category().name())) {
+                throw new CustomException(
+                        ErrorCode.RESOURCE_NOT_FOUND,
+                        Map.of("field", "items[" + index + "].nearbyPlaceId",
+                                "nearbyPlaceId", item.nearbyPlaceId()));
+            }
+        }
+    }
+
+    private void validateItemOwnership(
+            List<UpdateTourCourseItemRequest> items,
+            Map<Long, TourCourseItem> existingItems
+    ) {
+        for (int index = 0; index < items.size(); index++) {
+            Long itemId = items.get(index).itemId();
+            if (itemId != null && !existingItems.containsKey(itemId)) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        Map.of("field", "items[" + index + "].itemId", "itemId", itemId));
+            }
+        }
     }
 
     private void validatePage(int page, int size) {
@@ -179,27 +456,51 @@ public class TourCourseService {
         }
     }
 
-    private List<Long> validateAndGetSpotIds(List<CreateTourCourseItemRequest> items) {
-        Set<Long> uniqueIds = new HashSet<>();
-        for (CreateTourCourseItemRequest item : items) {
-            if (item.spotId() == null || item.spotId() < 1) {
-                throw validationException();
-            }
-            if (!uniqueIds.add(item.spotId())) {
+    private void validateCreatePlaces(List<CreateTourCourseItemRequest> items) {
+        Set<String> keys = new HashSet<>();
+        for (int index = 0; index < items.size(); index++) {
+            CreateTourCourseItemRequest item = items.get(index);
+            validatePlaceIdentifiers(item.category(), item.spotId(), item.nearbyPlaceId(),
+                    "items[" + index + "]", true);
+            Long id = item.category() == TourCourseItemCategory.TOUR_SPOT
+                    ? item.spotId() : item.nearbyPlaceId();
+            if (!keys.add(item.category() + ":" + id)) {
                 throw validationException();
             }
         }
-        return items.stream().map(CreateTourCourseItemRequest::spotId).toList();
+        List<Long> spotIds = items.stream()
+                .filter(item -> item.category() == TourCourseItemCategory.TOUR_SPOT)
+                .map(CreateTourCourseItemRequest::spotId)
+                .toList();
+        Set<Long> existingIds = spotIds.isEmpty()
+                ? Set.of() : tourSpotReferenceRepository.findExistingIds(spotIds);
+        if (!existingIds.containsAll(spotIds)) {
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+        items.stream()
+                .filter(item -> item.category() != TourCourseItemCategory.TOUR_SPOT)
+                .filter(item -> !tourSpotReferenceRepository.existsNearbyPlace(
+                        item.nearbyPlaceId(), item.category().name()))
+                .findFirst()
+                .ifPresent(item -> { throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND); });
     }
 
-    private void validateExistingSpots(List<Long> spotIds) {
-        Set<Long> existingIds = tourSpotReferenceRepository.findExistingIds(spotIds);
-        spotIds.stream()
-                .filter(spotId -> !existingIds.contains(spotId))
-                .findFirst()
-                .ifPresent(spotId -> {
-                    throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-                });
+    private void validatePlaceIdentifiers(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            String itemPath, boolean create
+    ) {
+        boolean valid = category != null && (
+                category == TourCourseItemCategory.TOUR_SPOT
+                        ? spotId != null && spotId > 0 && nearbyPlaceId == null
+                        : nearbyPlaceId != null && nearbyPlaceId > 0 && spotId == null);
+        if (!valid) {
+            if (create) {
+                throw validationException();
+            }
+            throw updateValidationException(
+                    itemPath,
+                    "TOUR_SPOT은 spotId만, RESTAURANT/ACCOMMODATION은 nearbyPlaceId만 입력해야 합니다.");
+        }
     }
 
     private CustomException validationException() {

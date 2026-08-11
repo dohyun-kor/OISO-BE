@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +36,23 @@ class JwtAuthenticationFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/api/auth/me");
         request.setCookies(new jakarta.servlet.http.Cookie(CookieUtil.ACCESS_TOKEN, "access.jwt"));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(jwt.validateToken("access.jwt", JwtTokenProvider.ACCESS)).thenReturn(true);
+        when(jwt.getUserId("access.jwt")).thenReturn(3L);
+        when(jwt.getNickname("access.jwt")).thenReturn("사용자");
+
+        new JwtAuthenticationFilter(jwt, cookies).doFilter(request, response, chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .isEqualTo(new AuthenticatedUser(3L, "사용자"));
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    void authenticatesValidBearerAccessToken() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/tour-courses");
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer access.jwt");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(jwt.validateToken("access.jwt", JwtTokenProvider.ACCESS)).thenReturn(true);
         when(jwt.getUserId("access.jwt")).thenReturn(3L);

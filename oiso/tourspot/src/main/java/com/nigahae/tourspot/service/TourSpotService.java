@@ -6,6 +6,9 @@ import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
+import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
+import com.nigahae.tourspot.dto.NearbyPlaceResponse;
+import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,5 +60,28 @@ public class TourSpotService {
                 result.getSize(),
                 result.getTotalElements()
         );
+    }
+
+    public NearbyPlaceListResponse getNearbyPlaces(
+            Long spotId, NearbyPlaceCategory category, int page, int size
+    ) {
+        if (!tourSpotQueryRepository.existsById(spotId)) {
+            throw new TourSpotNotFoundException(spotId);
+        }
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<com.nigahae.tourspot.dto.NearbyPlaceRow> result =
+                tourSpotQueryRepository.findNearbyPlaces(
+                        spotId, category == null ? "" : category.name(), pageRequest);
+        List<NearbyPlaceResponse> places = result.getContent().stream()
+                .map(NearbyPlaceResponse::from)
+                .toList();
+        return new NearbyPlaceListResponse(
+                places, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
+
+    public NearbyPlaceResponse getNearbyPlace(Long nearbyPlaceId) {
+        return tourSpotQueryRepository.findNearbyPlace(nearbyPlaceId)
+                .map(NearbyPlaceResponse::from)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 }

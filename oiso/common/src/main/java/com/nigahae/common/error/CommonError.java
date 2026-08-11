@@ -9,7 +9,7 @@ import com.nigahae.common.constant.ErrorCode;
  * @param message 오류 메시지
  * @param data 오류 응답 데이터. 항상 {@code null}입니다.
  */
-public record CommonError(int code, String message, Void data) {
+public record CommonError(int code, String message, Object data) {
 
     public static CommonError from(ErrorCode errorCode) {
         return from(errorCode, errorCode.getMessage());
@@ -17,5 +17,9 @@ public record CommonError(int code, String message, Void data) {
 
     public static CommonError from(ErrorCode errorCode, String message) {
         return new CommonError(errorCode.getCode(), message, null);
+    }
+
+    public static CommonError from(ErrorCode errorCode, String message, Object data) {
+        return new CommonError(errorCode.getCode(), message, data);
     }
 }

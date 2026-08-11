@@ -22,7 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class DevAuthController {
     private static final String DEV_PROVIDER = "dev";
 
-    public record DevLoginResponse(Long userId, String nickname) {
+    public record DevLoginResponse(
+            Long userId,
+            String nickname
+    ) {
     }
 
     private final UserAuthenticationService userAuthenticationService;
@@ -47,11 +50,12 @@ public class DevAuthController {
         AuthenticatedUser user = userAuthenticationService.loginOrRegister(
                 DEV_PROVIDER, providerUserId, nickname, null, null);
 
-        cookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN,
-                jwtTokenProvider.createAccessToken(user.userId(), user.nickname()),
+        String accessToken = jwtTokenProvider.createAccessToken(user.userId(), user.nickname());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.userId(), user.nickname());
+
+        cookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN, accessToken,
                 cookieUtil.getAccessTokenMaxAge());
-        cookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN,
-                jwtTokenProvider.createRefreshToken(user.userId(), user.nickname()),
+        cookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN, refreshToken,
                 cookieUtil.getRefreshTokenMaxAge());
 
         return ResponseEntity.ok(new DevLoginResponse(user.userId(), user.nickname()));

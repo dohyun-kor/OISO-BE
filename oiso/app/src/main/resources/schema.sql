@@ -155,6 +155,15 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     CONSTRAINT "PK_TOURCOURSE" PRIMARY KEY (tour_course_id, user_id)
 );
 
+-- Temporary local compatibility columns for Swagger tour-course testing.
+ALTER TABLE public."TourCourse"
+    ADD COLUMN IF NOT EXISTS share_yn boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS shared_password varchar(100),
+    ADD COLUMN IF NOT EXISTS created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS total_distance_meter integer NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS total_duration_second integer NOT NULL DEFAULT 0;
+
 
 -- public."TourCourseItem" definition
 
@@ -171,6 +180,12 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
     item_order                  int8 NULL,
     CONSTRAINT "PK_TOURCOURSEITEM" PRIMARY KEY (item_id, tour_spot_nearby_course_id2, spot_id)
 );
+
+ALTER TABLE public."TourCourseItem"
+    ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
+    ADD COLUMN IF NOT EXISTS transport_type varchar(10),
+    ADD COLUMN IF NOT EXISTS distance_meter integer,
+    ADD COLUMN IF NOT EXISTS duration_second integer;
 
 
 -- public."FestivalInfo" definition
@@ -322,6 +337,9 @@ ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS provider varchar(30);
 ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS provider_user_id varchar(100);
 ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS email varchar(320);
 ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS profile_image_url varchar(2048);
+-- Temporary local compatibility columns for Swagger authentication testing.
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS latitude varchar(255);
+ALTER TABLE public."User" ADD COLUMN IF NOT EXISTS longitude varchar(255);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_user_provider_subject
     ON public."User" (provider, provider_user_id)
     WHERE provider IS NOT NULL AND provider_user_id IS NOT NULL;

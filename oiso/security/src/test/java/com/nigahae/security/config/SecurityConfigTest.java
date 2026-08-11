@@ -60,4 +60,18 @@ class SecurityConfigTest {
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(postTourSpotDetail)).isFalse();
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getNestedPath)).isFalse();
     }
+
+    @Test
+    void nearbyPlaceReadMatchersAllowGetOnly() {
+        MockHttpServletRequest getGlobalDetail =
+                new MockHttpServletRequest("GET", "/api/v1/nearby-places/101");
+        MockHttpServletRequest getNearby =
+                new MockHttpServletRequest("GET", "/api/v1/tour-spots/1/nearby-places");
+        MockHttpServletRequest getNearbyDetail =
+                new MockHttpServletRequest("GET", "/api/v1/tour-spots/1/nearby-places/101");
+
+        assertThat(SecurityConfig.nearbyPlaceDetailReadRequestMatcher().matches(getGlobalDetail)).isTrue();
+        assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearby)).isTrue();
+        assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearbyDetail)).isFalse();
+    }
 }

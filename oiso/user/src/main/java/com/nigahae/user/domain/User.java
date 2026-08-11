@@ -24,8 +24,9 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "has_travel_plan")
-    private Boolean hasTravelPlan;
+    @Builder.Default
+    @Column(name = "has_travel_plan", nullable = false)
+    private Boolean hasTravelPlan = false;
 
     @Column(name = "travel_time")
     private Long travelTime;

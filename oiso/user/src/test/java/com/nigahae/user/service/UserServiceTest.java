@@ -31,7 +31,7 @@ class UserServiceTest {
                 .providerUserId("123").nickname("첫로그인").build());
         assertThat(service.loginOrRegister("kakao", "123", "첫로그인", null, null))
                 .isEqualTo(new AuthenticatedUser(7L, "첫로그인"));
-        verify(repository).save(any(User.class));
+        verify(repository).save(argThat(user -> Boolean.FALSE.equals(user.getHasTravelPlan())));
     }
 
     @Test

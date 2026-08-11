@@ -68,6 +68,37 @@ public class TourCourse {
         items.add(new TourCourseItem(this, spotId, itemOrder, transportType));
     }
 
+    public void addItem(
+            Long spotId,
+            int itemOrder,
+            TransportType transportType,
+            Integer distanceMeter,
+            Integer durationSecond
+    ) {
+        items.add(new TourCourseItem(
+                this, spotId, itemOrder, transportType, distanceMeter, durationSecond));
+    }
+
+    public void addItem(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, int itemOrder,
+            TransportType transportType, Integer distanceMeter, Integer durationSecond
+    ) {
+        items.add(new TourCourseItem(
+                this, category, spotId, nearbyPlaceId, itemOrder,
+                transportType, distanceMeter, durationSecond));
+    }
+
+    public void updateBasicInfo(String title, boolean shareYn, String sharedPassword) {
+        this.title = title;
+        this.shareYn = shareYn;
+        this.sharedPassword = sharedPassword;
+    }
+
+    public void updateMovementTotals(int totalDistanceMeter, int totalDurationSecond) {
+        this.totalDistanceMeter = totalDistanceMeter;
+        this.totalDurationSecond = totalDurationSecond;
+    }
+
     @PrePersist
     private void onCreate() {
         LocalDateTime now = LocalDateTime.now();

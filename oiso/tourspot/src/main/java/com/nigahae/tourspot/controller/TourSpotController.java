@@ -3,9 +3,13 @@ package com.nigahae.tourspot.controller;
 import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.controller.docs.TourSpotControllerDocs;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
-import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
+import com.nigahae.tourspot.domain.NearbyPlaceCategory;
+import com.nigahae.tourspot.domain.PlaceCategory;
+import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.exception.InvalidTourSpotIdException;
 import com.nigahae.tourspot.service.TourSpotService;
+import com.nigahae.tourspot.service.PlaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +17,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Validated
 @RestController
@@ -20,10 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/tour-spots")
 public class TourSpotController implements TourSpotControllerDocs {
 
-    private static final String SUCCESS_MESSAGE = "관광지 목록 조회에 성공했습니다.";
+    private static final String SUCCESS_MESSAGE = "장소 목록 조회에 성공했습니다.";
     private static final String DETAIL_SUCCESS_MESSAGE = "관광지 상세 조회에 성공했습니다.";
 
     private final TourSpotService tourSpotService;
+    private final PlaceService placeService;
 
     @GetMapping("/{spotId}")
     @Override
@@ -37,7 +45,8 @@ public class TourSpotController implements TourSpotControllerDocs {
 
     @GetMapping
     @Override
-    public CommonResponse<TourSpotListResponse> getTourSpots(
+    public CommonResponse<PlaceListResponse> getTourSpots(
+            @RequestParam(required = false) PlaceCategory category,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20")
@@ -46,8 +55,22 @@ public class TourSpotController implements TourSpotControllerDocs {
         return new CommonResponse<>(
                 CommonResponse.SUCCESS_CODE,
                 SUCCESS_MESSAGE,
-                tourSpotService.getTourSpots(keyword, page, size)
+                placeService.getPlaces(category, keyword, page, size)
         );
+    }
+
+    @Operation(summary = "주변 장소 목록 조회", description = "관광지 주변의 식당·숙소를 조회합니다. category로 필터링할 수 있습니다.")
+    @GetMapping("/{spotId}/nearby-places")
+    public CommonResponse<NearbyPlaceListResponse> getNearbyPlaces(
+            @PathVariable Long spotId,
+            @RequestParam(required = false) NearbyPlaceCategory category,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
+    ) {
+        return new CommonResponse<>(
+                CommonResponse.SUCCESS_CODE,
+                "주변 장소 목록 조회에 성공했습니다.",
+                tourSpotService.getNearbyPlaces(spotId, category, page, size));
     }
 
     private Long parseSpotId(String spotId) {
