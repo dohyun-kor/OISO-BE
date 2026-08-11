@@ -53,7 +53,7 @@
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </DataSourceFromHistory>
-  <DataSourceFromHistory isRemovedFromProject="false">
+  <DataSourceFromHistory isRemovedFromProject="true">
     <data-source source="LOCAL" name="postgres@localhost" uuid="8546b559-8acb-45c2-98c2-90e1a5bee80c">
       <database-info product="PostgreSQL" version="17.10" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.7.3" dbms="POSTGRES" exact-version="17.10" exact-driver-version="42.7">
         <identifier-quote-string>&quot;</identifier-quote-string>

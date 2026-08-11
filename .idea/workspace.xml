@@ -4,45 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5f23ada-6f61-41da-86e3-82bc8d3b65f6" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/config/SwaggerConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/domain/TourCourseItemCategory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/TourCourseDetailResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/TourCourseItemDetailResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/TourCourseItemDetailRow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/UpdateTourCourseItemRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/UpdateTourCourseRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/api/src/main/java/com/nigahae/api/config/SwaggerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/api/src/main/java/com/nigahae/api/config/SwaggerConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/app/src/main/resources/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/app/src/main/resources/schema.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/constant/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/constant/ErrorCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/error/CommonError.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/error/CommonError.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/exception/CustomException.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/exception/CustomException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/common/src/main/java/com/nigahae/common/exception/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/controller/DevAuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/controller/DevAuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/jwt/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/main/java/com/nigahae/security/jwt/JwtAuthenticationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/test/java/com/nigahae/security/config/SecurityConfigTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/test/java/com/nigahae/security/config/SecurityConfigTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/security/src/test/java/com/nigahae/security/jwt/JwtAuthenticationFilterTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/security/src/test/java/com/nigahae/security/jwt/JwtAuthenticationFilterTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/controller/TourCourseController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/controller/TourCourseController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/controller/docs/TourCourseControllerDocs.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/controller/docs/TourCourseControllerDocs.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/domain/TourCourse.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/domain/TourCourse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/domain/TourCourseItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/domain/TourCourseItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/CreateTourCourseItemRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/dto/CreateTourCourseItemRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/repository/TourCourseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/repository/TourCourseRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/repository/TourSpotReferenceRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/repository/TourSpotReferenceRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/service/TourCourseService.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/java/com/nigahae/tourcourse/service/TourCourseService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/main/resources/db/tour-course-schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/main/resources/db/tour-course-schema.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/test/java/com/nigahae/tourcourse/controller/TourCourseControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/test/java/com/nigahae/tourcourse/controller/TourCourseControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourcourse/src/test/java/com/nigahae/tourcourse/service/TourCourseServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourcourse/src/test/java/com/nigahae/tourcourse/service/TourCourseServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/TourSpotController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/TourSpotController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/docs/TourSpotControllerDocs.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/controller/docs/TourSpotControllerDocs.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/repository/TourSpotQueryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/repository/TourSpotQueryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/service/TourSpotService.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/main/java/com/nigahae/tourspot/service/TourSpotService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/tourspot/src/test/java/com/nigahae/tourspot/service/TourSpotServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/tourspot/src/test/java/com/nigahae/tourspot/service/TourSpotServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/user/src/main/java/com/nigahae/user/domain/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/user/src/main/java/com/nigahae/user/domain/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oiso/user/src/test/java/com/nigahae/user/service/UserServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/oiso/user/src/test/java/com/nigahae/user/service/UserServiceTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="a5f23ada-6f61-41da-86e3-82bc8d3b65f6" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
