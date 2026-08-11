@@ -7,6 +7,8 @@ import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.dto.NearbyPlaceRow;
+import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
@@ -31,6 +33,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class TourSpotServiceTest {
@@ -188,6 +191,27 @@ class TourSpotServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);
+    }
+
+    @Test
+    void getsRestaurantNearbyPlaces() {
+        NearbyPlaceRow row = mock(NearbyPlaceRow.class);
+        when(row.getNearbyPlaceId()).thenReturn(101L);
+        when(row.getSpotId()).thenReturn(1L);
+        when(row.getCategory()).thenReturn("RESTAURANT");
+        when(row.getName()).thenReturn("경주 식당");
+        when(tourSpotQueryRepository.existsById(1L)).thenReturn(true);
+        when(tourSpotQueryRepository.findNearbyPlaces(
+                eq(1L), eq("RESTAURANT"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(row), PageRequest.of(0, 20), 1));
+
+        var response = tourSpotService.getNearbyPlaces(
+                1L, NearbyPlaceCategory.RESTAURANT, 0, 20);
+
+        assertThat(response.nearbyPlaces()).hasSize(1);
+        assertThat(response.nearbyPlaces().get(0).nearbyPlaceId()).isEqualTo(101L);
+        assertThat(response.nearbyPlaces().get(0).category())
+                .isEqualTo(NearbyPlaceCategory.RESTAURANT);
     }
 
     private TourSpot tourSpot(Long id, String name) {

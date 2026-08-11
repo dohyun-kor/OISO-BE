@@ -43,17 +43,77 @@ public class TourCourseItem {
     @Column(name = "transport_type", length = 10)
     private TransportType transportType;
 
+    @Column(name = "distance_meter")
+    private Integer distanceMeter;
+
+    @Column(name = "duration_second")
+    private Integer durationSecond;
+
+    TourCourseItem(TourCourse tourCourse, Long spotId, int itemOrder, TransportType transportType) {
+        this(tourCourse, spotId, itemOrder, transportType, null, null);
+    }
+
+    TourCourseItem(
+            TourCourse tourCourse, TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            int itemOrder, TransportType transportType, Integer distanceMeter, Integer durationSecond
+    ) {
+        this.tourCourse = tourCourse;
+        setPlace(category, spotId, nearbyPlaceId);
+        this.itemOrder = itemOrder;
+        this.transportType = transportType;
+        this.distanceMeter = distanceMeter;
+        this.durationSecond = durationSecond;
+    }
+
     TourCourseItem(
             TourCourse tourCourse,
             Long spotId,
-            Long nearbyPlaceId,
             int itemOrder,
-            TransportType transportType
+            TransportType transportType,
+            Integer distanceMeter,
+            Integer durationSecond
     ) {
         this.tourCourse = tourCourse;
         this.spotId = spotId;
-        this.nearbyPlaceId = nearbyPlaceId;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
+        this.distanceMeter = distanceMeter;
+        this.durationSecond = durationSecond;
+    }
+
+    public void update(
+            Long spotId,
+            int itemOrder,
+            TransportType transportType,
+            Integer distanceMeter,
+            Integer durationSecond
+    ) {
+        this.spotId = spotId;
+        this.nearbyPlaceId = null;
+        this.itemOrder = itemOrder;
+        this.transportType = transportType;
+        this.distanceMeter = distanceMeter;
+        this.durationSecond = durationSecond;
+    }
+
+    public void update(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, int itemOrder,
+            TransportType transportType, Integer distanceMeter, Integer durationSecond
+    ) {
+        setPlace(category, spotId, nearbyPlaceId);
+        this.itemOrder = itemOrder;
+        this.transportType = transportType;
+        this.distanceMeter = distanceMeter;
+        this.durationSecond = durationSecond;
+    }
+
+    private void setPlace(TourCourseItemCategory category, Long spotId, Long nearbyPlaceId) {
+        if (category == TourCourseItemCategory.TOUR_SPOT) {
+            this.spotId = spotId;
+            this.nearbyPlaceId = null;
+        } else {
+            this.spotId = null;
+            this.nearbyPlaceId = nearbyPlaceId;
+        }
     }
 }

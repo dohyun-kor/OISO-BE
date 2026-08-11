@@ -8,7 +8,10 @@ ALTER TABLE public."TourCourse"
     ADD COLUMN IF NOT EXISTS total_duration_second integer NOT NULL DEFAULT 0;
 
 ALTER TABLE public."TourCourseItem"
-    ADD COLUMN IF NOT EXISTS transport_type varchar(10);
+    ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
+    ADD COLUMN IF NOT EXISTS transport_type varchar(10),
+    ADD COLUMN IF NOT EXISTS distance_meter integer,
+    ADD COLUMN IF NOT EXISTS duration_second integer;
 
 DO $$
 BEGIN

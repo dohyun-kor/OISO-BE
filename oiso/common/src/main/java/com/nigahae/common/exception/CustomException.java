@@ -7,9 +7,19 @@ import lombok.Getter;
 public class CustomException extends RuntimeException {
 
     private final ErrorCode errorCode;
+    private final Object data;
 
     public CustomException(ErrorCode errorCode) {
-        super(errorCode.getMessage()); // 부모 RuntimeException에 메시지 전달
+        this(errorCode, errorCode.getMessage(), null);
+    }
+
+    public CustomException(ErrorCode errorCode, Object data) {
+        this(errorCode, errorCode.getMessage(), data);
+    }
+
+    public CustomException(ErrorCode errorCode, String message, Object data) {
+        super(message);
         this.errorCode = errorCode;
+        this.data = data;
     }
 }
