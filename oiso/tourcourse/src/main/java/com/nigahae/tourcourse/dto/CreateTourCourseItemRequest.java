@@ -19,4 +19,16 @@ public record CreateTourCourseItemRequest(
     public CreateTourCourseItemRequest(Long spotId, Integer itemOrder, TransportType transportType) {
         this(TourCourseItemCategory.TOUR_SPOT, spotId, null, itemOrder, transportType);
     }
+
+    public CreateTourCourseItemRequest(
+            Long spotId, Long nearbyPlaceId, Integer itemOrder, TransportType transportType
+    ) {
+        this(
+                spotId != null ? TourCourseItemCategory.TOUR_SPOT : TourCourseItemCategory.RESTAURANT,
+                spotId,
+                nearbyPlaceId,
+                itemOrder,
+                transportType
+        );
+    }
 }

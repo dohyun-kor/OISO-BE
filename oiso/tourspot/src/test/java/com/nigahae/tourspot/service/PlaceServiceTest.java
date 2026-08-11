@@ -28,6 +28,7 @@ class PlaceServiceTest {
     void getsRestaurantsForCourseBuilder() {
         PlaceSummaryRow row = mock(PlaceSummaryRow.class);
         when(row.getCategory()).thenReturn("RESTAURANT");
+        when(row.getSpotId()).thenReturn(null);
         when(row.getNearbyPlaceId()).thenReturn(101L);
         when(row.getName()).thenReturn("경주 식당");
         when(repository.findPlaces(eq("RESTAURANT"), eq("한식"), any(Pageable.class)))

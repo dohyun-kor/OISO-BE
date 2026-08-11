@@ -65,12 +65,14 @@ public class TourCourse {
     }
 
     public void addItem(
+            TourCourseItemCategory category,
             Long spotId,
             Long nearbyPlaceId,
             int itemOrder,
             TransportType transportType
     ) {
-        items.add(new TourCourseItem(this, spotId, nearbyPlaceId, itemOrder, transportType));
+        items.add(new TourCourseItem(
+                this, category, spotId, nearbyPlaceId, itemOrder, transportType, null, null));
     }
 
     public void addItem(
@@ -82,6 +84,10 @@ public class TourCourse {
     ) {
         items.add(new TourCourseItem(
                 this, spotId, itemOrder, transportType, distanceMeter, durationSecond));
+    }
+
+    public void addItem(Long spotId, int itemOrder, TransportType transportType) {
+        addItem(spotId, itemOrder, transportType, null, null);
     }
 
     public void addItem(

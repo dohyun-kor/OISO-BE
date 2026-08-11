@@ -265,7 +265,8 @@ class TourCourseServiceTest {
                                 TourCourseItemCategory.RESTAURANT, null, 101L, 2, TransportType.WALK)
                 ));
         when(tourSpotReferenceRepository.findExistingIds(List.of(1L))).thenReturn(Set.of(1L));
-        when(tourSpotReferenceRepository.existsNearbyPlace(101L, "RESTAURANT")).thenReturn(true);
+        when(nearbyPlaceReferenceRepository.findExistingIds(List.of(101L)))
+                .thenReturn(Set.of(101L));
         when(tourCourseRepository.save(any(TourCourse.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
