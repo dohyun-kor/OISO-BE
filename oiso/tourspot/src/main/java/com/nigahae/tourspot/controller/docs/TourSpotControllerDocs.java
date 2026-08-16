@@ -4,7 +4,8 @@ import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
-import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.dto.PlaceListResponse;
+import com.nigahae.tourspot.domain.PlaceCategory;
 import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -190,8 +191,8 @@ public interface TourSpotControllerDocs {
     );
 
     @Operation(
-            summary = "관광지 목록 조회",
-            description = "관광지 이름, 주소, 요약으로 검색하고 페이지 단위로 조회합니다.",
+            summary = "장소 통합 목록 조회",
+            description = "관광지·식당·숙소를 category와 검색어로 조회합니다. category를 생략하면 전체 장소를 조회합니다.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -204,16 +205,17 @@ public interface TourSpotControllerDocs {
                                             value = """
                                                     {
                                                       "code": 0,
-                                                      "message": "관광지 목록 조회에 성공했습니다.",
+                                                      "message": "장소 목록 조회에 성공했습니다.",
                                                       "data": {
-                                                        "tourSpots": [
+                                                        "places": [
                                                           {
+                                                            "category": "TOUR_SPOT",
                                                             "spotId": 1,
+                                                            "nearbyPlaceId": null,
                                                             "name": "관광지 이름 예시",
                                                             "img": "https://example.com/tour-spot.jpg",
                                                             "overview": "관광지 요약 예시",
-                                                            "address": "관광지 주소 예시",
-                                                            "like": false
+                                                            "address": "관광지 주소 예시"
                                                           }
                                                         ],
                                                         "page": 0,
@@ -263,8 +265,10 @@ public interface TourSpotControllerDocs {
                     )
             }
     )
-    CommonResponse<TourSpotListResponse> getTourSpots(
-            @Parameter(description = "관광지 이름, 주소, 요약 검색")
+    CommonResponse<PlaceListResponse> getTourSpots(
+            @Parameter(description = "장소 종류. 생략하면 전체 조회", example = "RESTAURANT")
+            PlaceCategory category,
+            @Parameter(description = "장소 이름, 주소, 요약 검색")
             String keyword,
             @Parameter(description = "페이지 번호", example = "0")
             @Min(value = 0, message = "page") int page,
