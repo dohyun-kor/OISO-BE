@@ -90,6 +90,16 @@ CREATE TABLE IF NOT EXISTS public."Mission"
     CONSTRAINT "PK_MISSION" PRIMARY KEY (mission_id, spot_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS public."UserTourSpotMissionClear"
+(
+    user_id      int8        NOT NULL,
+    spot_id      int8        NOT NULL,
+    mission_type varchar(30) NOT NULL,
+    cleared_at   timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PK_USER_TOUR_SPOT_MISSION_CLEAR"
+        PRIMARY KEY (user_id, spot_id, mission_type)
+);
+
 
 -- public."NearbyPlaceDetail" definition
 

@@ -6,7 +6,10 @@ import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.domain.PlaceCategory;
+import com.nigahae.tourspot.domain.StampMissionType;
 import com.nigahae.tourspot.dto.PlaceListResponse;
+import com.nigahae.tourspot.dto.StampMissionClearResponse;
+import com.nigahae.user.AuthenticatedUser;
 import com.nigahae.tourspot.exception.InvalidTourSpotIdException;
 import com.nigahae.tourspot.service.TourSpotService;
 import com.nigahae.tourspot.service.PlaceService;
@@ -17,6 +20,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.nigahae.common.constant.ErrorCode;
+import com.nigahae.common.exception.CustomException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -35,12 +42,29 @@ public class TourSpotController implements TourSpotControllerDocs {
 
     @GetMapping("/{spotId}")
     @Override
-    public CommonResponse<TourSpotDetailResponse> getTourSpot(@PathVariable String spotId) {
+    public CommonResponse<TourSpotDetailResponse> getTourSpot(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId
+    ) {
         return new CommonResponse<>(
                 CommonResponse.SUCCESS_CODE,
                 DETAIL_SUCCESS_MESSAGE,
-                tourSpotService.getTourSpot(parseSpotId(spotId))
+                tourSpotService.getTourSpot(parseSpotId(spotId), user == null ? null : user.userId())
         );
+    }
+
+    @PutMapping("/{spotId}/stamp-missions/{missionType}/clear")
+    @Override
+    public CommonResponse<StampMissionClearResponse> clearStampMission(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId,
+            @PathVariable StampMissionType missionType
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "스탬프 미션을 완료했습니다.",
+                tourSpotService.clearStampMission(user.userId(), parseSpotId(spotId), missionType));
     }
 
     @GetMapping

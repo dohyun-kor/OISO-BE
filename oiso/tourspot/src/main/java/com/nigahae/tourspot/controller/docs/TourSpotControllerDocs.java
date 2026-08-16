@@ -4,6 +4,10 @@ import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.domain.PlaceCategory;
+import com.nigahae.tourspot.domain.StampMissionType;
+import com.nigahae.tourspot.dto.StampMissionClearResponse;
+import com.nigahae.user.AuthenticatedUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,7 +23,7 @@ public interface TourSpotControllerDocs {
 
     @Operation(
             summary = "관광지 상세 조회",
-            description = "관광지 ID로 관광지 상세 정보를 조회합니다.",
+            description = "관광지 상세 정보를 조회합니다. JWT 쿠키가 있으면 사용자별 VISIT, QR_SCAN, STORY_CARD 완료 상태를 stampProgress로 반환하고, 비로그인 조회에서는 stampProgress가 null입니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광지 상세 조회 성공",
                             content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
@@ -35,6 +39,16 @@ public interface TourSpotControllerDocs {
                                           "address": "경상북도 경주시 불국로 385",
                                           "mapX": 129.332,
                                           "mapY": 35.7901
+                                        },
+                                        "stampProgress": {
+                                          "clearedCount": 2,
+                                          "totalCount": 3,
+                                          "allCleared": false,
+                                          "missions": [
+                                            { "type": "VISIT", "cleared": true, "clearedAt": "2026-08-16T13:00:00" },
+                                            { "type": "QR_SCAN", "cleared": true, "clearedAt": "2026-08-16T13:10:00" },
+                                            { "type": "STORY_CARD", "cleared": false, "clearedAt": null }
+                                          ]
                                         }
                                       }
                                     }
@@ -58,6 +72,7 @@ public interface TourSpotControllerDocs {
             }
     )
     CommonResponse<TourSpotDetailResponse> getTourSpot(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
             @Parameter(
                     description = "조회할 관광지 ID",
                     required = true,
@@ -65,6 +80,34 @@ public interface TourSpotControllerDocs {
                     schema = @Schema(type = "integer", format = "int64", minimum = "1")
             )
             String spotId
+    );
+
+    @Operation(
+            summary = "스탬프 미션 완료",
+            description = "인증 사용자의 관광지 미션을 완료 처리합니다. 동일 요청을 반복해도 기존 완료 상태를 반환하는 멱등 API입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "스탬프 미션 완료 성공",
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 0,
+                                      "message": "스탬프 미션을 완료했습니다.",
+                                      "data": {
+                                        "spotId": 1,
+                                        "missionType": "QR_SCAN",
+                                        "cleared": true,
+                                        "clearedAt": "2026-08-16T13:10:00"
+                                      }
+                                    }
+                                    """))),
+                    @ApiResponse(responseCode = "400", description = "미션 완료 실패: 관광지 ID 또는 미션 유형 형식 오류"),
+                    @ApiResponse(responseCode = "401", description = "미션 완료 실패: 인증되지 않은 사용자"),
+                    @ApiResponse(responseCode = "404", description = "미션 완료 실패: 관광지를 찾을 수 없음")
+            }
+    )
+    CommonResponse<StampMissionClearResponse> clearStampMission(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "관광지 ID", example = "1") String spotId,
+            @Parameter(description = "미션 유형", example = "QR_SCAN") StampMissionType missionType
     );
 
     @Operation(

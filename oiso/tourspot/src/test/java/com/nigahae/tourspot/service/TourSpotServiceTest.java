@@ -7,8 +7,12 @@ import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceRow;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
+import com.nigahae.tourspot.domain.StampMissionClear;
+import com.nigahae.tourspot.domain.StampMissionClearId;
+import com.nigahae.tourspot.domain.StampMissionType;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
+import com.nigahae.tourspot.repository.StampMissionClearRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,11 +42,14 @@ class TourSpotServiceTest {
     @Mock
     private TourSpotQueryRepository tourSpotQueryRepository;
 
+    @Mock
+    private StampMissionClearRepository stampMissionClearRepository;
+
     private TourSpotService tourSpotService;
 
     @BeforeEach
     void setUp() {
-        tourSpotService = new TourSpotService(tourSpotQueryRepository);
+        tourSpotService = new TourSpotService(tourSpotQueryRepository, stampMissionClearRepository);
     }
 
     @Test
@@ -55,6 +63,29 @@ class TourSpotServiceTest {
         assertThat(response.tourSpot().spotId()).isEqualTo(1L);
         assertThat(response.tourSpot().name()).isEqualTo("불국사");
         assertThat(response.tourSpot().like()).isFalse();
+    }
+
+    @Test
+    @DisplayName("로그인 사용자의 관광지별 스탬프 진행 상태를 반환한다")
+    void getTourSpotWithStampProgress() {
+        TourSpot tourSpot = tourSpot(1L, "불국사");
+        StampMissionClear clear = mock(StampMissionClear.class);
+        StampMissionClearId clearId = new StampMissionClearId(7L, 1L, StampMissionType.VISIT);
+        LocalDateTime clearedAt = LocalDateTime.of(2026, 8, 16, 13, 0);
+        when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
+        when(clear.getId()).thenReturn(clearId);
+        when(clear.getClearedAt()).thenReturn(clearedAt);
+        when(stampMissionClearRepository.findAllByIdUserIdAndIdSpotId(7L, 1L))
+                .thenReturn(List.of(clear));
+
+        TourSpotDetailResponse response = tourSpotService.getTourSpot(1L, 7L);
+
+        assertThat(response.stampProgress().clearedCount()).isEqualTo(1);
+        assertThat(response.stampProgress().totalCount()).isEqualTo(3);
+        assertThat(response.stampProgress().allCleared()).isFalse();
+        assertThat(response.stampProgress().missions())
+                .filteredOn(mission -> mission.type() == StampMissionType.VISIT)
+                .singleElement().extracting("cleared").isEqualTo(true);
     }
 
     @Test
