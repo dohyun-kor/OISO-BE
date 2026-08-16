@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users/me/preferences")
-@Tag(name = "User Preferences", description = "인증 사용자의 초기 여행 선호정보 API")
+@Tag(name = "여행 선호정보", description = "인증 사용자의 초기 여행 선호정보 API")
 public class UserPreferencesController {
 
     private final UserService userService;
@@ -61,9 +61,9 @@ public class UserPreferencesController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "선호정보 저장 성공"),
-            @ApiResponse(responseCode = "400", description = "필수값, enum 또는 좌표 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
-            @ApiResponse(responseCode = "404", description = "인증 ID에 해당하는 사용자가 없음")
+            @ApiResponse(responseCode = "400", description = "선호정보 저장 실패: 필수값, enum 또는 좌표 검증 오류"),
+            @ApiResponse(responseCode = "401", description = "선호정보 저장 실패: 인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "선호정보 저장 실패: 사용자를 찾을 수 없음")
     })
     public CommonResponse<UserPreferencesResponse> updatePreferences(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users/me/mypage")
-@Tag(name = "My Page", description = "인증 사용자의 마이페이지 API")
+@Tag(name = "마이페이지", description = "인증 사용자의 마이페이지 조회 API")
 public class MyPageController {
 
     private final MyPageService myPageService;
@@ -31,8 +31,8 @@ public class MyPageController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "마이페이지 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
-            @ApiResponse(responseCode = "404", description = "인증 ID에 해당하는 사용자가 없음")
+            @ApiResponse(responseCode = "401", description = "마이페이지 조회 실패: 인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "마이페이지 조회 실패: 사용자를 찾을 수 없음")
     })
     public CommonResponse<MyPageResponse> getMyPage(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
