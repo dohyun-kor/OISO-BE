@@ -2,6 +2,7 @@ package com.nigahae.tourcourse.dto;
 
 public interface TourCourseItemDetailRow {
     Long getItemId();
+    Integer getDayNumber();
     Integer getItemOrder();
     String getCategory();
     Long getSpotId();

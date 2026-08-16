@@ -1,6 +1,7 @@
 package com.nigahae.tourcourse.service;
 
 import com.nigahae.tourcourse.domain.TourCourse;
+import com.nigahae.tourcourse.domain.TourCourseItem;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourcourse.domain.TransportType;
@@ -112,6 +113,32 @@ class TourCourseServiceTest {
         );
 
         assertValidationError(request);
+    }
+
+    @Test
+    void createsItemsWithOrdersRestartingForEachDay() {
+        CreateTourCourseRequest request = new CreateTourCourseRequest(
+                "2일 코스", false, null,
+                List.of(
+                        new CreateTourCourseItemRequest(
+                                TourCourseItemCategory.TOUR_SPOT, 1L, null, 1, 1, null),
+                        new CreateTourCourseItemRequest(
+                                TourCourseItemCategory.TOUR_SPOT, 2L, null, 2, 1, null)
+                ));
+        when(tourSpotReferenceRepository.findExistingIds(List.of(1L, 2L)))
+                .thenReturn(Set.of(1L, 2L));
+        when(tourCourseRepository.save(any(TourCourse.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        tourCourseService.create(7L, request);
+
+        TourCourse saved = org.mockito.Mockito.mockingDetails(tourCourseRepository).getInvocations()
+                .stream().filter(invocation -> invocation.getMethod().getName().equals("save"))
+                .map(invocation -> (TourCourse) invocation.getArgument(0)).findFirst().orElseThrow();
+        assertThat(saved.getItems()).extracting(TourCourseItem::getDayNumber)
+                .containsExactly(1, 2);
+        assertThat(saved.getItems()).extracting(TourCourseItem::getItemOrder)
+                .containsExactly(1, 1);
     }
 
     @Test
@@ -395,6 +422,7 @@ class TourCourseServiceTest {
     ) {
         TourCourseItemDetailRow row = mock(TourCourseItemDetailRow.class);
         when(row.getItemId()).thenReturn(itemId);
+        when(row.getDayNumber()).thenReturn(1);
         when(row.getItemOrder()).thenReturn(itemOrder);
         when(row.getCategory()).thenReturn(category);
         when(row.getSpotId()).thenReturn("TOUR_SPOT".equals(category) ? 1L : null);

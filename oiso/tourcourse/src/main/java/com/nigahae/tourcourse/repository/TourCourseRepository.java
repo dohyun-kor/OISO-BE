@@ -20,7 +20,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                         c.tourCourseId,
                         c.title,
                         c.shareYn,
-                        max(case when item.itemOrder = 1 then spot.img else null end),
+                        max(case when item.dayNumber = 1 and item.itemOrder = 1 then spot.img else null end),
                         count(item.itemId),
                         c.totalDistanceMeter,
                         c.totalDurationSecond,
@@ -51,6 +51,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
     @Query(value = """
             select
                 item.item_id as "itemId",
+                item.day_number as "dayNumber",
                 item.item_order as "itemOrder",
                 case
                     when item.spot_id is not null then 'TOUR_SPOT'
@@ -87,7 +88,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
             left join "TourSpotNearbyPlace" nearby
                 on nearby.tour_spot_nearby_course_id = item.tour_spot_nearby_course_id
             where item.tour_course_id = :tourCourseId
-            order by item.item_order asc
+            order by item.day_number asc, item.item_order asc
             """, nativeQuery = true)
     List<TourCourseItemDetailRow> findDetailItems(
             @Param("tourCourseId") Long tourCourseId,

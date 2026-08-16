@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record TourCourseItemDetailResponse(
         @Schema(description = "관광 코스에 포함된 항목 자체의 ID. 코스 수정 시 기존 항목을 식별하는 itemId로 사용합니다.", example = "11")
         Long itemId,
+        @Schema(description = "여행 일차", example = "1") Integer dayNumber,
         Integer itemOrder,
         TourCourseItemCategory category,
         @Schema(nullable = true, description = "항목이 가리키는 실제 관광지 ID. 코스 수정 요청의 spotId로 사용합니다. 주변 장소 항목이면 null입니다.", example = "35")
@@ -28,6 +29,7 @@ public record TourCourseItemDetailResponse(
         boolean firstItem = row.getItemOrder() != null && row.getItemOrder() == 1;
         return new TourCourseItemDetailResponse(
                 row.getItemId(),
+                row.getDayNumber(),
                 row.getItemOrder(),
                 TourCourseItemCategory.valueOf(row.getCategory()),
                 row.getSpotId(),

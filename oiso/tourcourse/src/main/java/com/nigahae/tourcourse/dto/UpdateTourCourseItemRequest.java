@@ -13,6 +13,8 @@ public record UpdateTourCourseItemRequest(
         Long spotId,
         @Schema(nullable = true, description = "식당·숙소 항목의 주변 장소 ID. 해당 category일 때만 입력합니다.", example = "101")
         Long nearbyPlaceId,
+        @Schema(description = "여행 일차(1부터 연속)", example = "1") Integer dayNumber,
+        @Schema(description = "해당 일차 내 방문 순서(1부터 연속)", example = "1")
         Integer itemOrder,
         @Schema(nullable = true) TransportType transportType,
         @Schema(nullable = true) Integer distanceMeter,
@@ -22,7 +24,16 @@ public record UpdateTourCourseItemRequest(
             Long itemId, Long spotId, Integer itemOrder, TransportType transportType,
             Integer distanceMeter, Integer durationSecond
     ) {
-        this(itemId, TourCourseItemCategory.TOUR_SPOT, spotId, null, itemOrder,
+        this(itemId, TourCourseItemCategory.TOUR_SPOT, spotId, null, 1, itemOrder,
+                transportType, distanceMeter, durationSecond);
+    }
+
+    public UpdateTourCourseItemRequest(
+            Long itemId, TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            Integer itemOrder, TransportType transportType,
+            Integer distanceMeter, Integer durationSecond
+    ) {
+        this(itemId, category, spotId, nearbyPlaceId, 1, itemOrder,
                 transportType, distanceMeter, durationSecond);
     }
 }

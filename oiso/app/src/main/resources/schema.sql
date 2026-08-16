@@ -192,10 +192,15 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
 );
 
 ALTER TABLE public."TourCourseItem"
+    ADD COLUMN IF NOT EXISTS day_number integer NOT NULL DEFAULT 1,
     ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
     ADD COLUMN IF NOT EXISTS transport_type varchar(10),
     ADD COLUMN IF NOT EXISTS distance_meter integer,
     ADD COLUMN IF NOT EXISTS duration_second integer;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_course_item_day_order
+    ON public."TourCourseItem" (tour_course_id, day_number, item_order)
+    WHERE tour_course_id IS NOT NULL;
 
 
 -- public."FestivalInfo" definition

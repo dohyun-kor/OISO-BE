@@ -80,12 +80,21 @@ public class TourCourse {
     }
 
     public void addItem(
-            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, int itemOrder,
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            int dayNumber, int itemOrder,
             TransportType transportType, Integer distanceMeter, Integer durationSecond
     ) {
         items.add(new TourCourseItem(
-                this, category, spotId, nearbyPlaceId, itemOrder,
+                this, category, spotId, nearbyPlaceId, dayNumber, itemOrder,
                 transportType, distanceMeter, durationSecond));
+    }
+
+    public void addItem(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, int itemOrder,
+            TransportType transportType, Integer distanceMeter, Integer durationSecond
+    ) {
+        addItem(category, spotId, nearbyPlaceId, 1, itemOrder,
+                transportType, distanceMeter, durationSecond);
     }
 
     public void updateBasicInfo(String title, boolean shareYn, String sharedPassword) {

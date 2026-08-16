@@ -39,6 +39,9 @@ public class TourCourseItem {
     @Column(name = "item_order", nullable = false)
     private int itemOrder;
 
+    @Column(name = "day_number", nullable = false)
+    private int dayNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "transport_type", length = 10)
     private TransportType transportType;
@@ -55,10 +58,12 @@ public class TourCourseItem {
 
     TourCourseItem(
             TourCourse tourCourse, TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            int itemOrder, TransportType transportType, Integer distanceMeter, Integer durationSecond
+            int dayNumber, int itemOrder, TransportType transportType,
+            Integer distanceMeter, Integer durationSecond
     ) {
         this.tourCourse = tourCourse;
         setPlace(category, spotId, nearbyPlaceId);
+        this.dayNumber = dayNumber;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
         this.distanceMeter = distanceMeter;
@@ -97,10 +102,12 @@ public class TourCourseItem {
     }
 
     public void update(
-            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, int itemOrder,
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            int dayNumber, int itemOrder,
             TransportType transportType, Integer distanceMeter, Integer durationSecond
     ) {
         setPlace(category, spotId, nearbyPlaceId);
+        this.dayNumber = dayNumber;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
         this.distanceMeter = distanceMeter;
