@@ -48,13 +48,124 @@ public interface TourCourseControllerDocs {
               "data": null
             }
             """;
+    String DETAIL_SUCCESS = """
+            {
+              "code": 2000,
+              "message": "관광 코스 상세 조회에 성공했습니다.",
+              "data": {
+                "tourCourseId": 1,
+                "title": "경주 2일 역사 여행 코스",
+                "shareYn": false,
+                "items": [
+                  {
+                    "itemId": 11,
+                    "dayNumber": 1,
+                    "itemOrder": 1,
+                    "category": "TOUR_SPOT",
+                    "spotId": 35,
+                    "nearbyPlaceId": null,
+                    "parentTourSpotId": null,
+                    "name": "불국사",
+                    "img": "https://cdn.example.com/bulguksa.jpg",
+                    "overview": "신라 불교문화를 대표하는 사찰입니다.",
+                    "address": "경상북도 경주시 불국로 385",
+                    "latitude": 35.7901,
+                    "longitude": 129.332,
+                    "like": true,
+                    "transportType": null,
+                    "distanceMeter": null,
+                    "durationSecond": null
+                  },
+                  {
+                    "itemId": 12,
+                    "dayNumber": 2,
+                    "itemOrder": 1,
+                    "category": "RESTAURANT",
+                    "spotId": null,
+                    "nearbyPlaceId": 101,
+                    "parentTourSpotId": 35,
+                    "name": "경주 한식당",
+                    "img": null,
+                    "overview": null,
+                    "address": "경상북도 경주시",
+                    "latitude": 35.791,
+                    "longitude": 129.333,
+                    "like": false,
+                    "transportType": null,
+                    "distanceMeter": null,
+                    "durationSecond": null
+                  }
+                ],
+                "totalDistanceMeter": 0,
+                "totalDurationSecond": 0,
+                "createdAt": "2026-08-18T10:00:00",
+                "updatedAt": "2026-08-18T10:30:00"
+              }
+            }
+            """;
+    String UPDATE_SUCCESS = """
+            {
+              "code": 2000,
+              "message": "관광 코스 수정에 성공했습니다.",
+              "data": {
+                "tourCourseId": 1,
+                "title": "수정된 경주 2일 코스",
+                "shareYn": true,
+                "items": [
+                  {
+                    "itemId": 11,
+                    "dayNumber": 1,
+                    "itemOrder": 1,
+                    "category": "TOUR_SPOT",
+                    "spotId": 35,
+                    "nearbyPlaceId": null,
+                    "parentTourSpotId": null,
+                    "name": "불국사",
+                    "img": "https://cdn.example.com/bulguksa.jpg",
+                    "overview": "신라 불교문화를 대표하는 사찰입니다.",
+                    "address": "경상북도 경주시 불국로 385",
+                    "latitude": 35.7901,
+                    "longitude": 129.332,
+                    "like": true,
+                    "transportType": null,
+                    "distanceMeter": null,
+                    "durationSecond": null
+                  },
+                  {
+                    "itemId": 15,
+                    "dayNumber": 1,
+                    "itemOrder": 2,
+                    "category": "TOUR_SPOT",
+                    "spotId": 36,
+                    "nearbyPlaceId": null,
+                    "parentTourSpotId": null,
+                    "name": "석굴암",
+                    "img": "https://cdn.example.com/seokguram.jpg",
+                    "overview": "통일신라 시대의 석굴 사원입니다.",
+                    "address": "경상북도 경주시 석굴로 238",
+                    "latitude": 35.7948,
+                    "longitude": 129.3492,
+                    "like": false,
+                    "transportType": "CAR",
+                    "distanceMeter": 7200,
+                    "durationSecond": 900
+                  }
+                ],
+                "totalDistanceMeter": 7200,
+                "totalDurationSecond": 900,
+                "createdAt": "2026-08-18T10:00:00",
+                "updatedAt": "2026-08-18T11:00:00"
+              }
+            }
+            """;
 
     @Operation(
             summary = "관광 코스 상세 조회",
             description = "소유자가 관광 코스의 기본 정보, 장소 목록과 실제 이동 기록을 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 상세 조회 성공",
-                            content = @Content(mediaType = "application/json")),
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = DETAIL_SUCCESS))),
                     @ApiResponse(responseCode = "400", description = "상세 조회 실패: 잘못된 관광 코스 ID",
                             content = @Content(mediaType = "application/json",
                                     examples = @ExampleObject(value = INVALID_COURSE_ID))),
@@ -84,7 +195,8 @@ public interface TourCourseControllerDocs {
             description = "요청의 최종 상태를 기준으로 코스 정보, 관광지 목록과 이동 기록을 추가·수정·삭제합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 수정 성공",
-                            content = @Content(mediaType = "application/json")),
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = UPDATE_SUCCESS))),
                     @ApiResponse(responseCode = "400", description = "수정 실패: 요청 값 검증 실패",
                             content = @Content(mediaType = "application/json", examples = {
                                     @ExampleObject(name = "잘못된 제목", value = """
@@ -161,7 +273,14 @@ public interface TourCourseControllerDocs {
             summary = "관광 코스 삭제",
             description = "로그인한 사용자가 소유한 관광 코스와 포함된 코스 항목을 함께 삭제합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "관광 코스 삭제 성공"),
+                    @ApiResponse(responseCode = "200", description = "관광 코스 삭제 성공",
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 2000,
+                                      "message": "관광 코스 삭제에 성공했습니다.",
+                                      "data": null
+                                    }
+                                    """))),
                     @ApiResponse(responseCode = "400", description = "삭제 실패: 잘못된 관광 코스 ID",
                             content = @Content(mediaType = "application/json",
                                     examples = @ExampleObject(value = INVALID_COURSE_ID))),
@@ -184,7 +303,30 @@ public interface TourCourseControllerDocs {
             description = "로그인한 사용자가 생성한 관광 코스를 페이징하여 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 목록 조회 성공",
-                            content = @Content(mediaType = "application/json")),
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 2000,
+                                      "message": "관광 코스 목록 조회에 성공했습니다.",
+                                      "data": {
+                                        "tourCourses": [
+                                          {
+                                            "tourCourseId": 1,
+                                            "title": "경주 2일 역사 여행 코스",
+                                            "shareYn": false,
+                                            "thumbnailImg": "https://cdn.example.com/bulguksa.jpg",
+                                            "itemCount": 3,
+                                            "totalDistanceMeter": 13500,
+                                            "totalDurationSecond": 2300,
+                                            "createdAt": "2026-08-18T10:00:00",
+                                            "updatedAt": "2026-08-18T10:30:00"
+                                          }
+                                        ],
+                                        "page": 0,
+                                        "size": 10,
+                                        "totalCount": 1
+                                      }
+                                    }
+                                    """))),
                     @ApiResponse(responseCode = "400", description = "목록 조회 실패: 페이지 또는 정렬 값 오류",
                             content = @Content(mediaType = "application/json",
                                     examples = @ExampleObject(value = COMMON_VALIDATION_FAILURE))),
@@ -214,7 +356,19 @@ public interface TourCourseControllerDocs {
             description = "인증된 사용자가 관광지와 주변 식당·숙소를 조합해 1~10개 항목의 다일 관광 코스를 생성합니다. dayNumber와 각 일차의 itemOrder는 1부터 연속이어야 합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 생성 성공",
-                            content = @Content(mediaType = "application/json")),
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 2001,
+                                      "message": "관광 코스 생성에 성공했습니다.",
+                                      "data": {
+                                        "tourCourseId": 1,
+                                        "title": "경주 역사 여행 코스",
+                                        "shareYn": false,
+                                        "itemCount": 3,
+                                        "createdAt": "2026-08-18T10:00:00"
+                                      }
+                                    }
+                                    """))),
                     @ApiResponse(responseCode = "400", description = "생성 실패: 요청 값 검증 실패",
                             content = @Content(mediaType = "application/json",
                                     examples = @ExampleObject(value = COMMON_VALIDATION_FAILURE))),
