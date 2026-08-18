@@ -57,7 +57,12 @@ class TourSpotServiceTest {
 
     @BeforeEach
     void setUp() {
-        tourSpotService = new TourSpotService(tourSpotQueryRepository, stampMissionClearRepository);
+        tourSpotService = new TourSpotService(
+                tourSpotQueryRepository,
+                userSavedTourSpotRepository,
+                tourDetailRefresher,
+                stampMissionClearRepository
+        );
     }
 
     @Test
@@ -81,6 +86,7 @@ class TourSpotServiceTest {
         StampMissionClear clear = mock(StampMissionClear.class);
         StampMissionClearId clearId = new StampMissionClearId(7L, 1L, StampMissionType.VISIT);
         LocalDateTime clearedAt = LocalDateTime.of(2026, 8, 16, 13, 0);
+        when(tourDetailRefresher.refresh(1L)).thenReturn(TourDetailRefreshResult.updated());
         when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
         when(clear.getId()).thenReturn(clearId);
         when(clear.getClearedAt()).thenReturn(clearedAt);

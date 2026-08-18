@@ -72,7 +72,8 @@ public class TourCourse {
             TransportType transportType
     ) {
         items.add(new TourCourseItem(
-                this, category, spotId, nearbyPlaceId, itemOrder, transportType, null, null));
+                this, category, spotId, nearbyPlaceId, 1, itemOrder,
+                transportType, null, null));
     }
 
     public void addItem(

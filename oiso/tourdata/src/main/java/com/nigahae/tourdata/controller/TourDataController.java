@@ -51,18 +51,26 @@ public class TourDataController {
     }
 
     @Operation(
-            summary = "공통 상세정보 동기화",
-            description = "공통 상세정보 조회 결과를 관광지와 축제 정보에 반영합니다."
+            summary = "관광지 공통 상세정보 단건 동기화",
+            description = "관광지 ID에 해당하는 공통 상세정보를 외부 관광 API에서 다시 조회해 반영합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "공통 상세정보 동기화 성공"),
-            @ApiResponse(responseCode = "207", description = "일부 데이터 동기화 성공"),
-            @ApiResponse(responseCode = "409", description = "동일 작업이 실행 중이어서 요청 생략"),
-            @ApiResponse(responseCode = "500", description = "공통 상세정보 동기화 실패")
+            @ApiResponse(responseCode = "200", description = "관광지 공통 상세정보 동기화 성공"),
+            @ApiResponse(responseCode = "404", description = "관광지를 찾을 수 없음"),
+            @ApiResponse(responseCode = "502", description = "외부 관광 API 호출 실패")
     })
-    @PostMapping("/common-details/refresh")
-    public ResponseEntity<TourDataResult> refreshCommonDetails() {
-        return response(tourDataRunner.run(TourDataJobType.COMMON_DETAILS, "manual-api"));
+    @PostMapping("/common-details/{spotId}/refresh")
+    public ResponseEntity<TourDataResult> refreshCommonDetail(@PathVariable Long spotId) {
+        TourDetailRefreshResult result = tourDetailRefresher.refresh(spotId);
+        if (result.updatedSuccessfully()) {
+            return ResponseEntity.ok(TourDataResult.success(1));
+        }
+        if (result.targetNotFound()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(TourDataResult.failure(1, "Tour spot not found. spotId=" + spotId));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(TourDataResult.failure(1, result.failureMessage()));
     }
 
     @Operation(
