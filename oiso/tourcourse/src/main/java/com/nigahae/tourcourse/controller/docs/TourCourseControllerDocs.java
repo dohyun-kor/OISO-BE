@@ -149,6 +149,8 @@ public interface TourCourseControllerDocs {
                             수정 후 관광 코스의 최종 상태입니다.
 
                             - `itemId`: 코스에 포함된 항목 자체의 ID입니다. 기존 항목은 상세 조회의 `itemId`를 입력하고, 새 항목은 `null`로 입력합니다.
+                            - `dayNumber`: 여행 일차입니다. 1부터 연속이어야 합니다.
+                            - `itemOrder`: 해당 일차 안의 방문 순서입니다. 각 일차마다 1부터 연속이어야 합니다.
                             - `category=TOUR_SPOT`: `spotId`만 입력하고 `nearbyPlaceId`는 null로 입력합니다.
                             - `category=RESTAURANT/ACCOMMODATION`: `nearbyPlaceId`만 입력하고 `spotId`는 null로 입력합니다.
                             """)
@@ -209,7 +211,7 @@ public interface TourCourseControllerDocs {
 
     @Operation(
             summary = "관광 코스 생성",
-            description = "인증된 사용자가 관광지와 주변 식당·숙소를 조합해 1~10개 항목의 관광 코스를 생성합니다.",
+            description = "인증된 사용자가 관광지와 주변 식당·숙소를 조합해 1~10개 항목의 다일 관광 코스를 생성합니다. dayNumber와 각 일차의 itemOrder는 1부터 연속이어야 합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 생성 성공",
                             content = @Content(mediaType = "application/json")),
@@ -240,8 +242,9 @@ public interface TourCourseControllerDocs {
                               "shareYn": false,
                               "sharedPassword": null,
                               "items": [
-                                { "category": "TOUR_SPOT", "spotId": 1, "nearbyPlaceId": null, "itemOrder": 1, "transportType": null },
-                                { "category": "RESTAURANT", "spotId": null, "nearbyPlaceId": 101, "itemOrder": 2, "transportType": "CAR" }
+                                { "category": "TOUR_SPOT", "spotId": 1, "nearbyPlaceId": null, "dayNumber": 1, "itemOrder": 1, "transportType": null },
+                                { "category": "RESTAURANT", "spotId": null, "nearbyPlaceId": 101, "dayNumber": 1, "itemOrder": 2, "transportType": "CAR" },
+                                { "category": "TOUR_SPOT", "spotId": 2, "nearbyPlaceId": null, "dayNumber": 2, "itemOrder": 1, "transportType": null }
                               ]
                             }
                             """)))

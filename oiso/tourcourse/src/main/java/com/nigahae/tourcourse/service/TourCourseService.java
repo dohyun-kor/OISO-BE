@@ -68,12 +68,9 @@ public class TourCourseService {
                 : null;
         TourCourse course = new TourCourse(userId, request.title().trim(), request.shareYn(), encodedPassword);
         items.forEach(item -> course.addItem(
-                item.category(),
-                item.spotId(),
-                item.nearbyPlaceId(),
-                item.itemOrder(),
-                item.transportType()
-        ));
+                item.category(), item.spotId(), item.nearbyPlaceId(),
+                item.dayNumber(), item.itemOrder(),
+                item.transportType(), null, null));
 
         return CreateTourCourseResponse.from(tourCourseRepository.save(course));
     }
@@ -148,12 +145,12 @@ public class TourCourseService {
             if (item.itemId() == null) {
                 course.addItem(
                         item.category(), item.spotId(), item.nearbyPlaceId(),
-                        item.itemOrder(), item.transportType(),
+                        item.dayNumber(), item.itemOrder(), item.transportType(),
                         item.distanceMeter(), item.durationSecond());
             } else {
                 existingItems.get(item.itemId()).update(
                         item.category(), item.spotId(), item.nearbyPlaceId(),
-                        item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType(),
+                        item.dayNumber(), item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType(),
                         item.distanceMeter(), item.durationSecond());
             }
         }
@@ -236,7 +233,8 @@ public class TourCourseService {
     }
 
     private void validateUpdateItems(List<UpdateTourCourseItemRequest> items) {
-        Set<Integer> orders = new HashSet<>();
+        Map<Integer, Set<Integer>> ordersByDay = new HashMap<>();
+        Set<Integer> days = new HashSet<>();
         Set<Long> itemIds = new HashSet<>();
         Set<String> placeKeys = new HashSet<>();
         for (int index = 0; index < items.size(); index++) {
@@ -246,7 +244,12 @@ public class TourCourseService {
                 throw updateValidationException(itemPath, "관광지 항목은 null일 수 없습니다.");
             }
             validatePlaceIdentifiers(
-                    item.category(), item.spotId(), item.nearbyPlaceId(), itemPath);
+                    item.category(), item.spotId(), item.nearbyPlaceId(), itemPath, false);
+            if (item.dayNumber() == null || item.dayNumber() < 1) {
+                throw updateValidationException(
+                        itemPath + ".dayNumber", "여행 일차는 1 이상의 값이어야 합니다.");
+            }
+            days.add(item.dayNumber());
             if (item.itemOrder() == null || item.itemOrder() < 1) {
                 throw updateValidationException(
                         itemPath + ".itemOrder", "관광지 순서는 1 이상의 값이어야 합니다.");
@@ -256,7 +259,9 @@ public class TourCourseService {
             if (!placeKeys.add(item.category() + ":" + placeId)) {
                 throw updateValidationException(itemPath, "동일한 장소를 중복해서 포함할 수 없습니다.");
             }
-            if (!orders.add(item.itemOrder())) {
+            Set<Integer> dayOrders = ordersByDay.computeIfAbsent(
+                    item.dayNumber(), ignored -> new HashSet<>());
+            if (!dayOrders.add(item.itemOrder())) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_ORDER_DUPLICATED,
                         Map.of("field", itemPath + ".itemOrder"));
@@ -291,11 +296,18 @@ public class TourCourseService {
                         "이동 기록은 transportType, distanceMeter, durationSecond를 모두 입력하거나 모두 null이어야 합니다.");
             }
         }
-        for (int expected = 1; expected <= items.size(); expected++) {
-            if (!orders.contains(expected)) {
+        for (int expectedDay = 1; expectedDay <= days.size(); expectedDay++) {
+            if (!days.contains(expectedDay)) {
+                throw updateValidationException("dayNumber", "여행 일차는 1부터 연속이어야 합니다.");
+            }
+        }
+        for (Map.Entry<Integer, Set<Integer>> entry : ordersByDay.entrySet()) {
+            for (int expected = 1; expected <= entry.getValue().size(); expected++) {
+                if (!entry.getValue().contains(expected)) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_ORDER_NOT_CONSECUTIVE,
-                        Map.of("field", "itemOrder"));
+                            Map.of("field", "itemOrder", "dayNumber", entry.getKey()));
+                }
             }
         }
     }
@@ -440,31 +452,41 @@ public class TourCourseService {
     }
 
     private void validateOrders(List<CreateTourCourseItemRequest> items) {
-        Set<Integer> orders = new HashSet<>();
+        Map<Integer, Set<Integer>> ordersByDay = new HashMap<>();
+        Set<Integer> days = new HashSet<>();
         for (CreateTourCourseItemRequest item : items) {
             if (item == null) {
                 throw validationException();
             }
+            if (item.dayNumber() == null || item.dayNumber() < 1) {
+                throw validationException();
+            }
+            days.add(item.dayNumber());
             if (item.itemOrder() == null || item.itemOrder() < 1) {
                 throw validationException();
             }
-            if (!orders.add(item.itemOrder())) {
+            if (!ordersByDay.computeIfAbsent(item.dayNumber(), ignored -> new HashSet<>())
+                    .add(item.itemOrder())) {
                 throw validationException();
             }
         }
-        for (int expected = 1; expected <= items.size(); expected++) {
-            if (!orders.contains(expected)) {
+        for (int expectedDay = 1; expectedDay <= days.size(); expectedDay++) {
+            if (!days.contains(expectedDay)) {
                 throw validationException();
+            }
+        }
+        for (Set<Integer> orders : ordersByDay.values()) {
+            for (int expected = 1; expected <= orders.size(); expected++) {
+                if (!orders.contains(expected)) {
+                    throw validationException();
+                }
             }
         }
     }
 
     private void validateTransport(List<CreateTourCourseItemRequest> items) {
-        CreateTourCourseItemRequest first = items.stream()
-                .filter(item -> item.itemOrder() == 1)
-                .findFirst()
-                .orElseThrow(this::validationException);
-        if (first.transportType() != null) {
+        if (items.stream().anyMatch(item ->
+                item.itemOrder() == 1 && item.transportType() != null)) {
             throw validationException();
         }
         if (items.stream().anyMatch(item -> item.itemOrder() > 1 && item.transportType() == null)) {

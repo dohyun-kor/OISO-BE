@@ -241,6 +241,16 @@ CREATE TABLE IF NOT EXISTS public."TourStory"
         CHECK (btrim(title) <> '')
 );
 
+CREATE TABLE IF NOT EXISTS public."UserTourSpotMissionClear"
+(
+    user_id      int8        NOT NULL,
+    spot_id      int8        NOT NULL,
+    mission_type varchar(30) NOT NULL,
+    cleared_at   timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PK_USER_TOUR_SPOT_MISSION_CLEAR"
+        PRIMARY KEY (user_id, spot_id, mission_type)
+);
+
 
 CREATE INDEX IF NOT EXISTS "IX_TOURSTORY_SPOT_ID"
     ON public."TourStory" (spot_id);
@@ -355,6 +365,17 @@ CREATE TABLE IF NOT EXISTS public."UserSavedTourStory"
         REFERENCES public."TourStory" (story_id)
         ON DELETE CASCADE
 );
+
+ALTER TABLE public."TourCourseItem"
+    ADD COLUMN IF NOT EXISTS day_number integer NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
+    ADD COLUMN IF NOT EXISTS transport_type varchar(10),
+    ADD COLUMN IF NOT EXISTS distance_meter integer,
+    ADD COLUMN IF NOT EXISTS duration_second integer;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_course_item_day_order
+    ON public."TourCourseItem" (tour_course_id, day_number, item_order)
+    WHERE tour_course_id IS NOT NULL;
 
 
 CREATE INDEX IF NOT EXISTS "IX_USERSAVEDTOURSTORY_USER_SAVED_AT"

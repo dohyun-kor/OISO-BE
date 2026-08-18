@@ -13,9 +13,17 @@ import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
+import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
+import com.nigahae.tourspot.dto.NearbyPlaceResponse;
+import com.nigahae.tourspot.domain.NearbyPlaceCategory;
+import com.nigahae.tourspot.domain.StampMissionClear;
+import com.nigahae.tourspot.domain.StampMissionType;
+import com.nigahae.tourspot.dto.StampMissionClearResponse;
+import com.nigahae.tourspot.dto.StampMissionResponse;
+import com.nigahae.tourspot.dto.StampProgressResponse;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
-import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
+import com.nigahae.tourspot.repository.StampMissionClearRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +34,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,43 +45,46 @@ import java.util.List;
 public class TourSpotService {
 
     private final TourSpotQueryRepository tourSpotQueryRepository;
-    private final UserSavedTourSpotRepository userSavedTourSpotRepository;
-    private final TourDetailRefresher tourDetailRefresher;
+    private final StampMissionClearRepository stampMissionClearRepository;
 
-    @Transactional
-    public SaveTourSpotResponse saveTourSpot(Long userId, Long spotId) {
-        validateTourSpotExists(spotId);
-
-        userSavedTourSpotRepository.saveIfAbsent(userId, spotId);
-        return new SaveTourSpotResponse(spotId, true);
-    }
-
-    @Transactional
-    public DeleteSavedTourSpotResponse deleteSavedTourSpot(Long userId, Long spotId) {
-        validateTourSpotExists(spotId);
-
-        userSavedTourSpotRepository.delete(userId, spotId);
-        return new DeleteSavedTourSpotResponse(spotId, false);
-    }
-
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public TourSpotDetailResponse getTourSpot(Long spotId) {
-        TourDetailRefreshResult refreshResult = tourDetailRefresher.refresh(spotId);
-        if (refreshResult.targetNotFound()) {
-            throw new TourSpotNotFoundException(spotId);
-        }
-        if (refreshResult.failed()) {
-            log.warn(
-                    "Returning stored tour detail after refresh failure. spotId={}, message={}",
-                    spotId,
-                    refreshResult.failureMessage()
-            );
-        }
-
+    public TourSpotDetailResponse getTourSpot(Long spotId, Long userId) {
         TourSpot tourSpot = tourSpotQueryRepository.findById(spotId)
                 .orElseThrow(() -> new TourSpotNotFoundException(spotId));
 
-        return TourSpotDetailResponse.from(tourSpot);
+        StampProgressResponse progress = userId == null ? null : getStampProgress(userId, spotId);
+        return TourSpotDetailResponse.from(tourSpot, progress);
+    }
+
+    public TourSpotDetailResponse getTourSpot(Long spotId) {
+        return getTourSpot(spotId, null);
+    }
+
+    @Transactional
+    public StampMissionClearResponse clearStampMission(
+            Long userId, Long spotId, StampMissionType missionType
+    ) {
+        if (!tourSpotQueryRepository.existsById(spotId)) {
+            throw new TourSpotNotFoundException(spotId);
+        }
+        stampMissionClearRepository.saveIfAbsent(userId, spotId, missionType.name());
+        StampMissionClear clear = stampMissionClearRepository.findById(
+                        new com.nigahae.tourspot.domain.StampMissionClearId(userId, spotId, missionType))
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+        return new StampMissionClearResponse(spotId, missionType, true, clear.getClearedAt());
+    }
+
+    private StampProgressResponse getStampProgress(Long userId, Long spotId) {
+        Map<StampMissionType, StampMissionClear> clears = stampMissionClearRepository
+                .findAllByIdUserIdAndIdSpotId(userId, spotId).stream()
+                .collect(Collectors.toMap(clear -> clear.getId().getMissionType(), Function.identity()));
+        List<StampMissionResponse> missions = java.util.Arrays.stream(StampMissionType.values())
+                .map(type -> new StampMissionResponse(
+                        type, clears.containsKey(type),
+                        clears.containsKey(type) ? clears.get(type).getClearedAt() : null))
+                .toList();
+        int clearedCount = clears.size();
+        return new StampProgressResponse(
+                clearedCount, missions.size(), clearedCount == missions.size(), missions);
     }
 
     public TourSpotListResponse getTourSpots(String keyword, int page, int size) {

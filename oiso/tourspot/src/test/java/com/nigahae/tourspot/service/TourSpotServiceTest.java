@@ -9,8 +9,12 @@ import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceRow;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
+import com.nigahae.tourspot.domain.StampMissionClear;
+import com.nigahae.tourspot.domain.StampMissionClearId;
+import com.nigahae.tourspot.domain.StampMissionType;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
+import com.nigahae.tourspot.repository.StampMissionClearRepository;
 import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,63 +50,14 @@ class TourSpotServiceTest {
     @Mock
     private TourDetailRefresher tourDetailRefresher;
 
+    @Mock
+    private StampMissionClearRepository stampMissionClearRepository;
+
     private TourSpotService tourSpotService;
 
     @BeforeEach
     void setUp() {
-        tourSpotService = new TourSpotService(
-                tourSpotQueryRepository,
-                userSavedTourSpotRepository,
-                tourDetailRefresher
-        );
-    }
-
-    @Test
-    @DisplayName("관광지를 사용자 저장 목록에 추가한다")
-    void saveTourSpot() {
-        when(tourSpotQueryRepository.existsById(1L)).thenReturn(true);
-
-        var response = tourSpotService.saveTourSpot(7L, 1L);
-
-        assertThat(response.spotId()).isEqualTo(1L);
-        assertThat(response.like()).isTrue();
-        verify(userSavedTourSpotRepository).saveIfAbsent(7L, 1L);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 관광지는 저장하지 않는다")
-    void doesNotSaveMissingTourSpot() {
-        when(tourSpotQueryRepository.existsById(999L)).thenReturn(false);
-
-        assertThatThrownBy(() -> tourSpotService.saveTourSpot(7L, 999L))
-                .isInstanceOf(TourSpotNotFoundException.class);
-
-        verify(userSavedTourSpotRepository, org.mockito.Mockito.never())
-                .saveIfAbsent(7L, 999L);
-    }
-
-    @Test
-    @DisplayName("관광지를 사용자 저장 목록에서 삭제한다")
-    void deleteSavedTourSpot() {
-        when(tourSpotQueryRepository.existsById(1L)).thenReturn(true);
-
-        var response = tourSpotService.deleteSavedTourSpot(7L, 1L);
-
-        assertThat(response.spotId()).isEqualTo(1L);
-        assertThat(response.like()).isFalse();
-        verify(userSavedTourSpotRepository).delete(7L, 1L);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 관광지는 저장 목록에서 삭제하지 않는다")
-    void doesNotDeleteMissingTourSpot() {
-        when(tourSpotQueryRepository.existsById(999L)).thenReturn(false);
-
-        assertThatThrownBy(() -> tourSpotService.deleteSavedTourSpot(7L, 999L))
-                .isInstanceOf(TourSpotNotFoundException.class);
-
-        verify(userSavedTourSpotRepository, org.mockito.Mockito.never())
-                .delete(7L, 999L);
+        tourSpotService = new TourSpotService(tourSpotQueryRepository, stampMissionClearRepository);
     }
 
     @Test
@@ -119,28 +75,26 @@ class TourSpotServiceTest {
     }
 
     @Test
-    void getTourSpotRefreshesOnEveryRequest() {
-        TourSpot tourSpot = tourSpot(1L, "Repeated place");
-        when(tourDetailRefresher.refresh(1L)).thenReturn(TourDetailRefreshResult.updated());
+    @DisplayName("로그인 사용자의 관광지별 스탬프 진행 상태를 반환한다")
+    void getTourSpotWithStampProgress() {
+        TourSpot tourSpot = tourSpot(1L, "불국사");
+        StampMissionClear clear = mock(StampMissionClear.class);
+        StampMissionClearId clearId = new StampMissionClearId(7L, 1L, StampMissionType.VISIT);
+        LocalDateTime clearedAt = LocalDateTime.of(2026, 8, 16, 13, 0);
         when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
+        when(clear.getId()).thenReturn(clearId);
+        when(clear.getClearedAt()).thenReturn(clearedAt);
+        when(stampMissionClearRepository.findAllByIdUserIdAndIdSpotId(7L, 1L))
+                .thenReturn(List.of(clear));
 
-        tourSpotService.getTourSpot(1L);
-        tourSpotService.getTourSpot(1L);
+        TourSpotDetailResponse response = tourSpotService.getTourSpot(1L, 7L);
 
-        verify(tourDetailRefresher, times(2)).refresh(1L);
-        verify(tourSpotQueryRepository, times(2)).findById(1L);
-    }
-
-    @Test
-    void getTourSpotReturnsStoredDataWhenRefreshFails() {
-        TourSpot tourSpot = tourSpot(1L, "Stored place");
-        when(tourDetailRefresher.refresh(1L))
-                .thenReturn(TourDetailRefreshResult.failed("Read timed out"));
-        when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
-
-        TourSpotDetailResponse response = tourSpotService.getTourSpot(1L);
-
-        assertThat(response.tourSpot().name()).isEqualTo("Stored place");
+        assertThat(response.stampProgress().clearedCount()).isEqualTo(1);
+        assertThat(response.stampProgress().totalCount()).isEqualTo(3);
+        assertThat(response.stampProgress().allCleared()).isFalse();
+        assertThat(response.stampProgress().missions())
+                .filteredOn(mission -> mission.type() == StampMissionType.VISIT)
+                .singleElement().extracting("cleared").isEqualTo(true);
     }
 
     @Test

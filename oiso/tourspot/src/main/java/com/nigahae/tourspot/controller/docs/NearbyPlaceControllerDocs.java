@@ -16,7 +16,7 @@ public interface NearbyPlaceControllerDocs {
             description = "전역 고유 nearbyPlaceId로 식당·숙소 상세 정보를 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "주변 장소 상세 조회 성공"),
-                    @ApiResponse(responseCode = "404", description = "주변 장소를 찾을 수 없음")
+                    @ApiResponse(responseCode = "404", description = "주변 장소 상세 조회 실패: 장소를 찾을 수 없음")
             }
     )
     CommonResponse<NearbyPlaceResponse> getNearbyPlace(

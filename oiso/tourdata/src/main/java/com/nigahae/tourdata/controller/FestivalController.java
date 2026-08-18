@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/event")
-@Tag(name = "Festival", description = "축제 조회 API")
+@Tag(name = "축제", description = "축제 목록 및 상세 조회 API")
 public class FestivalController {
 
     private final FestivalQueryService festivalQueryService;
@@ -47,8 +47,8 @@ public class FestivalController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "축제 상세 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "spotId 형식 오류"),
-            @ApiResponse(responseCode = "404", description = "해당 spotId의 축제가 존재하지 않음")
+            @ApiResponse(responseCode = "400", description = "축제 상세 조회 실패: 축제 ID 형식 오류"),
+            @ApiResponse(responseCode = "404", description = "축제 상세 조회 실패: 축제를 찾을 수 없음")
     })
     public CommonResponse<FestivalDetailResponse> getFestivalDetail(
             @Parameter(description = "축제 식별자", example = "300", required = true)
