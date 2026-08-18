@@ -244,7 +244,7 @@ public class TourCourseService {
                 throw updateValidationException(itemPath, "관광지 항목은 null일 수 없습니다.");
             }
             validatePlaceIdentifiers(
-                    item.category(), item.spotId(), item.nearbyPlaceId(), itemPath, false);
+                    item.category(), item.spotId(), item.nearbyPlaceId(), itemPath);
             if (item.dayNumber() == null || item.dayNumber() < 1) {
                 throw updateValidationException(
                         itemPath + ".dayNumber", "여행 일차는 1 이상의 값이어야 합니다.");
