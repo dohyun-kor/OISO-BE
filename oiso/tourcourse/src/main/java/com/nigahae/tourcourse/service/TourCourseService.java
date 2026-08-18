@@ -17,6 +17,7 @@ import com.nigahae.tourcourse.domain.TourCourseItem;
 import com.nigahae.tourcourse.domain.TourCourseItemCategory;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
+import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,7 @@ public class TourCourseService {
 
     private final TourCourseRepository tourCourseRepository;
     private final TourSpotReferenceRepository tourSpotReferenceRepository;
+    private final NearbyPlaceReferenceRepository nearbyPlaceReferenceRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -57,7 +59,9 @@ public class TourCourseService {
         List<CreateTourCourseItemRequest> items = request.items();
         validateOrders(items);
         validateTransport(items);
-        validateCreatePlaces(items);
+        TargetIds targetIds = validateAndGetTargetIds(items);
+        validateExistingSpots(targetIds.spotIds());
+        validateExistingNearbyPlaces(targetIds.nearbyPlaceIds());
 
         String encodedPassword = request.shareYn()
                 ? passwordEncoder.encode(request.sharedPassword())
@@ -100,40 +104,18 @@ public class TourCourseService {
 
     @Transactional(readOnly = true)
     public TourCourseDetailResponse getTourCourseDetail(Long userId, Long tourCourseId) {
-        if (tourCourseId == null || tourCourseId < 1) {
-            throw new CustomException(
-                    ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
-        }
-
-        TourCourse course = tourCourseRepository.findById(tourCourseId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
-        if (!course.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.TOUR_COURSE_FORBIDDEN);
-        }
-
-        List<TourCourseItemDetailResponse> items = tourCourseRepository
-                .findDetailItems(tourCourseId, userId)
-                .stream()
-                .map(TourCourseItemDetailResponse::from)
-                .toList();
-        return TourCourseDetailResponse.from(course, items);
+        validateCourseId(tourCourseId);
+        TourCourse course = getOwnedCourse(userId, tourCourseId, ErrorCode.TOUR_COURSE_FORBIDDEN);
+        return toDetailResponse(course, userId);
     }
 
     @Transactional
     public TourCourseDetailResponse updateTourCourse(
-            Long userId,
-            Long tourCourseId,
-            UpdateTourCourseRequest request
+            Long userId, Long tourCourseId, UpdateTourCourseRequest request
     ) {
-        if (tourCourseId == null || tourCourseId < 1) {
-            throw new CustomException(
-                    ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
-        }
-        TourCourse course = tourCourseRepository.findById(tourCourseId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
-        if (!course.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.TOUR_COURSE_UPDATE_FORBIDDEN);
-        }
+        validateCourseId(tourCourseId);
+        TourCourse course = getOwnedCourse(
+                userId, tourCourseId, ErrorCode.TOUR_COURSE_UPDATE_FORBIDDEN);
 
         validateUpdateRequest(request);
         validateUpdateItems(request.items());
@@ -150,7 +132,7 @@ public class TourCourseService {
 
         Set<Long> retainedItemIds = request.items().stream()
                 .map(UpdateTourCourseItemRequest::itemId)
-                .filter(itemId -> itemId != null)
+                .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toSet());
 
         if (!existingItems.isEmpty()) {
@@ -175,12 +157,12 @@ public class TourCourseService {
 
         int totalDistance = request.items().stream()
                 .map(UpdateTourCourseItemRequest::distanceMeter)
-                .filter(value -> value != null)
+                .filter(java.util.Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
         int totalDuration = request.items().stream()
                 .map(UpdateTourCourseItemRequest::durationSecond)
-                .filter(value -> value != null)
+                .filter(java.util.Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
         course.updateMovementTotals(totalDistance, totalDuration);
@@ -189,27 +171,40 @@ public class TourCourseService {
         if (!existingItems.isEmpty()) {
             tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
         }
-
-        List<TourCourseItemDetailResponse> items = tourCourseRepository
-                .findDetailItems(tourCourseId, userId)
-                .stream()
-                .map(TourCourseItemDetailResponse::from)
-                .toList();
-        return TourCourseDetailResponse.from(course, items);
+        return toDetailResponse(course, userId);
     }
 
     @Transactional
     public void deleteTourCourse(Long userId, Long tourCourseId) {
+        validateCourseId(tourCourseId);
+        TourCourse course = getOwnedCourse(
+                userId, tourCourseId, ErrorCode.TOUR_COURSE_DELETE_FORBIDDEN);
+        tourCourseRepository.delete(course);
+    }
+
+    private void validateCourseId(Long tourCourseId) {
         if (tourCourseId == null || tourCourseId < 1) {
             throw new CustomException(
                     ErrorCode.INVALID_TOUR_COURSE_ID, Map.of("field", "tourCourseId"));
         }
+    }
+
+    private TourCourse getOwnedCourse(Long userId, Long tourCourseId, ErrorCode forbiddenCode) {
         TourCourse course = tourCourseRepository.findById(tourCourseId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
         if (!course.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.TOUR_COURSE_DELETE_FORBIDDEN);
+            throw new CustomException(forbiddenCode);
         }
-        tourCourseRepository.delete(course);
+        return course;
+    }
+
+    private TourCourseDetailResponse toDetailResponse(TourCourse course, Long userId) {
+        List<TourCourseItemDetailResponse> items = tourCourseRepository
+                .findDetailItems(course.getTourCourseId(), userId)
+                .stream()
+                .map(TourCourseItemDetailResponse::from)
+                .toList();
+        return TourCourseDetailResponse.from(course, items);
     }
 
     private void validateUpdateRequest(UpdateTourCourseRequest request) {
@@ -259,12 +254,10 @@ public class TourCourseService {
                 throw updateValidationException(
                         itemPath + ".itemOrder", "관광지 순서는 1 이상의 값이어야 합니다.");
             }
-            String placeKey = item.category() + ":"
-                    + (item.category() == TourCourseItemCategory.TOUR_SPOT
-                    ? item.spotId() : item.nearbyPlaceId());
-            if (!placeKeys.add(placeKey)) {
-                throw updateValidationException(
-                        itemPath, "동일한 장소를 중복해서 포함할 수 없습니다.");
+            Long placeId = item.category() == TourCourseItemCategory.TOUR_SPOT
+                    ? item.spotId() : item.nearbyPlaceId();
+            if (!placeKeys.add(item.category() + ":" + placeId)) {
+                throw updateValidationException(itemPath, "동일한 장소를 중복해서 포함할 수 없습니다.");
             }
             Set<Integer> dayOrders = ordersByDay.computeIfAbsent(
                     item.dayNumber(), ignored -> new HashSet<>());
@@ -319,10 +312,23 @@ public class TourCourseService {
         }
     }
 
+    private void validatePlaceIdentifiers(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId, String itemPath
+    ) {
+        boolean valid = category != null && (
+                category == TourCourseItemCategory.TOUR_SPOT
+                        ? spotId != null && spotId > 0 && nearbyPlaceId == null
+                        : nearbyPlaceId != null && nearbyPlaceId > 0 && spotId == null);
+        if (!valid) {
+            throw updateValidationException(
+                    itemPath,
+                    "TOUR_SPOT은 spotId만, RESTAURANT/ACCOMMODATION은 nearbyPlaceId만 입력해야 합니다.");
+        }
+    }
+
     private void validateUpdatePassword(boolean shareYn, String password) {
         if (shareYn && (password == null || password.isBlank())) {
-            throw updateValidationException(
-                    "sharedPassword", "공유 코스는 접근 비밀번호가 필요합니다.");
+            throw updateValidationException("sharedPassword", "공유 코스는 접근 비밀번호가 필요합니다.");
         }
         if (!shareYn && password != null) {
             throw updateValidationException(
@@ -336,9 +342,7 @@ public class TourCourseService {
 
     private CustomException updateValidationException(String field, String message) {
         return new CustomException(
-                ErrorCode.INVALID_TOUR_COURSE_UPDATE,
-                message,
-                Map.of("field", field));
+                ErrorCode.INVALID_TOUR_COURSE_UPDATE, message, Map.of("field", field));
     }
 
     private void validateUpdatePlaces(List<UpdateTourCourseItemRequest> items) {
@@ -346,8 +350,14 @@ public class TourCourseService {
                 .filter(item -> item.category() == TourCourseItemCategory.TOUR_SPOT)
                 .map(UpdateTourCourseItemRequest::spotId)
                 .toList();
+        List<Long> nearbyPlaceIds = items.stream()
+                .filter(item -> item.category() != TourCourseItemCategory.TOUR_SPOT)
+                .map(UpdateTourCourseItemRequest::nearbyPlaceId)
+                .toList();
         Set<Long> existingSpotIds = spotIds.isEmpty()
                 ? Set.of() : tourSpotReferenceRepository.findExistingIds(spotIds);
+        Set<Long> existingNearbyPlaceIds = nearbyPlaceIds.isEmpty()
+                ? Set.of() : nearbyPlaceReferenceRepository.findExistingIds(nearbyPlaceIds);
         for (int index = 0; index < items.size(); index++) {
             UpdateTourCourseItemRequest item = items.get(index);
             if (item.category() == TourCourseItemCategory.TOUR_SPOT
@@ -357,8 +367,7 @@ public class TourCourseService {
                         Map.of("field", "items[" + index + "].spotId", "spotId", item.spotId()));
             }
             if (item.category() != TourCourseItemCategory.TOUR_SPOT
-                    && !tourSpotReferenceRepository.existsNearbyPlace(
-                    item.nearbyPlaceId(), item.category().name())) {
+                    && !existingNearbyPlaceIds.contains(item.nearbyPlaceId())) {
                 throw new CustomException(
                         ErrorCode.RESOURCE_NOT_FOUND,
                         Map.of("field", "items[" + index + "].nearbyPlaceId",
@@ -480,56 +489,64 @@ public class TourCourseService {
                 item.itemOrder() == 1 && item.transportType() != null)) {
             throw validationException();
         }
+        if (items.stream().anyMatch(item -> item.itemOrder() > 1 && item.transportType() == null)) {
+            throw validationException();
+        }
     }
 
-    private void validateCreatePlaces(List<CreateTourCourseItemRequest> items) {
-        Set<String> keys = new HashSet<>();
-        for (int index = 0; index < items.size(); index++) {
-            CreateTourCourseItemRequest item = items.get(index);
-            validatePlaceIdentifiers(item.category(), item.spotId(), item.nearbyPlaceId(),
-                    "items[" + index + "]", true);
-            Long id = item.category() == TourCourseItemCategory.TOUR_SPOT
-                    ? item.spotId() : item.nearbyPlaceId();
-            if (!keys.add(item.category() + ":" + id)) {
+    private TargetIds validateAndGetTargetIds(List<CreateTourCourseItemRequest> items) {
+        Set<Long> uniqueSpotIds = new HashSet<>();
+        Set<Long> uniqueNearbyPlaceIds = new HashSet<>();
+        for (CreateTourCourseItemRequest item : items) {
+            boolean hasSpot = item.spotId() != null;
+            boolean hasNearbyPlace = item.nearbyPlaceId() != null;
+            if (hasSpot == hasNearbyPlace) {
+                throw validationException();
+            }
+            if (hasSpot && (item.spotId() < 1 || !uniqueSpotIds.add(item.spotId()))) {
+                throw validationException();
+            }
+            if (hasNearbyPlace && (item.nearbyPlaceId() < 1
+                    || !uniqueNearbyPlaceIds.add(item.nearbyPlaceId()))) {
                 throw validationException();
             }
         }
-        List<Long> spotIds = items.stream()
-                .filter(item -> item.category() == TourCourseItemCategory.TOUR_SPOT)
-                .map(CreateTourCourseItemRequest::spotId)
-                .toList();
-        Set<Long> existingIds = spotIds.isEmpty()
-                ? Set.of() : tourSpotReferenceRepository.findExistingIds(spotIds);
-        if (!existingIds.containsAll(spotIds)) {
-            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+        return new TargetIds(
+                items.stream().map(CreateTourCourseItemRequest::spotId).filter(java.util.Objects::nonNull).toList(),
+                items.stream().map(CreateTourCourseItemRequest::nearbyPlaceId).filter(java.util.Objects::nonNull).toList()
+        );
+    }
+
+    private void validateExistingSpots(List<Long> spotIds) {
+        if (spotIds.isEmpty()) {
+            return;
         }
-        items.stream()
-                .filter(item -> item.category() != TourCourseItemCategory.TOUR_SPOT)
-                .filter(item -> !tourSpotReferenceRepository.existsNearbyPlace(
-                        item.nearbyPlaceId(), item.category().name()))
+        Set<Long> existingIds = tourSpotReferenceRepository.findExistingIds(spotIds);
+        spotIds.stream()
+                .filter(spotId -> !existingIds.contains(spotId))
                 .findFirst()
-                .ifPresent(item -> { throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND); });
+                .ifPresent(spotId -> {
+                    throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+                });
     }
 
-    private void validatePlaceIdentifiers(
-            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            String itemPath, boolean create
-    ) {
-        boolean valid = category != null && (
-                category == TourCourseItemCategory.TOUR_SPOT
-                        ? spotId != null && spotId > 0 && nearbyPlaceId == null
-                        : nearbyPlaceId != null && nearbyPlaceId > 0 && spotId == null);
-        if (!valid) {
-            if (create) {
-                throw validationException();
-            }
-            throw updateValidationException(
-                    itemPath,
-                    "TOUR_SPOT은 spotId만, RESTAURANT/ACCOMMODATION은 nearbyPlaceId만 입력해야 합니다.");
+    private void validateExistingNearbyPlaces(List<Long> nearbyPlaceIds) {
+        if (nearbyPlaceIds.isEmpty()) {
+            return;
         }
+        Set<Long> existingIds = nearbyPlaceReferenceRepository.findExistingIds(nearbyPlaceIds);
+        nearbyPlaceIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .findFirst()
+                .ifPresent(id -> {
+                    throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+                });
     }
 
     private CustomException validationException() {
         return new CustomException(ErrorCode.VALIDATION_ERROR);
+    }
+
+    private record TargetIds(List<Long> spotIds, List<Long> nearbyPlaceIds) {
     }
 }

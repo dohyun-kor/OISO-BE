@@ -1,5 +1,7 @@
 package com.nigahae.tourdata.controller;
 
+import com.nigahae.tourdata.TourDetailRefresher;
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.domain.TourDataJobType;
 import com.nigahae.tourdata.service.TourDataResult;
 import com.nigahae.tourdata.service.TourDataRunner;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TourDataController {
 
     private final TourDataRunner tourDataRunner;
+    private final TourDetailRefresher tourDetailRefresher;
 
     @Operation(summary = "관광지 데이터 동기화", description = "지역 기반 관광지 조회 결과를 관광지 데이터에 반영합니다.")
     @ApiResponses({

@@ -25,11 +25,6 @@ public class TourDataScheduler {
         run(TourDataJobType.FESTIVALS);
     }
 
-    @Scheduled(cron = "${tour-data.schedule.common-details-cron}", zone = "Asia/Seoul")
-    public void refreshCommonDetails() {
-        run(TourDataJobType.COMMON_DETAILS);
-    }
-
     @Scheduled(cron = "${tour-data.schedule.accommodations-cron}", zone = "Asia/Seoul")
     public void refreshAccommodations() {
         run(TourDataJobType.ACCOMMODATIONS);

@@ -2,6 +2,8 @@ package com.nigahae.tourspot.service;
 
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
+import com.nigahae.tourdata.TourDetailRefresher;
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
@@ -13,6 +15,7 @@ import com.nigahae.tourspot.domain.StampMissionType;
 import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import com.nigahae.tourspot.repository.StampMissionClearRepository;
+import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
@@ -41,6 +45,10 @@ class TourSpotServiceTest {
 
     @Mock
     private TourSpotQueryRepository tourSpotQueryRepository;
+    @Mock
+    private UserSavedTourSpotRepository userSavedTourSpotRepository;
+    @Mock
+    private TourDetailRefresher tourDetailRefresher;
 
     @Mock
     private StampMissionClearRepository stampMissionClearRepository;
@@ -56,6 +64,7 @@ class TourSpotServiceTest {
     @DisplayName("관광지 ID로 상세 정보를 조회한다")
     void getTourSpot() {
         TourSpot tourSpot = tourSpot(1L, "불국사");
+        when(tourDetailRefresher.refresh(1L)).thenReturn(TourDetailRefreshResult.updated());
         when(tourSpotQueryRepository.findById(1L)).thenReturn(Optional.of(tourSpot));
 
         TourSpotDetailResponse response = tourSpotService.getTourSpot(1L);
@@ -91,7 +100,7 @@ class TourSpotServiceTest {
     @Test
     @DisplayName("관광지가 존재하지 않으면 상세 조회 예외를 던진다")
     void throwExceptionWhenTourSpotDoesNotExist() {
-        when(tourSpotQueryRepository.findById(999L)).thenReturn(Optional.empty());
+        when(tourDetailRefresher.refresh(999L)).thenReturn(TourDetailRefreshResult.notFound());
 
         assertThatThrownBy(() -> tourSpotService.getTourSpot(999L))
                 .isInstanceOf(TourSpotNotFoundException.class);

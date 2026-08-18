@@ -12,6 +12,7 @@ import com.nigahae.user.domain.preference.TravelCompanion;
 import com.nigahae.user.domain.preference.TravelTime;
 import com.nigahae.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -31,7 +32,9 @@ class UserServiceTest {
                 .providerUserId("123").nickname("첫로그인").build());
         assertThat(service.loginOrRegister("kakao", "123", "첫로그인", null, null))
                 .isEqualTo(new AuthenticatedUser(7L, "첫로그인"));
-        verify(repository).save(argThat(user -> Boolean.FALSE.equals(user.getHasTravelPlan())));
+        ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
+        verify(repository).save(savedUser.capture());
+        assertThat(savedUser.getValue().getHasTravelPlan()).isFalse();
     }
 
     @Test

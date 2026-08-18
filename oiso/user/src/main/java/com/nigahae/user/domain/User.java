@@ -19,8 +19,7 @@ import java.math.BigDecimal;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
-    @SequenceGenerator(name = "user_id_seq", sequenceName = "user_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
 
@@ -49,7 +48,7 @@ public class User {
     @Column(name = "provider_user_id", length = 100)
     private String providerUserId;
 
-    @Column
+    @Column(length = 100)
     private String nickname;
 
     @Column(length = 320)
@@ -68,6 +67,13 @@ public class User {
         this.nickname = nickname;
         this.email = email;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    @PrePersist
+    private void applyDefaults() {
+        if (hasTravelPlan == null) {
+            hasTravelPlan = false;
+        }
     }
 
     public void updatePreferences(

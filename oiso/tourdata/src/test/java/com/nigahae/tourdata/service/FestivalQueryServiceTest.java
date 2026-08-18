@@ -104,7 +104,7 @@ class FestivalQueryServiceTest {
     @Test
     void returnsFestivalDetailBySpotId() {
         FestivalInfo festival = festival(300L, LocalDate.of(2026, 6, 5), LocalDate.of(2026, 8, 28));
-        festival.updateFromDetail(new TourContentPayload(
+        festival.getTourSpot().updateFromDetail(new TourContentPayload(
                 "300",
                 "15",
                 "2026 Festival",
@@ -152,8 +152,9 @@ class FestivalQueryServiceTest {
     }
 
     private FestivalInfo festival(Long spotId, LocalDate startDate, LocalDate endDate) {
-        FestivalInfo festival = new FestivalInfo(spotId);
-        festival.updateFromList(new FestivalPayload(
+        com.nigahae.tourdata.domain.TourSpot tourSpot =
+                com.nigahae.tourdata.domain.TourSpot.reference(spotId);
+        FestivalPayload payload = new FestivalPayload(
                 new TourContentPayload(
                         spotId.toString(),
                         "15",
@@ -171,7 +172,10 @@ class FestivalQueryServiceTest {
                 ),
                 startDate,
                 endDate
-        ));
+        );
+        tourSpot.updateFromList(payload.content());
+        FestivalInfo festival = FestivalInfo.forSpot(tourSpot);
+        festival.updateDates(payload);
         return festival;
     }
 }

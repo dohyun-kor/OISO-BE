@@ -28,4 +28,16 @@ public record CreateTourCourseItemRequest(
     ) {
         this(category, spotId, nearbyPlaceId, 1, itemOrder, transportType);
     }
+
+    public CreateTourCourseItemRequest(
+            Long spotId, Long nearbyPlaceId, Integer itemOrder, TransportType transportType
+    ) {
+        this(
+                spotId != null ? TourCourseItemCategory.TOUR_SPOT : TourCourseItemCategory.RESTAURANT,
+                spotId,
+                nearbyPlaceId,
+                itemOrder,
+                transportType
+        );
+    }
 }

@@ -41,7 +41,6 @@ public class TourDataProperties {
     public static class Schedule {
         private String tourSpotsCron = "0 0 3 * * *";
         private String festivalsCron = "0 10 3 * * *";
-        private String commonDetailsCron = "0 30 3 * * *";
         private String accommodationsCron = "0 0 5 * * *";
     }
 }

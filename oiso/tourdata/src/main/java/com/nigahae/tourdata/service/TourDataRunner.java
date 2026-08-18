@@ -23,8 +23,8 @@ public class TourDataRunner {
     }
 
     public TourDataResult run(TourDataJobType jobType, String trigger) {
-        if (jobType == TourDataJobType.LEGACY_FULL_REFRESH) {
-            throw new IllegalArgumentException("LEGACY_FULL_REFRESH cannot be executed");
+        if (jobType == TourDataJobType.COMMON_DETAILS || jobType == TourDataJobType.LEGACY_FULL_REFRESH) {
+            throw new IllegalArgumentException(jobType + " cannot be executed");
         }
 
         AtomicBoolean running = runningByJob.get(jobType);
@@ -38,9 +38,8 @@ public class TourDataRunner {
             return switch (jobType) {
                 case TOUR_SPOTS -> tourDataService.refreshTourSpots();
                 case FESTIVALS -> tourDataService.refreshFestivals();
-                case COMMON_DETAILS -> tourDataService.refreshCommonDetails();
                 case ACCOMMODATIONS -> tourDataService.refreshAccommodations();
-                case LEGACY_FULL_REFRESH -> throw new IllegalStateException("Unsupported legacy job");
+                case COMMON_DETAILS, LEGACY_FULL_REFRESH -> throw new IllegalStateException("Unsupported job");
             };
         } finally {
             running.set(false);

@@ -1,9 +1,12 @@
 package com.nigahae.tourdata.service;
 
+import com.nigahae.tourdata.TourDetailRefresher;
+import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.client.FestivalPayload;
 import com.nigahae.tourdata.client.PublicTourDataClient;
+import com.nigahae.tourdata.client.TourApiException;
 import com.nigahae.tourdata.client.TourContentPayload;
-import com.nigahae.tourdata.domain.AccommodationDetail;
+import com.nigahae.tourdata.domain.AccommodationRoom;
 import com.nigahae.tourdata.domain.FestivalInfo;
 import com.nigahae.tourdata.domain.TourDataExecution;
 import com.nigahae.tourdata.domain.TourDataJobType;
@@ -19,17 +22,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Supplier;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TourDataService {
+public class TourDataService implements TourDetailRefresher {
 
     private static final Long ACCOMMODATION_CONTENT_TYPE_ID = 32L;
     private static final ZoneId GYEONGJU_TIME_ZONE = ZoneId.of("Asia/Seoul");
@@ -38,7 +37,7 @@ public class TourDataService {
     private final PublicTourDataClient publicTourDataClient;
     private final TourSpotRepository tourSpotRepository;
     private final FestivalInfoRepository festivalInfoRepository;
-    private final AccommodationDetailStore accommodationDetailStore;
+    private final AccommodationRoomStore accommodationRoomStore;
     private final TourDataExecutionRepository executionRepository;
 
     public TourDataResult refreshTourSpots() {
@@ -47,7 +46,7 @@ public class TourDataService {
             for (TourContentPayload payload : payloads) {
                 Long contentId = payload.contentIdAsLong();
                 TourSpot tourSpot = tourSpotRepository.findByContentId(contentId)
-                        .orElseGet(() -> new TourSpot(contentId));
+                        .orElseGet(TourSpot::create);
                 tourSpot.updateFromList(payload);
                 tourSpotRepository.save(tourSpot);
             }
@@ -61,45 +60,44 @@ public class TourDataService {
             List<FestivalPayload> payloads = publicTourDataClient.fetchAllFestivals(eventStartDate);
             for (FestivalPayload payload : payloads) {
                 Long contentId = payload.content().contentIdAsLong();
-                FestivalInfo festivalInfo = festivalInfoRepository.findByContentId(contentId)
-                        .orElseGet(() -> new FestivalInfo(contentId));
-                festivalInfo.updateFromList(payload);
+                TourSpot tourSpot = tourSpotRepository.findByContentId(contentId)
+                        .orElseGet(TourSpot::create);
+                tourSpot.updateFromList(payload.content());
+                tourSpot = tourSpotRepository.save(tourSpot);
+
+                TourSpot savedTourSpot = tourSpot;
+                FestivalInfo festivalInfo = festivalInfoRepository.findById(savedTourSpot.getSpotId())
+                        .orElseGet(() -> FestivalInfo.forSpot(savedTourSpot));
+                festivalInfo.updateDates(payload);
                 festivalInfoRepository.save(festivalInfo);
             }
             return TourDataResult.success(payloads.size());
         });
     }
 
-    public TourDataResult refreshCommonDetails() {
-        return execute(TourDataJobType.COMMON_DETAILS, () -> {
-            Map<Long, TourSpot> tourSpotsByContentId = indexTourSpots();
-            Map<Long, FestivalInfo> festivalsByContentId = indexFestivals();
-            Set<Long> contentIds = new TreeSet<>(tourSpotsByContentId.keySet());
-            contentIds.addAll(festivalsByContentId.keySet());
+    @Override
+    public TourDetailRefreshResult refresh(Long spotId) {
+        TourSpot tourSpot = tourSpotRepository.findById(spotId).orElse(null);
+        if (tourSpot == null) {
+            return TourDetailRefreshResult.notFound();
+        }
 
-            FailureCollector failures = new FailureCollector();
-            int processedCount = 0;
-            for (Long contentId : contentIds) {
-                try {
-                    TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
-                    TourSpot tourSpot = tourSpotsByContentId.get(contentId);
-                    if (tourSpot != null) {
-                        tourSpot.updateFromDetail(detail);
-                        tourSpotRepository.save(tourSpot);
-                    }
-                    FestivalInfo festivalInfo = festivalsByContentId.get(contentId);
-                    if (festivalInfo != null) {
-                        festivalInfo.updateFromDetail(detail);
-                        festivalInfoRepository.save(festivalInfo);
-                    }
-                    processedCount++;
-                } catch (RuntimeException e) {
-                    failures.add(contentId, e);
-                    log.warn("Common detail ingest failed. contentId={}, message={}", contentId, e.getMessage());
-                }
-            }
-            return failures.toResult(processedCount);
-        });
+        Long contentId = tourSpot.getContentId();
+        try {
+            TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
+            tourSpot.updateFromDetail(detail);
+            tourSpotRepository.save(tourSpot);
+            return TourDetailRefreshResult.updated();
+        } catch (TourApiException exception) {
+            String failureMessage = messageOf(exception);
+            log.warn(
+                    "Tour detail refresh failed. spotId={}, contentId={}, message={}",
+                    spotId,
+                    contentId,
+                    failureMessage
+            );
+            return TourDetailRefreshResult.failed(failureMessage);
+        }
     }
 
     public TourDataResult refreshAccommodations() {
@@ -110,8 +108,8 @@ public class TourDataService {
             for (TourSpot accommodation : accommodations) {
                 Long contentId = accommodation.getContentId();
                 try {
-                    List<AccommodationDetail> details = accommodationDetails(contentId, accommodation.getSpotId());
-                    accommodationDetailStore.replace(accommodation.getSpotId(), details);
+                    List<AccommodationRoom> rooms = accommodationRooms(contentId, accommodation.getSpotId());
+                    accommodationRoomStore.replace(accommodation.getSpotId(), rooms);
                     processedCount++;
                 } catch (RuntimeException e) {
                     failures.add(contentId, e);
@@ -149,36 +147,16 @@ public class TourDataService {
         }
     }
 
-    private Map<Long, TourSpot> indexTourSpots() {
-        Map<Long, TourSpot> result = new HashMap<>();
-        for (TourSpot tourSpot : tourSpotRepository.findAll()) {
-            if (tourSpot.getContentId() != null) {
-                result.put(tourSpot.getContentId(), tourSpot);
-            }
-        }
-        return result;
-    }
-
-    private Map<Long, FestivalInfo> indexFestivals() {
-        Map<Long, FestivalInfo> result = new HashMap<>();
-        for (FestivalInfo festivalInfo : festivalInfoRepository.findAll()) {
-            if (festivalInfo.getContentId() != null) {
-                result.put(festivalInfo.getContentId(), festivalInfo);
-            }
-        }
-        return result;
-    }
-
-    private List<AccommodationDetail> accommodationDetails(Long contentId, Long spotId) {
-        List<AccommodationDetail> details = new ArrayList<>();
-        long tempRoomId = 1L;
+    private List<AccommodationRoom> accommodationRooms(Long contentId, Long spotId) {
+        List<AccommodationRoom> rooms = new ArrayList<>();
+        int roomOrder = 1;
         for (var roomPayload : publicTourDataClient.fetchAccommodationRooms(
                 contentId, ACCOMMODATION_CONTENT_TYPE_ID
         )) {
-            details.add(AccommodationDetail.fromRoomPayload(tempRoomId, spotId, roomPayload));
-            tempRoomId++;
+            rooms.add(AccommodationRoom.fromRoomPayload(spotId, roomOrder, roomPayload));
+            roomOrder++;
         }
-        return details;
+        return rooms;
     }
 
     private static String messageOf(RuntimeException exception) {
