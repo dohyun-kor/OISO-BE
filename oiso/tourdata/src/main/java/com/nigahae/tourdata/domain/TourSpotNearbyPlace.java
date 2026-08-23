@@ -17,10 +17,16 @@ public class TourSpotNearbyPlace {
     private Long spotId;
     @Column(name = "name", nullable = false)
     private String name;
+    @Column(name = "img", length = 2048)
+    private String img;
+    @Column(name = "overview", columnDefinition = "text")
+    private String overview;
     @Column(name = "category", nullable = false, length = 30)
     private String category;
     @Column(name = "address", columnDefinition = "text")
     private String address;
+    @Column(name = "homepage_url", length = 2048)
+    private String homepageUrl;
     @Column(name = "content_id")
     private Long contentId;
     @Column(name = "content_type_id")
@@ -43,9 +49,14 @@ public class TourSpotNearbyPlace {
         this.category = category;
         this.contentId = payload.contentIdAsLong();
         this.contentTypeId = payload.contentTypeIdAsLong();
-        this.name = payload.title();
-        this.address = payload.address();
-        this.mapX = payload.mapXAsDouble();
-        this.mapY = payload.mapYAsDouble();
+        if (hasText(payload.title())) this.name = payload.title();
+        if (hasText(payload.firstImage())) this.img = payload.firstImage();
+        if (hasText(payload.overview())) this.overview = payload.overview();
+        if (hasText(payload.address())) this.address = payload.address();
+        if (hasText(payload.homepage())) this.homepageUrl = payload.homepage();
+        if (payload.mapXAsDouble() != null) this.mapX = payload.mapXAsDouble();
+        if (payload.mapYAsDouble() != null) this.mapY = payload.mapYAsDouble();
     }
+
+    private static boolean hasText(String value) { return value != null && !value.isBlank(); }
 }

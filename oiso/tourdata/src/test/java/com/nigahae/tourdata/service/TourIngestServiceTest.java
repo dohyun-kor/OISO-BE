@@ -93,6 +93,11 @@ class TourIngestServiceTest {
         when(tourSpotRepository.findAllByContentTypeIdIn(List.of(12L, 14L, 15L, 25L, 28L)))
                 .thenReturn(List.of(destination));
         when(nearbyPlaceRepository.findBySpotIdAndContentId(100L, 200L)).thenReturn(Optional.empty());
+        when(publicTourDataClient.fetchTourContentDetail(200L)).thenReturn(new TourContentPayload(
+                "200", "39", "Place 200", "1", "2", "Address",
+                "127.001", "37.001", "https://image.example.com/200.jpg",
+                "대표 음식점 설명", "https://place.example.com/200", null, "{}"
+        ));
 
         TourDataResult result = tourDataService.refreshTourSpots();
 
@@ -103,6 +108,10 @@ class TourIngestServiceTest {
         assertThat(captor.getValue().getSpotId()).isEqualTo(100L);
         assertThat(captor.getValue().getContentId()).isEqualTo(200L);
         assertThat(captor.getValue().getCategory()).isEqualTo("RESTAURANT");
+        assertThat(captor.getValue().getImg()).isEqualTo("https://image.example.com/200.jpg");
+        assertThat(captor.getValue().getOverview()).isEqualTo("대표 음식점 설명");
+        assertThat(captor.getValue().getHomepageUrl()).isEqualTo("https://place.example.com/200");
+        verify(publicTourDataClient).fetchTourContentDetail(200L);
         verify(tourSpotRepository, never()).findByContentId(200L);
         verify(nearbyPlaceRepository, never()).findBySpotIdAndContentId(100L, 300L);
     }

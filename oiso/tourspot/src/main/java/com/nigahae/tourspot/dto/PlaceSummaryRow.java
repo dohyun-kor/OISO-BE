@@ -4,6 +4,7 @@ public interface PlaceSummaryRow {
     String getCategory();
     Long getSpotId();
     Long getNearbyPlaceId();
+    Long getParentTourSpotId();
     String getName();
     String getImg();
     String getOverview();

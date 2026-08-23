@@ -17,6 +17,7 @@ class NearbyPlaceControllerTest {
         TourSpotService service = mock(TourSpotService.class);
         NearbyPlaceResponse response = new NearbyPlaceResponse(
                 101L, 35L, NearbyPlaceCategory.RESTAURANT, "경주 식당",
+                "https://image.example.com/101.jpg", "대표 음식점 설명",
                 null, "경주시", null, null, 39,
                 129.1, 35.1, null, null, null, null,
                 null, null, null, null);

@@ -394,6 +394,8 @@ CREATE TABLE IF NOT EXISTS public."TourSpotNearbyPlace"
     spot_id                    int8 NOT NULL,
 
     "name"                     varchar(255) NOT NULL,
+    img                        varchar(2048) NULL,
+    overview                   text NULL,
     category                   varchar(30) NULL,
     mood                       varchar(30) NULL,
     address                    text NULL,
@@ -419,6 +421,10 @@ CREATE TABLE IF NOT EXISTS public."TourSpotNearbyPlace"
     CONSTRAINT "CK_TOURSPOTNEARBYPLACE_NAME"
         CHECK (btrim("name") <> '')
 );
+
+ALTER TABLE public."TourSpotNearbyPlace"
+    ADD COLUMN IF NOT EXISTS img varchar(2048),
+    ADD COLUMN IF NOT EXISTS overview text;
 
 
 CREATE INDEX IF NOT EXISTS "IX_TOURSPOTNEARBYPLACE_SPOT_ID"
