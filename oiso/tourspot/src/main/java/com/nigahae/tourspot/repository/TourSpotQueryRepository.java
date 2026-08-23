@@ -100,12 +100,14 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
 
     @Query(value = """
             select places.category as "category", places.spot_id as "spotId",
-                   places.nearby_place_id as "nearbyPlaceId", places.name as "name",
+                   places.nearby_place_id as "nearbyPlaceId",
+                   places.parent_tour_spot_id as "parentTourSpotId", places.name as "name",
                    places.img as "img", places.overview as "overview", places.address as "address",
                    places.latitude as "latitude", places.longitude as "longitude"
             from (
                 select 'TOUR_SPOT' as category, spot.spot_id as spot_id,
-                       cast(null as bigint) as nearby_place_id, spot.name as name,
+                       cast(null as bigint) as nearby_place_id,
+                       cast(null as bigint) as parent_tour_spot_id, spot.name as name,
                        spot.img as img, spot.overview as overview, spot.address as address,
                        spot.map_y as latitude, spot.map_x as longitude
                 from "TourSpot" spot
@@ -117,12 +119,17 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                        end as category,
                        cast(null as bigint) as spot_id,
                        nearby.tour_spot_nearby_course_id as nearby_place_id,
+                       nearby.spot_id as parent_tour_spot_id,
                        nearby.name as name, cast(null as varchar) as img,
                        cast(null as varchar) as overview, nearby.address as address,
                        nearby.map_y as latitude, nearby.map_x as longitude
-                from "TourSpotNearbyPlace" nearby
-                where nearby.content_type_id in (32, 39)
-                   or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING')
+                from (
+                    select distinct on (source.content_id) source.*
+                    from "TourSpotNearbyPlace" source
+                    where source.content_type_id in (32, 39)
+                       or upper(source.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING')
+                    order by source.content_id, source.tour_spot_nearby_course_id
+                ) nearby
             ) places
             where (:category = '' or places.category = :category)
               and (:keyword = '' or lower(places.name) like lower(concat('%', :keyword, '%'))
@@ -143,9 +150,13 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                          when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                        end as category,
                        nearby.name, nearby.address, cast(null as varchar) as overview
-                from "TourSpotNearbyPlace" nearby
-                where nearby.content_type_id in (32, 39)
-                   or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING')
+                from (
+                    select distinct on (source.content_id) source.*
+                    from "TourSpotNearbyPlace" source
+                    where source.content_type_id in (32, 39)
+                       or upper(source.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING')
+                    order by source.content_id, source.tour_spot_nearby_course_id
+                ) nearby
             ) places
             where (:category = '' or places.category = :category)
               and (:keyword = '' or lower(places.name) like lower(concat('%', :keyword, '%'))

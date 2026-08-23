@@ -30,6 +30,7 @@ class PlaceServiceTest {
         when(row.getCategory()).thenReturn("RESTAURANT");
         when(row.getSpotId()).thenReturn(null);
         when(row.getNearbyPlaceId()).thenReturn(101L);
+        when(row.getParentTourSpotId()).thenReturn(35L);
         when(row.getName()).thenReturn("경주 식당");
         when(repository.findPlaces(eq("RESTAURANT"), eq("한식"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(row), PageRequest.of(0, 20), 1));
@@ -41,5 +42,6 @@ class PlaceServiceTest {
         assertThat(response.places().get(0).category()).isEqualTo(PlaceCategory.RESTAURANT);
         assertThat(response.places().get(0).spotId()).isNull();
         assertThat(response.places().get(0).nearbyPlaceId()).isEqualTo(101L);
+        assertThat(response.places().get(0).parentTourSpotId()).isEqualTo(35L);
     }
 }
