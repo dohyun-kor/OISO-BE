@@ -9,6 +9,7 @@ dependencies {
     implementation project(':tourdata')
     implementation project(':tourspot')
     implementation project(':tourcourse')
+    implementation project(':location')
 
     testImplementation project(':common')
     testImplementation project(':user')
@@ -16,6 +17,7 @@ dependencies {
     testImplementation project(':tourdata')
     testImplementation project(':tourspot')
     testImplementation project(':tourcourse')
+    testImplementation project(':location')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
