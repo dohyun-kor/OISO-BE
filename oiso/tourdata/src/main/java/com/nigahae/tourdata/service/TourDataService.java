@@ -11,9 +11,11 @@ import com.nigahae.tourdata.domain.FestivalInfo;
 import com.nigahae.tourdata.domain.TourDataExecution;
 import com.nigahae.tourdata.domain.TourDataJobType;
 import com.nigahae.tourdata.domain.TourSpot;
+import com.nigahae.tourdata.domain.TourSpotNearbyPlace;
 import com.nigahae.tourdata.repository.FestivalInfoRepository;
 import com.nigahae.tourdata.repository.TourDataExecutionRepository;
 import com.nigahae.tourdata.repository.TourSpotRepository;
+import com.nigahae.tourdata.repository.TourSpotNearbyPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -31,11 +34,16 @@ import java.util.function.Supplier;
 public class TourDataService implements TourDetailRefresher {
 
     private static final Long ACCOMMODATION_CONTENT_TYPE_ID = 32L;
+    private static final Long RESTAURANT_CONTENT_TYPE_ID = 39L;
+    private static final List<Long> TOUR_SPOT_CONTENT_TYPE_IDS = List.of(12L, 14L, 15L, 25L, 28L);
+    private static final double NEARBY_RADIUS_METERS = 3_000.0;
+    private static final int MAX_NEARBY_PLACES_PER_CATEGORY = 20;
     private static final ZoneId GYEONGJU_TIME_ZONE = ZoneId.of("Asia/Seoul");
     private static final int MAX_RECORDED_FAILURES = 20;
 
     private final PublicTourDataClient publicTourDataClient;
     private final TourSpotRepository tourSpotRepository;
+    private final TourSpotNearbyPlaceRepository nearbyPlaceRepository;
     private final FestivalInfoRepository festivalInfoRepository;
     private final AccommodationRoomStore accommodationRoomStore;
     private final TourDataExecutionRepository executionRepository;
@@ -43,15 +51,71 @@ public class TourDataService implements TourDetailRefresher {
     public TourDataResult refreshTourSpots() {
         return execute(TourDataJobType.TOUR_SPOTS, () -> {
             List<TourContentPayload> payloads = publicTourDataClient.fetchAllTourContents();
-            for (TourContentPayload payload : payloads) {
+            List<TourContentPayload> tourSpotPayloads = payloads.stream()
+                    .filter(payload -> TOUR_SPOT_CONTENT_TYPE_IDS.contains(payload.contentTypeIdAsLong()))
+                    .toList();
+            for (TourContentPayload payload : tourSpotPayloads) {
                 Long contentId = payload.contentIdAsLong();
                 TourSpot tourSpot = tourSpotRepository.findByContentId(contentId)
                         .orElseGet(TourSpot::create);
                 tourSpot.updateFromList(payload);
                 tourSpotRepository.save(tourSpot);
             }
-            return TourDataResult.success(payloads.size());
+
+            List<TourContentPayload> nearbyPayloads = payloads.stream()
+                    .filter(payload -> ACCOMMODATION_CONTENT_TYPE_ID.equals(payload.contentTypeIdAsLong())
+                            || RESTAURANT_CONTENT_TYPE_ID.equals(payload.contentTypeIdAsLong()))
+                    .filter(this::hasCoordinates)
+                    .toList();
+            List<TourSpot> tourSpots = tourSpotRepository.findAllByContentTypeIdIn(
+                    TOUR_SPOT_CONTENT_TYPE_IDS);
+            int nearbyCount = refreshNearbyPlaces(tourSpots, nearbyPayloads);
+            return TourDataResult.success(tourSpotPayloads.size() + nearbyCount);
         });
+    }
+
+    private int refreshNearbyPlaces(List<TourSpot> tourSpots, List<TourContentPayload> candidates) {
+        int processedCount = 0;
+        for (TourSpot tourSpot : tourSpots) {
+            if (tourSpot.getMapX() == null || tourSpot.getMapY() == null) continue;
+            for (Long contentTypeId : List.of(RESTAURANT_CONTENT_TYPE_ID, ACCOMMODATION_CONTENT_TYPE_ID)) {
+                List<TourContentPayload> nearby = candidates.stream()
+                        .filter(candidate -> candidate.contentTypeIdAsLong().equals(contentTypeId))
+                        .filter(candidate -> distanceMeters(tourSpot.getMapY(), tourSpot.getMapX(),
+                                candidate.mapYAsDouble(), candidate.mapXAsDouble()) <= NEARBY_RADIUS_METERS)
+                        .sorted(Comparator.comparingDouble(candidate -> distanceMeters(
+                                tourSpot.getMapY(), tourSpot.getMapX(),
+                                candidate.mapYAsDouble(), candidate.mapXAsDouble())))
+                        .limit(MAX_NEARBY_PLACES_PER_CATEGORY)
+                        .toList();
+                for (TourContentPayload payload : nearby) {
+                    Long contentId = payload.contentIdAsLong();
+                    String category = contentTypeId.equals(RESTAURANT_CONTENT_TYPE_ID)
+                            ? "RESTAURANT" : "ACCOMMODATION";
+                    TourSpotNearbyPlace place = nearbyPlaceRepository
+                            .findBySpotIdAndContentId(tourSpot.getSpotId(), contentId)
+                            .orElseGet(() -> TourSpotNearbyPlace.create(tourSpot.getSpotId(), category, payload));
+                    place.update(category, payload);
+                    nearbyPlaceRepository.save(place);
+                    processedCount++;
+                }
+            }
+        }
+        return processedCount;
+    }
+
+    private boolean hasCoordinates(TourContentPayload payload) {
+        return payload.mapXAsDouble() != null && payload.mapYAsDouble() != null;
+    }
+
+    private double distanceMeters(double latitude1, double longitude1, double latitude2, double longitude2) {
+        double earthRadius = 6_371_000.0;
+        double latDelta = Math.toRadians(latitude2 - latitude1);
+        double lonDelta = Math.toRadians(longitude2 - longitude1);
+        double a = Math.sin(latDelta / 2) * Math.sin(latDelta / 2)
+                + Math.cos(Math.toRadians(latitude1)) * Math.cos(Math.toRadians(latitude2))
+                * Math.sin(lonDelta / 2) * Math.sin(lonDelta / 2);
+        return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     public TourDataResult refreshFestivals() {

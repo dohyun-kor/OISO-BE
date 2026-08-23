@@ -11,4 +11,6 @@ public interface TourSpotRepository extends JpaRepository<TourSpot, Long> {
     Optional<TourSpot> findByContentId(Long contentId);
 
     List<TourSpot> findAllByContentTypeId(Long contentTypeId);
+
+    List<TourSpot> findAllByContentTypeIdIn(List<Long> contentTypeIds);
 }

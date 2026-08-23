@@ -15,6 +15,7 @@ import com.nigahae.tourdata.domain.TourSpot;
 import com.nigahae.tourdata.repository.FestivalInfoRepository;
 import com.nigahae.tourdata.repository.TourDataExecutionRepository;
 import com.nigahae.tourdata.repository.TourSpotRepository;
+import com.nigahae.tourdata.repository.TourSpotNearbyPlaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +43,9 @@ class TourIngestServiceTest {
 
     @Mock
     TourSpotRepository tourSpotRepository;
+
+    @Mock
+    TourSpotNearbyPlaceRepository nearbyPlaceRepository;
 
     @Mock
     FestivalInfoRepository festivalInfoRepository;
@@ -76,6 +80,31 @@ class TourIngestServiceTest {
         verify(tourSpotRepository).save(existing);
         verify(publicTourDataClient, never()).fetchTourContentDetail(any());
         assertExecution(TourDataJobType.TOUR_SPOTS, TourDataStatus.SUCCESS, 1, 0);
+    }
+
+    @Test
+    void refreshTourSpotsSeparatesRestaurantIntoNearbyPlaceByDistance() {
+        TourSpot destination = tourSpot("100", "12");
+        TourContentPayload restaurant = payloadAt("200", "39", "127.001", "37.001");
+        TourContentPayload farAccommodation = payloadAt("300", "32", "128", "38");
+        when(publicTourDataClient.fetchAllTourContents())
+                .thenReturn(List.of(payload("100", "12"), restaurant, farAccommodation));
+        when(tourSpotRepository.findByContentId(100L)).thenReturn(Optional.of(destination));
+        when(tourSpotRepository.findAllByContentTypeIdIn(List.of(12L, 14L, 15L, 25L, 28L)))
+                .thenReturn(List.of(destination));
+        when(nearbyPlaceRepository.findBySpotIdAndContentId(100L, 200L)).thenReturn(Optional.empty());
+
+        TourDataResult result = tourDataService.refreshTourSpots();
+
+        assertThat(result).isEqualTo(TourDataResult.success(2));
+        ArgumentCaptor<com.nigahae.tourdata.domain.TourSpotNearbyPlace> captor =
+                ArgumentCaptor.forClass(com.nigahae.tourdata.domain.TourSpotNearbyPlace.class);
+        verify(nearbyPlaceRepository).save(captor.capture());
+        assertThat(captor.getValue().getSpotId()).isEqualTo(100L);
+        assertThat(captor.getValue().getContentId()).isEqualTo(200L);
+        assertThat(captor.getValue().getCategory()).isEqualTo("RESTAURANT");
+        verify(tourSpotRepository, never()).findByContentId(200L);
+        verify(nearbyPlaceRepository, never()).findBySpotIdAndContentId(100L, 300L);
     }
 
     @Test
@@ -215,6 +244,13 @@ class TourIngestServiceTest {
         return new TourContentPayload(
                 contentId, contentTypeId, "Place " + contentId, "1", "2", "Address",
                 "127", "37", null, overview, homepage, null, "{}"
+        );
+    }
+
+    private TourContentPayload payloadAt(String contentId, String contentTypeId, String mapX, String mapY) {
+        return new TourContentPayload(
+                contentId, contentTypeId, "Place " + contentId, "1", "2", "Address",
+                mapX, mapY, null, null, null, null, "{}"
         );
     }
 

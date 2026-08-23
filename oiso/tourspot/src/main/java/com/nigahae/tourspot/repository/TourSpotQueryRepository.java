@@ -14,11 +14,18 @@ import java.util.Optional;
 public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
 
     @Query("""
+            SELECT t FROM TourSpotReadModel t
+            WHERE t.contentTypeId IS NULL OR t.contentTypeId IN (12, 14, 15, 25, 28)
+            """)
+    Page<TourSpot> findAllTourSpots(Pageable pageable);
+
+    @Query("""
             SELECT t
             FROM TourSpotReadModel t
-            WHERE LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            WHERE (t.contentTypeId IS NULL OR t.contentTypeId IN (12, 14, 15, 25, 28))
+              AND (LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR LOWER(COALESCE(t.address, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(COALESCE(t.overview, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(COALESCE(t.overview, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
     Page<TourSpot> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
@@ -30,7 +37,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
                    nearby.name as "name", nearby.mood as "mood", nearby.address as "address",
-                   nearby.hompage_url as "homepageUrl", nearby.content_id as "contentId",
+                   nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
                    detail.open_time as "openTime", detail.rest_date as "restDate",
                    detail.reservation_info as "reservationInfo", detail.inquiry_info as "inquiryInfo",
@@ -45,8 +52,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                    or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING'))
               and (:category = '' or
                    case
-                     when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
-                     when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
+                     when upper(nearby.category) = 'RESTAURANT' then 'RESTAURANT'
+                     when upper(nearby.category) = 'ACCOMMODATION' then 'ACCOMMODATION'
                    end = :category)
             """,
             countQuery = """
@@ -74,7 +81,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
                    nearby.name as "name", nearby.mood as "mood", nearby.address as "address",
-                   nearby.hompage_url as "homepageUrl", nearby.content_id as "contentId",
+                   nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
                    detail.open_time as "openTime", detail.rest_date as "restDate",
                    detail.reservation_info as "reservationInfo", detail.inquiry_info as "inquiryInfo",
@@ -85,8 +92,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
              and detail.spot_id = nearby.spot_id
             where nearby.tour_spot_nearby_course_id = :nearbyPlaceId
-              and (nearby.content_type_id in (32, 39)
-                   or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING'))
+              and upper(nearby.category) in ('RESTAURANT', 'ACCOMMODATION')
             """, nativeQuery = true)
     Optional<NearbyPlaceRow> findNearbyPlace(
             @Param("nearbyPlaceId") Long nearbyPlaceId
@@ -103,6 +109,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                        spot.img as img, spot.overview as overview, spot.address as address,
                        spot.map_y as latitude, spot.map_x as longitude
                 from "TourSpot" spot
+                where spot.content_type_id is null or spot.content_type_id in (12, 14, 15, 25, 28)
                 union all
                 select case
                          when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
@@ -129,6 +136,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from (
                 select 'TOUR_SPOT' as category, spot.name, spot.address, spot.overview
                 from "TourSpot" spot
+                where spot.content_type_id is null or spot.content_type_id in (12, 14, 15, 25, 28)
                 union all
                 select case
                          when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
