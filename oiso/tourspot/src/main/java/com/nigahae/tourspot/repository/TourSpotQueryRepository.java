@@ -36,7 +36,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
-                   nearby.name as "name", nearby.mood as "mood", nearby.address as "address",
+                   nearby.name as "name", nearby.img as "img", nearby.overview as "overview",
+                   nearby.mood as "mood", nearby.address as "address",
                    nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
                    detail.open_time as "openTime", detail.rest_date as "restDate",
@@ -80,7 +81,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
-                   nearby.name as "name", nearby.mood as "mood", nearby.address as "address",
+                   nearby.name as "name", nearby.img as "img", nearby.overview as "overview",
+                   nearby.mood as "mood", nearby.address as "address",
                    nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
                    detail.open_time as "openTime", detail.rest_date as "restDate",
@@ -120,8 +122,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                        cast(null as bigint) as spot_id,
                        nearby.tour_spot_nearby_course_id as nearby_place_id,
                        nearby.spot_id as parent_tour_spot_id,
-                       nearby.name as name, cast(null as varchar) as img,
-                       cast(null as varchar) as overview, nearby.address as address,
+                       nearby.name as name, nearby.img as img,
+                       nearby.overview as overview, nearby.address as address,
                        nearby.map_y as latitude, nearby.map_x as longitude
                 from (
                     select distinct on (source.content_id) source.*
@@ -149,7 +151,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                          when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                          when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                        end as category,
-                       nearby.name, nearby.address, cast(null as varchar) as overview
+                       nearby.name, nearby.address, nearby.overview
                 from (
                     select distinct on (source.content_id) source.*
                     from "TourSpotNearbyPlace" source

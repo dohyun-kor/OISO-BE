@@ -8,6 +8,8 @@ public record NearbyPlaceResponse(
         @Schema(description = "주변 장소가 속한 관광지 ID", example = "35") Long spotId,
         NearbyPlaceCategory category,
         String name,
+        String img,
+        String overview,
         String mood,
         String address,
         String homepageUrl,
@@ -27,7 +29,7 @@ public record NearbyPlaceResponse(
     public static NearbyPlaceResponse from(NearbyPlaceRow row) {
         return new NearbyPlaceResponse(
                 row.getNearbyPlaceId(), row.getSpotId(), NearbyPlaceCategory.valueOf(row.getCategory()),
-                row.getName(), row.getMood(), row.getAddress(), row.getHomepageUrl(),
+                row.getName(), row.getImg(), row.getOverview(), row.getMood(), row.getAddress(), row.getHomepageUrl(),
                 row.getContentId(), row.getContentTypeId(), row.getMapX(), row.getMapY(),
                 row.getOpenTime(), row.getRestDate(), row.getReservationInfo(),
                 row.getInquiryInfo(), row.getParkingInfo(), row.getPetInfo(),

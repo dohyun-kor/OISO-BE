@@ -26,6 +26,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -76,6 +78,7 @@ public class TourDataService implements TourDetailRefresher {
 
     private int refreshNearbyPlaces(List<TourSpot> tourSpots, List<TourContentPayload> candidates) {
         int processedCount = 0;
+        Map<Long, TourContentPayload> detailCache = new HashMap<>();
         for (TourSpot tourSpot : tourSpots) {
             if (tourSpot.getMapX() == null || tourSpot.getMapY() == null) continue;
             for (Long contentTypeId : List.of(RESTAURANT_CONTENT_TYPE_ID, ACCOMMODATION_CONTENT_TYPE_ID)) {
@@ -96,12 +99,32 @@ public class TourDataService implements TourDetailRefresher {
                             .findBySpotIdAndContentId(tourSpot.getSpotId(), contentId)
                             .orElseGet(() -> TourSpotNearbyPlace.create(tourSpot.getSpotId(), category, payload));
                     place.update(category, payload);
+                    TourContentPayload detail = nearbyDetail(payload, detailCache);
+                    if (detail != payload) place.update(category, detail);
                     nearbyPlaceRepository.save(place);
                     processedCount++;
                 }
             }
         }
         return processedCount;
+    }
+
+    private TourContentPayload nearbyDetail(
+            TourContentPayload listPayload, Map<Long, TourContentPayload> detailCache
+    ) {
+        if (listPayload.overview() != null && !listPayload.overview().isBlank()) return listPayload;
+        Long contentId = listPayload.contentIdAsLong();
+        if (detailCache.containsKey(contentId)) return detailCache.get(contentId);
+        try {
+            TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
+            TourContentPayload result = detail == null ? listPayload : detail;
+            detailCache.put(contentId, result);
+            return result;
+        } catch (TourApiException exception) {
+            log.warn("Nearby place detail ingest failed. contentId={}, message={}", contentId, exception.getMessage());
+            detailCache.put(contentId, listPayload);
+            return listPayload;
+        }
     }
 
     private boolean hasCoordinates(TourContentPayload payload) {

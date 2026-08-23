@@ -5,6 +5,8 @@ public interface NearbyPlaceRow {
     Long getSpotId();
     String getCategory();
     String getName();
+    String getImg();
+    String getOverview();
     String getMood();
     String getAddress();
     String getHomepageUrl();
