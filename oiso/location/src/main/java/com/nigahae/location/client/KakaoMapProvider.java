@@ -5,6 +5,7 @@ import com.nigahae.location.config.KakaoMapProperties;
 import com.nigahae.location.domain.RouteTransportType;
 import com.nigahae.location.dto.*;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriBuilder;
@@ -15,17 +16,26 @@ import java.util.function.Function;
 
 @Component
 public class KakaoMapProvider implements MapProvider {
-    private final RestClient restClient;
+    private final RestClient mapRestClient;
+    private final RestClient mobilityRestClient;
     private final KakaoMapProperties properties;
 
-    public KakaoMapProvider(RestClient kakaoMapRestClient, KakaoMapProperties properties) {
-        this.restClient = kakaoMapRestClient;
+    public KakaoMapProvider(
+            @Qualifier("kakaoMapRestClient") RestClient kakaoMapRestClient,
+            @Qualifier("kakaoMobilityRestClient") RestClient kakaoMobilityRestClient,
+            KakaoMapProperties properties
+    ) {
+        this.mapRestClient = kakaoMapRestClient;
+        this.mobilityRestClient = kakaoMobilityRestClient;
         this.properties = properties;
     }
 
     @Override
     public RouteProviderResult calculateRoute(CoordinateRequest origin, CoordinateRequest destination,
                                                RouteTransportType type) {
+        if (type == RouteTransportType.CAR) {
+            return calculateCarRoute(origin, destination);
+        }
         JsonNode root = get(routePath(type), builder -> builder
                 .queryParam("start_x", origin.longitude()).queryParam("start_y", origin.latitude())
                 .queryParam("s_name", name(origin.name(), "출발"))
@@ -44,6 +54,33 @@ public class KakaoMapProvider implements MapProvider {
         if (!route.has("totalDistance")) throw new MapProviderException("경로를 찾을 수 없습니다.");
         return new RouteProviderResult(route.path("totalDistance").asInt(), route.path("totalTime").asInt(),
                 route.path("landingUrl").asText());
+    }
+
+    private RouteProviderResult calculateCarRoute(CoordinateRequest origin, CoordinateRequest destination) {
+        validateKey();
+        try {
+            JsonNode root = mobilityRestClient.get().uri(builder -> builder
+                    .path("/v1/directions")
+                    .queryParam("origin", coordinate(origin))
+                    .queryParam("destination", coordinate(destination))
+                    .queryParam("priority", "RECOMMEND")
+                    .queryParam("summary", true)
+                    .build()).retrieve().body(JsonNode.class);
+            if (root == null || root.path("routes").isEmpty()) {
+                throw new MapProviderException("자동차 경로를 찾을 수 없습니다.");
+            }
+            JsonNode route = root.path("routes").get(0);
+            int resultCode = route.path("result_code").asInt(-1);
+            if (resultCode != 0) {
+                throw new MapProviderException("자동차 경로를 찾을 수 없습니다. resultCode=" + resultCode
+                        + ", message=" + route.path("result_msg").asText());
+            }
+            JsonNode summary = route.path("summary");
+            return new RouteProviderResult(summary.path("distance").asInt(), summary.path("duration").asInt(),
+                    navigationUrl(destination));
+        } catch (RestClientException exception) {
+            throw new MapProviderException("Kakao Mobility 자동차 길찾기 API 호출에 실패했습니다.", exception);
+        }
     }
 
     @Override
@@ -90,7 +127,7 @@ public class KakaoMapProvider implements MapProvider {
     private JsonNode get(String path, Function<UriBuilder, UriBuilder> query) {
         validateKey();
         try {
-            JsonNode value = restClient.get().uri(builder -> query.apply(builder.path(path)).build())
+            JsonNode value = mapRestClient.get().uri(builder -> query.apply(builder.path(path)).build())
                     .retrieve().body(JsonNode.class);
             if (value == null) throw new MapProviderException("Kakao Map API가 빈 응답을 반환했습니다.");
             return value;
@@ -108,7 +145,17 @@ public class KakaoMapProvider implements MapProvider {
             case WALK -> "/v2/routing/walk";
             case BICYCLE -> "/v2/routing/bicycle";
             case PUBLIC_TRANSIT -> "/v2/routing/publictraffic";
+            case CAR -> throw new IllegalArgumentException("CAR uses Kakao Mobility API");
         };
+    }
+    private String coordinate(CoordinateRequest point) {
+        return point.longitude() + "," + point.latitude() + ",name=" + name(point.name(), "장소");
+    }
+    private String navigationUrl(CoordinateRequest destination) {
+        String encodedName = java.net.URLEncoder.encode(name(destination.name(), "목적지"),
+                java.nio.charset.StandardCharsets.UTF_8);
+        return "https://map.kakao.com/link/to/" + encodedName + ","
+                + destination.latitude() + "," + destination.longitude();
     }
     private String name(String value, String fallback) { return value == null || value.isBlank() ? fallback : value; }
     private String text(JsonNode node, String field) {

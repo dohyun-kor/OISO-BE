@@ -16,4 +16,14 @@ public class KakaoMapConfig {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + properties.getRestApiKey())
                 .requestFactory(factory).build();
     }
+
+    @Bean RestClient kakaoMobilityRestClient(RestClient.Builder builder, KakaoMapProperties properties) {
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(properties.getConnectTimeout());
+        factory.setReadTimeout(properties.getReadTimeout());
+        return builder.baseUrl(properties.getMobilityBaseUrl())
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + properties.getRestApiKey())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .requestFactory(factory).build();
+    }
 }
