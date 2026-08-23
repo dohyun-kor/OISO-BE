@@ -119,7 +119,7 @@ public class TourSpotService {
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
 
         Page<TourSpot> result = normalizedKeyword.isEmpty()
-                ? tourSpotQueryRepository.findAll(pageRequest)
+                ? tourSpotQueryRepository.findAllTourSpots(pageRequest)
                 : tourSpotQueryRepository.searchByKeyword(normalizedKeyword, pageRequest);
 
         if (result.isEmpty()) {

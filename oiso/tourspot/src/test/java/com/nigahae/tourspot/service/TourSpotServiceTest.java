@@ -116,7 +116,7 @@ class TourSpotServiceTest {
     @DisplayName("키워드가 없으면 전체 관광지를 페이지 단위로 조회한다")
     void getTourSpotsWithoutKeyword() {
         TourSpot tourSpot = tourSpot(1L, "불국사");
-        when(tourSpotQueryRepository.findAll(any(Pageable.class)))
+        when(tourSpotQueryRepository.findAllTourSpots(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(tourSpot), PageRequest.of(0, 20), 1));
 
         TourSpotListResponse response = tourSpotService.getTourSpots(null, 0, 20);
@@ -144,7 +144,7 @@ class TourSpotServiceTest {
     @Test
     @DisplayName("조회된 관광지가 없으면 검색 결과 없음 예외를 던진다")
     void throwExceptionWhenResultIsEmpty() {
-        when(tourSpotQueryRepository.findAll(any(Pageable.class)))
+        when(tourSpotQueryRepository.findAllTourSpots(any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         assertThatThrownBy(() -> tourSpotService.getTourSpots(null, 0, 20))

@@ -57,6 +57,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
+                                "/api/v1/routes/calculate",
+                                "/api/v1/locations/**",
+                                "/api/v1/map-links",
                                 "/internal/tour-data/**"
                         ).permitAll()
                         .anyRequest().authenticated())
