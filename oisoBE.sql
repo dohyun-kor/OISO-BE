@@ -553,8 +553,8 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
             (tour_spot_nearby_course_id)
         ON DELETE RESTRICT,
 
-    CONSTRAINT "UK_TOURCOURSEITEM_ORDER"
-        UNIQUE (tour_course_id, item_order),
+    CONSTRAINT "UK_TOURCOURSEITEM_DAY_ORDER"
+        UNIQUE (tour_course_id, day_number, item_order),
 
     CONSTRAINT "CK_TOURCOURSEITEM_TARGET"
         CHECK (

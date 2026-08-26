@@ -373,6 +373,9 @@ ALTER TABLE public."TourCourseItem"
     ADD COLUMN IF NOT EXISTS distance_meter integer,
     ADD COLUMN IF NOT EXISTS duration_second integer;
 
+ALTER TABLE public."TourCourseItem"
+    DROP CONSTRAINT IF EXISTS "UK_TOURCOURSEITEM_ORDER";
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_course_item_day_order
     ON public."TourCourseItem" (tour_course_id, day_number, item_order)
     WHERE tour_course_id IS NOT NULL;
@@ -580,8 +583,8 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
             (tour_spot_nearby_course_id)
         ON DELETE RESTRICT,
 
-    CONSTRAINT "UK_TOURCOURSEITEM_ORDER"
-        UNIQUE (tour_course_id, item_order),
+    CONSTRAINT "UK_TOURCOURSEITEM_DAY_ORDER"
+        UNIQUE (tour_course_id, day_number, item_order),
 
     CONSTRAINT "CK_TOURCOURSEITEM_TARGET"
         CHECK (
