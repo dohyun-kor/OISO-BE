@@ -18,4 +18,5 @@ public interface TourCourseItemDetailRow {
     String getTransportType();
     Integer getDistanceMeter();
     Integer getDurationSecond();
+    String getStatus();
 }

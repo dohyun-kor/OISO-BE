@@ -9,6 +9,7 @@ import com.nigahae.tourcourse.dto.CreateTourCourseResponse;
 import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.tourcourse.service.TourCourseService;
 import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -104,6 +106,23 @@ public class TourCourseController implements TourCourseControllerDocs {
                 LIST_SUCCESS_CODE,
                 UPDATE_SUCCESS_MESSAGE,
                 tourCourseService.updateTourCourse(user.userId(), tourCourseId, request)
+        );
+    }
+
+    @PatchMapping("/{tourCourseId}/items/{itemId}")
+    public CommonResponse<TourCourseDetailResponse> patchTourCourseItem(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long tourCourseId,
+            @PathVariable Long itemId,
+            @RequestBody(required = false) PatchTourCourseItemRequest request
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(
+                LIST_SUCCESS_CODE,
+                UPDATE_SUCCESS_MESSAGE,
+                tourCourseService.patchTourCourseItem(user.userId(), tourCourseId, itemId, request)
         );
     }
 

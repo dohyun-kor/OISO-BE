@@ -13,6 +13,7 @@ import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.TourCourseItemDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.tourcourse.domain.TourCourseItem;
 import com.nigahae.tourcourse.domain.TourCourseItemCategory;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
@@ -171,6 +172,66 @@ public class TourCourseService {
         if (!existingItems.isEmpty()) {
             tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
         }
+        return toDetailResponse(course, userId);
+    }
+
+    @Transactional
+    public TourCourseDetailResponse patchTourCourseItem(
+            Long userId, Long tourCourseId, Long itemId, PatchTourCourseItemRequest request
+    ) {
+        validateCourseId(tourCourseId);
+        if (itemId == null || itemId < 1) {
+            throw updateValidationException("itemId", "아이템 ID는 1 이상의 값이어야 합니다.");
+        }
+        if (request == null) {
+            throw updateValidationException("request", "요청 본문이 필요합니다.");
+        }
+        if (request.status() == null) {
+            throw updateValidationException("status", "진행 상태는 필수입니다.");
+        }
+
+        TourCourse course = getOwnedCourse(
+                userId, tourCourseId, ErrorCode.TOUR_COURSE_UPDATE_FORBIDDEN);
+        TourCourseItem target = course.getItems().stream()
+                .filter(item -> itemId.equals(item.getItemId()))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        Map.of("field", "itemId", "itemId", itemId)));
+
+        List<UpdateTourCourseItemRequest> updatedItems = course.getItems().stream()
+                .map(item -> item == target
+                        ? new UpdateTourCourseItemRequest(
+                                itemId, request.category(), request.spotId(), request.nearbyPlaceId(),
+                                request.dayNumber(), request.itemOrder(), request.transportType(),
+                                request.distanceMeter(), request.durationSecond())
+                        : new UpdateTourCourseItemRequest(
+                                item.getItemId(), item.getCategory(), item.getSpotId(), item.getNearbyPlaceId(),
+                                item.getDayNumber(), item.getItemOrder(), item.getTransportType(),
+                                item.getDistanceMeter(), item.getDurationSecond()))
+                .toList();
+        validateUpdateItems(updatedItems);
+        validateUpdatePlaces(updatedItems);
+
+        target.update(
+                request.category(), request.spotId(), request.nearbyPlaceId(),
+                request.dayNumber(), request.itemOrder(),
+                request.transportType(), request.distanceMeter(), request.durationSecond(),
+                request.status());
+
+        int totalDistance = course.getItems().stream()
+                .map(TourCourseItem::getDistanceMeter)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+        int totalDuration = course.getItems().stream()
+                .map(TourCourseItem::getDurationSecond)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+        course.updateMovementTotals(totalDistance, totalDuration);
+        tourCourseRepository.flush();
+
         return toDetailResponse(course, userId);
     }
 

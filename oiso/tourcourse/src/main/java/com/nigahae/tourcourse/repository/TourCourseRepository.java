@@ -81,7 +81,8 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                 end as "liked",
                 item.transport_type as "transportType",
                 item.distance_meter as "distanceMeter",
-                item.duration_second as "durationSecond"
+                item.duration_second as "durationSecond",
+                item.status as "status"
             from "TourCourseItem" item
             left join "TourSpot" spot
                 on spot.spot_id = item.spot_id

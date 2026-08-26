@@ -2,6 +2,7 @@ package com.nigahae.tourcourse.dto;
 
 import com.nigahae.tourcourse.domain.TourCourseItemCategory;
 import com.nigahae.tourcourse.domain.TransportType;
+import com.nigahae.tourcourse.domain.TourCourseItemStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record TourCourseItemDetailResponse(
@@ -23,7 +24,8 @@ public record TourCourseItemDetailResponse(
         boolean like,
         @Schema(nullable = true) TransportType transportType,
         @Schema(nullable = true) Integer distanceMeter,
-        @Schema(nullable = true) Integer durationSecond
+        @Schema(nullable = true) Integer durationSecond,
+        TourCourseItemStatus status
 ) {
     public static TourCourseItemDetailResponse from(TourCourseItemDetailRow row) {
         boolean firstItem = row.getItemOrder() != null && row.getItemOrder() == 1;
@@ -45,7 +47,10 @@ public record TourCourseItemDetailResponse(
                 firstItem || row.getTransportType() == null
                         ? null : TransportType.valueOf(row.getTransportType()),
                 firstItem ? null : row.getDistanceMeter(),
-                firstItem ? null : row.getDurationSecond()
+                firstItem ? null : row.getDurationSecond(),
+                row.getStatus() == null
+                        ? TourCourseItemStatus.PENDING
+                        : TourCourseItemStatus.valueOf(row.getStatus())
         );
     }
 }

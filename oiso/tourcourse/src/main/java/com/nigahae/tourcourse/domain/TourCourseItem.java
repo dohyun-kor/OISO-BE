@@ -52,6 +52,10 @@ public class TourCourseItem {
     @Column(name = "duration_second")
     private Integer durationSecond;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private TourCourseItemStatus status = TourCourseItemStatus.PENDING;
+
     TourCourseItem(TourCourse tourCourse, Long spotId, int itemOrder, TransportType transportType) {
         this(tourCourse, spotId, itemOrder, transportType, null, null);
     }
@@ -112,6 +116,22 @@ public class TourCourseItem {
         this.transportType = transportType;
         this.distanceMeter = distanceMeter;
         this.durationSecond = durationSecond;
+    }
+
+    public void update(
+            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
+            int dayNumber, int itemOrder, TransportType transportType,
+            Integer distanceMeter, Integer durationSecond, TourCourseItemStatus status
+    ) {
+        update(category, spotId, nearbyPlaceId, dayNumber, itemOrder,
+                transportType, distanceMeter, durationSecond);
+        this.status = status;
+    }
+
+    public TourCourseItemCategory getCategory() {
+        return spotId != null
+                ? TourCourseItemCategory.TOUR_SPOT
+                : TourCourseItemCategory.RESTAURANT;
     }
 
     private void setPlace(TourCourseItemCategory category, Long spotId, Long nearbyPlaceId) {

@@ -9,6 +9,7 @@ ALTER TABLE public."TourCourse"
 
 ALTER TABLE public."TourCourseItem"
     ADD COLUMN IF NOT EXISTS day_number integer NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING',
     ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
     ADD COLUMN IF NOT EXISTS transport_type varchar(10),
     ADD COLUMN IF NOT EXISTS distance_meter integer,

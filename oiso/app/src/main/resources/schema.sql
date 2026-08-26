@@ -368,6 +368,7 @@ CREATE TABLE IF NOT EXISTS public."UserSavedTourStory"
 
 ALTER TABLE public."TourCourseItem"
     ADD COLUMN IF NOT EXISTS day_number integer NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING',
     ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
     ADD COLUMN IF NOT EXISTS transport_type varchar(10),
     ADD COLUMN IF NOT EXISTS distance_meter integer,
@@ -561,8 +562,12 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
     spot_id                    int8 NULL,
     tour_spot_nearby_course_id int8 NULL,
 
+    day_number                int4 NOT NULL DEFAULT 1,
     item_order                 int4 NOT NULL,
     transport_type             varchar(10) NULL,
+    distance_meter             int4 NULL,
+    duration_second            int4 NULL,
+    status                     varchar(20) NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "PK_TOURCOURSEITEM"
         PRIMARY KEY (item_id),
@@ -601,6 +606,9 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
 
     CONSTRAINT "CK_TOURCOURSEITEM_ORDER"
         CHECK (item_order >= 1),
+
+    CONSTRAINT "CK_TOURCOURSEITEM_STATUS"
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED')),
 
     CONSTRAINT "CK_TOURCOURSEITEM_TRANSPORT_TYPE"
         CHECK (
