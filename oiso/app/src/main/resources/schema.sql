@@ -370,9 +370,15 @@ ALTER TABLE public."TourCourseItem"
     ADD COLUMN IF NOT EXISTS day_number integer NOT NULL DEFAULT 1,
     ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING',
     ADD COLUMN IF NOT EXISTS tour_spot_nearby_course_id bigint,
-    ADD COLUMN IF NOT EXISTS transport_type varchar(10),
-    ADD COLUMN IF NOT EXISTS distance_meter integer,
-    ADD COLUMN IF NOT EXISTS duration_second integer;
+    ADD COLUMN IF NOT EXISTS transport_type varchar(10);
+
+ALTER TABLE public."TourCourseItem"
+    DROP COLUMN IF EXISTS distance_meter,
+    DROP COLUMN IF EXISTS duration_second;
+
+ALTER TABLE public."TourCourse"
+    DROP COLUMN IF EXISTS total_distance_meter,
+    DROP COLUMN IF EXISTS total_duration_second;
 
 ALTER TABLE public."TourCourseItem"
     DROP CONSTRAINT IF EXISTS "UK_TOURCOURSEITEM_ORDER";
@@ -504,8 +510,6 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     title          varchar(20) NOT NULL,
     share_yn       bool NOT NULL DEFAULT false,
     shared_password varchar(100) NULL,
-    total_distance_meter int4 NOT NULL DEFAULT 0,
-    total_duration_second int4 NOT NULL DEFAULT 0,
 
     created_at     timestamp NOT NULL DEFAULT now(),
     updated_at     timestamp NOT NULL DEFAULT now(),
@@ -526,13 +530,7 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
             (share_yn AND shared_password IS NOT NULL)
             OR
             (NOT share_yn AND shared_password IS NULL)
-        ),
-
-    CONSTRAINT "CK_TOURCOURSE_DISTANCE"
-        CHECK (total_distance_meter >= 0),
-
-    CONSTRAINT "CK_TOURCOURSE_DURATION"
-        CHECK (total_duration_second >= 0)
+        )
 );
 
 
@@ -565,8 +563,6 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
     day_number                int4 NOT NULL DEFAULT 1,
     item_order                 int4 NOT NULL,
     transport_type             varchar(10) NULL,
-    distance_meter             int4 NULL,
-    duration_second            int4 NULL,
     status                     varchar(20) NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "PK_TOURCOURSEITEM"

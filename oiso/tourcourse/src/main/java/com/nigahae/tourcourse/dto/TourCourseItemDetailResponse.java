@@ -23,8 +23,6 @@ public record TourCourseItemDetailResponse(
         Double longitude,
         boolean like,
         @Schema(nullable = true) TransportType transportType,
-        @Schema(nullable = true) Integer distanceMeter,
-        @Schema(nullable = true) Integer durationSecond,
         TourCourseItemStatus status
 ) {
     public static TourCourseItemDetailResponse from(TourCourseItemDetailRow row) {
@@ -46,8 +44,6 @@ public record TourCourseItemDetailResponse(
                 Boolean.TRUE.equals(row.getLiked()),
                 firstItem || row.getTransportType() == null
                         ? null : TransportType.valueOf(row.getTransportType()),
-                firstItem ? null : row.getDistanceMeter(),
-                firstItem ? null : row.getDurationSecond(),
                 row.getStatus() == null
                         ? TourCourseItemStatus.PENDING
                         : TourCourseItemStatus.valueOf(row.getStatus())

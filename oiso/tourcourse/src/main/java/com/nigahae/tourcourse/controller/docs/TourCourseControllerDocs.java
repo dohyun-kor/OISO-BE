@@ -72,9 +72,7 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7901,
                     "longitude": 129.332,
                     "like": true,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   },
                   {
                     "itemId": 12,
@@ -91,13 +89,9 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.791,
                     "longitude": 129.333,
                     "like": false,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   }
                 ],
-                "totalDistanceMeter": 0,
-                "totalDurationSecond": 0,
                 "createdAt": "2026-08-18T10:00:00",
                 "updatedAt": "2026-08-18T10:30:00"
               }
@@ -127,9 +121,7 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7901,
                     "longitude": 129.332,
                     "like": true,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   },
                   {
                     "itemId": 15,
@@ -146,13 +138,9 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7948,
                     "longitude": 129.3492,
                     "like": false,
-                    "transportType": "CAR",
-                    "distanceMeter": 7200,
-                    "durationSecond": 900
+                    "transportType": "CAR"
                   }
                 ],
-                "totalDistanceMeter": 7200,
-                "totalDurationSecond": 900,
                 "createdAt": "2026-08-18T10:00:00",
                 "updatedAt": "2026-08-18T11:00:00"
               }
@@ -217,7 +205,7 @@ public interface TourCourseControllerDocs {
                                             {
                                               "code": 4000,
                                               "message": "이동거리는 0 이상이어야 합니다.",
-                                              "data": { "field": "items[1].distanceMeter" }
+                                              "data": { "field": "items[0].transportType" }
                                             }
                                             """),
                                     @ExampleObject(name = "다른 코스 아이템", value = """
@@ -315,8 +303,6 @@ public interface TourCourseControllerDocs {
                                             "shareYn": false,
                                             "thumbnailImg": "https://cdn.example.com/bulguksa.jpg",
                                             "itemCount": 3,
-                                            "totalDistanceMeter": 13500,
-                                            "totalDurationSecond": 2300,
                                             "createdAt": "2026-08-18T10:00:00",
                                             "updatedAt": "2026-08-18T10:30:00"
                                           }

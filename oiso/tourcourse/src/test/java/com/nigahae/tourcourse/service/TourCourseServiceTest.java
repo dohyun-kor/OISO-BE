@@ -328,12 +328,9 @@ class TourCourseServiceTest {
         assertThat(response.tourCourseId()).isEqualTo(1L);
         assertThat(response.items()).hasSize(2);
         assertThat(response.items().get(0).transportType()).isNull();
-        assertThat(response.items().get(0).distanceMeter()).isNull();
         assertThat(response.items().get(1).nearbyPlaceId()).isEqualTo(101L);
         assertThat(response.items().get(1).parentTourSpotId()).isEqualTo(1L);
         assertThat(response.items().get(1).like()).isFalse();
-        assertThat(response.totalDistanceMeter()).isEqualTo(12_000);
-        assertThat(response.totalDurationSecond()).isEqualTo(1_200);
     }
 
     @Test
@@ -388,9 +385,6 @@ class TourCourseServiceTest {
         assertThat(course.getTitle()).isEqualTo("수정된 코스");
         assertThat(course.getItems()).hasSize(2);
         assertThat(course.getItems()).noneMatch(item -> Long.valueOf(12L).equals(item.getItemId()));
-        assertThat(course.getTotalDistanceMeter()).isEqualTo(12_000);
-        assertThat(course.getTotalDurationSecond()).isEqualTo(1_200);
-        assertThat(response.totalDistanceMeter()).isEqualTo(12_000);
         verify(tourCourseRepository).offsetItemOrders(1L, 1_000);
         verify(tourCourseRepository).restoreItemOrders(1L, 1_000);
     }
@@ -463,8 +457,6 @@ class TourCourseServiceTest {
         when(row.getLiked()).thenReturn("TOUR_SPOT".equals(category));
         if (itemOrder != 1) {
             when(row.getTransportType()).thenReturn(transportType);
-            when(row.getDistanceMeter()).thenReturn(distanceMeter);
-            when(row.getDurationSecond()).thenReturn(durationSecond);
         }
         return row;
     }

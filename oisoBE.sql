@@ -473,8 +473,6 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     title          varchar(20) NOT NULL,
     share_yn       bool NOT NULL DEFAULT false,
     shared_password varchar(100) NULL,
-    total_distance_meter int4 NOT NULL DEFAULT 0,
-    total_duration_second int4 NOT NULL DEFAULT 0,
 
     created_at     timestamp NOT NULL DEFAULT now(),
     updated_at     timestamp NOT NULL DEFAULT now(),
@@ -495,13 +493,7 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
             (share_yn AND shared_password IS NOT NULL)
             OR
             (NOT share_yn AND shared_password IS NULL)
-        ),
-
-    CONSTRAINT "CK_TOURCOURSE_DISTANCE"
-        CHECK (total_distance_meter >= 0),
-
-    CONSTRAINT "CK_TOURCOURSE_DURATION"
-        CHECK (total_duration_second >= 0)
+        )
 );
 
 
@@ -534,8 +526,6 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
     day_number                int4 NOT NULL DEFAULT 1,
     item_order                 int4 NOT NULL,
     transport_type             varchar(10) NULL,
-    distance_meter             int4 NULL,
-    duration_second            int4 NULL,
     status                     varchar(20) NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "PK_TOURCOURSEITEM"

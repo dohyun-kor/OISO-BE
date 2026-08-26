@@ -71,7 +71,7 @@ public class TourCourseService {
         items.forEach(item -> course.addItem(
                 item.category(), item.spotId(), item.nearbyPlaceId(),
                 item.dayNumber(), item.itemOrder(),
-                item.transportType(), null, null));
+                item.transportType()));
 
         return CreateTourCourseResponse.from(tourCourseRepository.save(course));
     }
@@ -146,27 +146,13 @@ public class TourCourseService {
             if (item.itemId() == null) {
                 course.addItem(
                         item.category(), item.spotId(), item.nearbyPlaceId(),
-                        item.dayNumber(), item.itemOrder(), item.transportType(),
-                        item.distanceMeter(), item.durationSecond());
+                        item.dayNumber(), item.itemOrder(), item.transportType());
             } else {
                 existingItems.get(item.itemId()).update(
                         item.category(), item.spotId(), item.nearbyPlaceId(),
-                        item.dayNumber(), item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType(),
-                        item.distanceMeter(), item.durationSecond());
+                        item.dayNumber(), item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType());
             }
         }
-
-        int totalDistance = request.items().stream()
-                .map(UpdateTourCourseItemRequest::distanceMeter)
-                .filter(java.util.Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .sum();
-        int totalDuration = request.items().stream()
-                .map(UpdateTourCourseItemRequest::durationSecond)
-                .filter(java.util.Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .sum();
-        course.updateMovementTotals(totalDistance, totalDuration);
 
         tourCourseRepository.flush();
         if (!existingItems.isEmpty()) {
@@ -203,12 +189,10 @@ public class TourCourseService {
                 .map(item -> item == target
                         ? new UpdateTourCourseItemRequest(
                                 itemId, request.category(), request.spotId(), request.nearbyPlaceId(),
-                                request.dayNumber(), request.itemOrder(), request.transportType(),
-                                request.distanceMeter(), request.durationSecond())
+                                request.dayNumber(), request.itemOrder(), request.transportType())
                         : new UpdateTourCourseItemRequest(
                                 item.getItemId(), item.getCategory(), item.getSpotId(), item.getNearbyPlaceId(),
-                                item.getDayNumber(), item.getItemOrder(), item.getTransportType(),
-                                item.getDistanceMeter(), item.getDurationSecond()))
+                                item.getDayNumber(), item.getItemOrder(), item.getTransportType()))
                 .toList();
         validateUpdateItems(updatedItems);
         validateUpdatePlaces(updatedItems);
@@ -216,20 +200,7 @@ public class TourCourseService {
         target.update(
                 request.category(), request.spotId(), request.nearbyPlaceId(),
                 request.dayNumber(), request.itemOrder(),
-                request.transportType(), request.distanceMeter(), request.durationSecond(),
-                request.status());
-
-        int totalDistance = course.getItems().stream()
-                .map(TourCourseItem::getDistanceMeter)
-                .filter(java.util.Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .sum();
-        int totalDuration = course.getItems().stream()
-                .map(TourCourseItem::getDurationSecond)
-                .filter(java.util.Objects::nonNull)
-                .mapToInt(Integer::intValue)
-                .sum();
-        course.updateMovementTotals(totalDistance, totalDuration);
+                request.transportType(), request.status());
         tourCourseRepository.flush();
 
         return toDetailResponse(course, userId);
@@ -332,29 +303,10 @@ public class TourCourseService {
                         ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
                         Map.of("field", itemPath + ".itemId", "itemId", item.itemId()));
             }
-            if (item.distanceMeter() != null && item.distanceMeter() < 0) {
-                throw new CustomException(
-                        ErrorCode.TOUR_COURSE_NEGATIVE_DISTANCE,
-                        Map.of("field", itemPath + ".distanceMeter"));
-            }
-            if (item.durationSecond() != null && item.durationSecond() < 0) {
-                throw new CustomException(
-                        ErrorCode.TOUR_COURSE_NEGATIVE_DURATION,
-                        Map.of("field", itemPath + ".durationSecond"));
-            }
-            boolean hasAnyMovement = item.transportType() != null
-                    || item.distanceMeter() != null || item.durationSecond() != null;
-            boolean hasAllMovement = item.transportType() != null
-                    && item.distanceMeter() != null && item.durationSecond() != null;
-            if (item.itemOrder() == 1 && hasAnyMovement) {
+            if (item.itemOrder() == 1 && item.transportType() != null) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_FIRST_ITEM_MOVEMENT,
                         Map.of("field", itemPath + ".transportType"));
-            }
-            if (item.itemOrder() > 1 && hasAnyMovement && !hasAllMovement) {
-                throw updateValidationException(
-                        itemPath,
-                        "이동 기록은 transportType, distanceMeter, durationSecond를 모두 입력하거나 모두 null이어야 합니다.");
             }
         }
         for (int expectedDay = 1; expectedDay <= days.size(); expectedDay++) {

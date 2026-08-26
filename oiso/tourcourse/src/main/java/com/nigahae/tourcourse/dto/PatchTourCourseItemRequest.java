@@ -11,8 +11,6 @@ public record PatchTourCourseItemRequest(
         Integer dayNumber,
         Integer itemOrder,
         TransportType transportType,
-        Integer distanceMeter,
-        Integer durationSecond,
         TourCourseItemStatus status
 ) {
 }

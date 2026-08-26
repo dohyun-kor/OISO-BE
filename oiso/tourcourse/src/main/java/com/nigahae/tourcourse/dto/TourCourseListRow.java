@@ -8,9 +8,14 @@ public record TourCourseListRow(
         boolean shareYn,
         String thumbnailImg,
         long itemCount,
-        int totalDistanceMeter,
-        int totalDurationSecond,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+    public TourCourseListRow(
+            Long tourCourseId, String title, boolean shareYn, String thumbnailImg,
+            long itemCount, int ignoredDistance, int ignoredDuration,
+            LocalDateTime createdAt, LocalDateTime updatedAt
+    ) {
+        this(tourCourseId, title, shareYn, thumbnailImg, itemCount, createdAt, updatedAt);
+    }
 }

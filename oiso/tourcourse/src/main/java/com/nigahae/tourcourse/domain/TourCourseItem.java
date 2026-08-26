@@ -46,85 +46,53 @@ public class TourCourseItem {
     @Column(name = "transport_type", length = 10)
     private TransportType transportType;
 
-    @Column(name = "distance_meter")
-    private Integer distanceMeter;
-
-    @Column(name = "duration_second")
-    private Integer durationSecond;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private TourCourseItemStatus status = TourCourseItemStatus.PENDING;
 
     TourCourseItem(TourCourse tourCourse, Long spotId, int itemOrder, TransportType transportType) {
-        this(tourCourse, spotId, itemOrder, transportType, null, null);
+        this.tourCourse = tourCourse;
+        this.spotId = spotId;
+        this.itemOrder = itemOrder;
+        this.transportType = transportType;
     }
 
     TourCourseItem(
             TourCourse tourCourse, TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            int dayNumber, int itemOrder, TransportType transportType,
-            Integer distanceMeter, Integer durationSecond
+            int dayNumber, int itemOrder, TransportType transportType
     ) {
         this.tourCourse = tourCourse;
         setPlace(category, spotId, nearbyPlaceId);
         this.dayNumber = dayNumber;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
-        this.distanceMeter = distanceMeter;
-        this.durationSecond = durationSecond;
-    }
-
-    TourCourseItem(
-            TourCourse tourCourse,
-            Long spotId,
-            int itemOrder,
-            TransportType transportType,
-            Integer distanceMeter,
-            Integer durationSecond
-    ) {
-        this.tourCourse = tourCourse;
-        this.spotId = spotId;
-        this.itemOrder = itemOrder;
-        this.transportType = transportType;
-        this.distanceMeter = distanceMeter;
-        this.durationSecond = durationSecond;
     }
 
     public void update(
-            Long spotId,
-            int itemOrder,
-            TransportType transportType,
-            Integer distanceMeter,
-            Integer durationSecond
+            Long spotId, int itemOrder, TransportType transportType
     ) {
         this.spotId = spotId;
         this.nearbyPlaceId = null;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
-        this.distanceMeter = distanceMeter;
-        this.durationSecond = durationSecond;
     }
 
     public void update(
             TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            int dayNumber, int itemOrder,
-            TransportType transportType, Integer distanceMeter, Integer durationSecond
+            int dayNumber, int itemOrder, TransportType transportType
     ) {
         setPlace(category, spotId, nearbyPlaceId);
         this.dayNumber = dayNumber;
         this.itemOrder = itemOrder;
         this.transportType = transportType;
-        this.distanceMeter = distanceMeter;
-        this.durationSecond = durationSecond;
     }
 
     public void update(
             TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
             int dayNumber, int itemOrder, TransportType transportType,
-            Integer distanceMeter, Integer durationSecond, TourCourseItemStatus status
+            TourCourseItemStatus status
     ) {
-        update(category, spotId, nearbyPlaceId, dayNumber, itemOrder,
-                transportType, distanceMeter, durationSecond);
+        update(category, spotId, nearbyPlaceId, dayNumber, itemOrder, transportType);
         this.status = status;
     }
 
