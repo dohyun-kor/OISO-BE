@@ -16,24 +16,27 @@ public record UpdateTourCourseItemRequest(
         @Schema(description = "여행 일차(1부터 연속)", example = "1") Integer dayNumber,
         @Schema(description = "해당 일차 내 방문 순서(1부터 연속)", example = "1")
         Integer itemOrder,
-        @Schema(nullable = true) TransportType transportType,
-        @Schema(nullable = true) Integer distanceMeter,
-        @Schema(nullable = true) Integer durationSecond
+        @Schema(nullable = true) TransportType transportType
 ) {
     public UpdateTourCourseItemRequest(
             Long itemId, Long spotId, Integer itemOrder, TransportType transportType,
-            Integer distanceMeter, Integer durationSecond
+            Integer ignoredDistance, Integer ignoredDuration
+    ) {
+        this(itemId, spotId, itemOrder, transportType);
+    }
+
+    public UpdateTourCourseItemRequest(
+            Long itemId, Long spotId, Integer itemOrder, TransportType transportType
     ) {
         this(itemId, TourCourseItemCategory.TOUR_SPOT, spotId, null, 1, itemOrder,
-                transportType, distanceMeter, durationSecond);
+                transportType);
     }
 
     public UpdateTourCourseItemRequest(
             Long itemId, TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            Integer itemOrder, TransportType transportType,
-            Integer distanceMeter, Integer durationSecond
+            Integer itemOrder, TransportType transportType
     ) {
         this(itemId, category, spotId, nearbyPlaceId, 1, itemOrder,
-                transportType, distanceMeter, durationSecond);
+                transportType);
     }
 }

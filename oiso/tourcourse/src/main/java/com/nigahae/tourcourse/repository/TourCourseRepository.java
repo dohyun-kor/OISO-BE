@@ -22,8 +22,6 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                         c.shareYn,
                         max(case when item.dayNumber = 1 and item.itemOrder = 1 then spot.img else null end),
                         count(item.itemId),
-                        c.totalDistanceMeter,
-                        c.totalDurationSecond,
                         c.createdAt,
                         c.updatedAt
                     )
@@ -32,8 +30,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                     left join TourCourseSpotReference spot on spot.spotId = item.spotId
                     where c.userId = :userId
                       and (:keyword = '' or lower(c.title) like lower(concat('%', :keyword, '%')))
-                    group by c.tourCourseId, c.title, c.shareYn,
-                             c.totalDistanceMeter, c.totalDurationSecond, c.createdAt, c.updatedAt
+                    group by c.tourCourseId, c.title, c.shareYn, c.createdAt, c.updatedAt
                     """,
             countQuery = """
                     select count(c.tourCourseId)
@@ -80,8 +77,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                     )
                 end as "liked",
                 item.transport_type as "transportType",
-                item.distance_meter as "distanceMeter",
-                item.duration_second as "durationSecond"
+                item.status as "status"
             from "TourCourseItem" item
             left join "TourSpot" spot
                 on spot.spot_id = item.spot_id

@@ -17,6 +17,15 @@ public class JdbcUserSavedTourSpotRepository implements UserSavedTourSpotReposit
             DELETE FROM public."UserSavedTourSpot"
             WHERE user_id = ? AND spot_id = ?
             """;
+    private static final String SAVE_NEARBY_PLACE_IF_ABSENT_SQL = """
+            INSERT INTO public."UserSavedNearbyPlace" (user_id, tour_spot_nearby_course_id)
+            VALUES (?, ?)
+            ON CONFLICT (user_id, tour_spot_nearby_course_id) DO NOTHING
+            """;
+    private static final String DELETE_NEARBY_PLACE_SQL = """
+            DELETE FROM public."UserSavedNearbyPlace"
+            WHERE user_id = ? AND tour_spot_nearby_course_id = ?
+            """;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -28,5 +37,15 @@ public class JdbcUserSavedTourSpotRepository implements UserSavedTourSpotReposit
     @Override
     public void delete(Long userId, Long spotId) {
         jdbcTemplate.update(DELETE_SQL, userId, spotId);
+    }
+
+    @Override
+    public void saveNearbyPlaceIfAbsent(Long userId, Long nearbyPlaceId) {
+        jdbcTemplate.update(SAVE_NEARBY_PLACE_IF_ABSENT_SQL, userId, nearbyPlaceId);
+    }
+
+    @Override
+    public void deleteNearbyPlace(Long userId, Long nearbyPlaceId) {
+        jdbcTemplate.update(DELETE_NEARBY_PLACE_SQL, userId, nearbyPlaceId);
     }
 }

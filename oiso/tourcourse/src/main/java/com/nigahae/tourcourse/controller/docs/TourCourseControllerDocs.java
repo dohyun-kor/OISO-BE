@@ -6,6 +6,7 @@ import com.nigahae.tourcourse.dto.CreateTourCourseResponse;
 import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -72,9 +73,7 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7901,
                     "longitude": 129.332,
                     "like": true,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   },
                   {
                     "itemId": 12,
@@ -91,13 +90,9 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.791,
                     "longitude": 129.333,
                     "like": false,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   }
                 ],
-                "totalDistanceMeter": 0,
-                "totalDurationSecond": 0,
                 "createdAt": "2026-08-18T10:00:00",
                 "updatedAt": "2026-08-18T10:30:00"
               }
@@ -127,9 +122,7 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7901,
                     "longitude": 129.332,
                     "like": true,
-                    "transportType": null,
-                    "distanceMeter": null,
-                    "durationSecond": null
+                    "transportType": null
                   },
                   {
                     "itemId": 15,
@@ -146,13 +139,9 @@ public interface TourCourseControllerDocs {
                     "latitude": 35.7948,
                     "longitude": 129.3492,
                     "like": false,
-                    "transportType": "CAR",
-                    "distanceMeter": 7200,
-                    "durationSecond": 900
+                    "transportType": "CAR"
                   }
                 ],
-                "totalDistanceMeter": 7200,
-                "totalDurationSecond": 900,
                 "createdAt": "2026-08-18T10:00:00",
                 "updatedAt": "2026-08-18T11:00:00"
               }
@@ -217,7 +206,7 @@ public interface TourCourseControllerDocs {
                                             {
                                               "code": 4000,
                                               "message": "이동거리는 0 이상이어야 합니다.",
-                                              "data": { "field": "items[1].distanceMeter" }
+                                              "data": { "field": "items[0].transportType" }
                                             }
                                             """),
                                     @ExampleObject(name = "다른 코스 아이템", value = """
@@ -270,6 +259,92 @@ public interface TourCourseControllerDocs {
     );
 
     @Operation(
+            summary = "관광 코스 아이템 진행 상태 변경",
+            description = """
+                    로그인한 사용자가 소유한 관광 코스의 특정 아이템 진행 상태만 변경합니다.
+
+                    - `tourCourseId`와 `itemId`가 모두 일치하는 아이템만 변경됩니다.
+                    - `status`는 `PENDING`, `IN_PROGRESS`, `COMPLETED` 중 하나입니다.
+                    - 장소, 일차, 순서, 이동 수단 등 다른 정보는 변경하지 않습니다.
+                    - 수정 후 코스 전체 상세 정보를 반환합니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "코스 아이템 진행 상태 변경 성공",
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 2000,
+                                      "message": "관광 코스 수정에 성공했습니다.",
+                                      "data": {
+                                        "tourCourseId": 1,
+                                        "title": "벚꽃이 흩날리는 경주 산책 코스",
+                                        "shareYn": false,
+                                        "items": [
+                                          {
+                                            "itemId": 18,
+                                            "dayNumber": 1,
+                                            "itemOrder": 1,
+                                            "category": "TOUR_SPOT",
+                                            "spotId": 32,
+                                            "nearbyPlaceId": null,
+                                            "parentTourSpotId": null,
+                                            "name": "불국사",
+                                            "img": null,
+                                            "overview": null,
+                                            "address": "경상북도 경주시",
+                                            "latitude": 35.7900,
+                                            "longitude": 129.3320,
+                                            "like": false,
+                                            "transportType": null,
+                                            "status": "IN_PROGRESS"
+                                          }
+                                        ],
+                                        "createdAt": "2026-08-26T10:00:00",
+                                        "updatedAt": "2026-08-26T15:30:00"
+                                      }
+                                    }
+                                    """))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 아이템 수정 요청",
+                            content = @Content(mediaType = "application/json", examples = {
+                                    @ExampleObject(name = "잘못된 상태", value = """
+                                            {
+                                              "code": 1001,
+                                              "message": "요청 값이 올바르지 않습니다.",
+                                              "data": null
+                                            }
+                                            """),
+                                    @ExampleObject(name = "코스에 속하지 않은 아이템", value = """
+                                            {
+                                              "code": 4000,
+                                              "message": "해당 관광 코스에 포함되지 않은 아이템입니다.",
+                                              "data": { "field": "itemId", "itemId": 99 }
+                                            }
+                                            """)
+                            })),
+                    @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = AUTH_FAILURE))),
+                    @ApiResponse(responseCode = "403", description = "코스 수정 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "관광 코스를 찾을 수 없음",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = COURSE_NOT_FOUND)))
+            }
+    )
+    CommonResponse<TourCourseDetailResponse> patchTourCourseItem(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "수정할 관광 코스 ID", required = true, example = "1") Long tourCourseId,
+            @Parameter(description = "수정할 코스 아이템 ID", required = true, example = "18") Long itemId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "변경할 진행 상태입니다. PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료)를 사용할 수 있습니다.",
+                    content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                            {
+                              "status": "IN_PROGRESS"
+                            }
+                            """)))
+            @RequestBody PatchTourCourseItemRequest request
+    );
+
+    @Operation(
             summary = "관광 코스 삭제",
             description = "로그인한 사용자가 소유한 관광 코스와 포함된 코스 항목을 함께 삭제합니다.",
             responses = {
@@ -315,8 +390,6 @@ public interface TourCourseControllerDocs {
                                             "shareYn": false,
                                             "thumbnailImg": "https://cdn.example.com/bulguksa.jpg",
                                             "itemCount": 3,
-                                            "totalDistanceMeter": 13500,
-                                            "totalDurationSecond": 2300,
                                             "createdAt": "2026-08-18T10:00:00",
                                             "updatedAt": "2026-08-18T10:30:00"
                                           }

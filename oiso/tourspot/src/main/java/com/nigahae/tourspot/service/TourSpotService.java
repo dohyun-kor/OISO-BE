@@ -10,6 +10,7 @@ import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
+import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
@@ -59,6 +60,20 @@ public class TourSpotService {
         validateTourSpotExists(spotId);
         userSavedTourSpotRepository.delete(userId, spotId);
         return new DeleteSavedTourSpotResponse(spotId, false);
+    }
+
+    @Transactional
+    public SavedNearbyPlaceResponse saveNearbyPlace(Long userId, Long nearbyPlaceId) {
+        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId);
+        userSavedTourSpotRepository.saveNearbyPlaceIfAbsent(userId, nearbyPlaceId);
+        return new SavedNearbyPlaceResponse(nearbyPlaceId, place.category(), true);
+    }
+
+    @Transactional
+    public SavedNearbyPlaceResponse deleteSavedNearbyPlace(Long userId, Long nearbyPlaceId) {
+        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId);
+        userSavedTourSpotRepository.deleteNearbyPlace(userId, nearbyPlaceId);
+        return new SavedNearbyPlaceResponse(nearbyPlaceId, place.category(), false);
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)

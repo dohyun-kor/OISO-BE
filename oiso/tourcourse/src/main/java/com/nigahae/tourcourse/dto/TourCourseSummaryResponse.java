@@ -10,11 +10,17 @@ public record TourCourseSummaryResponse(
         @Schema(example = "false") boolean shareYn,
         @Schema(example = "https://cdn.example.com/bulguksa.jpg", nullable = true) String thumbnailImg,
         @Schema(example = "3") int itemCount,
-        @Schema(example = "13500") int totalDistanceMeter,
-        @Schema(example = "2300") int totalDurationSecond,
         @Schema(example = "2026-07-11T15:00:00") LocalDateTime createdAt,
         @Schema(example = "2026-07-11T15:00:00") LocalDateTime updatedAt
 ) {
+    public TourCourseSummaryResponse(
+            Long tourCourseId, String title, boolean shareYn, String thumbnailImg,
+            int itemCount, int ignoredDistance, int ignoredDuration,
+            LocalDateTime createdAt, LocalDateTime updatedAt
+    ) {
+        this(tourCourseId, title, shareYn, thumbnailImg, itemCount, createdAt, updatedAt);
+    }
+
     public static TourCourseSummaryResponse from(TourCourseListRow row) {
         return new TourCourseSummaryResponse(
                 row.tourCourseId(),
@@ -22,8 +28,6 @@ public record TourCourseSummaryResponse(
                 row.shareYn(),
                 row.thumbnailImg(),
                 Math.toIntExact(row.itemCount()),
-                row.totalDistanceMeter(),
-                row.totalDurationSecond(),
                 row.createdAt(),
                 row.updatedAt()
         );

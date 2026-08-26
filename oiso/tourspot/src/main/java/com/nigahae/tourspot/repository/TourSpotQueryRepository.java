@@ -13,6 +13,71 @@ import java.util.Optional;
 
 public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
 
+    @Query(value = """
+            select saved.category as "category", saved.spot_id as "spotId",
+                   saved.nearby_place_id as "nearbyPlaceId",
+                   saved.parent_tour_spot_id as "parentTourSpotId",
+                   saved.name as "name", saved.img as "img",
+                   saved.overview as "overview", saved.address as "address",
+                   saved.latitude as "latitude", saved.longitude as "longitude"
+            from (
+                select 'TOUR_SPOT' as category, spot.spot_id as spot_id,
+                       cast(null as bigint) as nearby_place_id,
+                       cast(null as bigint) as parent_tour_spot_id,
+                       spot.name, spot.img, spot.overview, spot.address,
+                       spot.map_y as latitude, spot.map_x as longitude,
+                       favorite.saved_at
+                from "UserSavedTourSpot" favorite
+                join "TourSpot" spot on spot.spot_id = favorite.spot_id
+                where favorite.user_id = :userId
+                union all
+                select case
+                         when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD')
+                           then 'RESTAURANT'
+                         when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING')
+                           then 'ACCOMMODATION'
+                       end as category,
+                       cast(null as bigint) as spot_id,
+                       nearby.tour_spot_nearby_course_id as nearby_place_id,
+                       nearby.spot_id as parent_tour_spot_id,
+                       nearby.name, nearby.img, nearby.overview, nearby.address,
+                       nearby.map_y as latitude, nearby.map_x as longitude,
+                       favorite.saved_at
+                from "UserSavedNearbyPlace" favorite
+                join "TourSpotNearbyPlace" nearby
+                  on nearby.tour_spot_nearby_course_id = favorite.tour_spot_nearby_course_id
+                where favorite.user_id = :userId
+            ) saved
+            where (:category = '' or saved.category = :category)
+            order by saved.saved_at desc,
+                     coalesce(saved.spot_id, saved.nearby_place_id) desc
+            """,
+            countQuery = """
+            select count(*)
+            from (
+                select 'TOUR_SPOT' as category
+                from "UserSavedTourSpot" favorite
+                where favorite.user_id = :userId
+                union all
+                select case
+                         when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD')
+                           then 'RESTAURANT'
+                         when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING')
+                           then 'ACCOMMODATION'
+                       end as category
+                from "UserSavedNearbyPlace" favorite
+                join "TourSpotNearbyPlace" nearby
+                  on nearby.tour_spot_nearby_course_id = favorite.tour_spot_nearby_course_id
+                where favorite.user_id = :userId
+            ) saved
+            where (:category = '' or saved.category = :category)
+            """, nativeQuery = true)
+    Page<PlaceSummaryRow> findSavedPlaces(
+            @Param("userId") Long userId,
+            @Param("category") String category,
+            Pageable pageable
+    );
+
     @Query("""
             SELECT t FROM TourSpotReadModel t
             WHERE t.contentTypeId IS NULL OR t.contentTypeId IN (12, 14, 15, 25, 28)
@@ -47,7 +112,6 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
-             and detail.spot_id = nearby.spot_id
             where nearby.spot_id = :spotId
               and (nearby.content_type_id in (32, 39)
                    or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING'))
@@ -92,7 +156,6 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
-             and detail.spot_id = nearby.spot_id
             where nearby.tour_spot_nearby_course_id = :nearbyPlaceId
               and upper(nearby.category) in ('RESTAURANT', 'ACCOMMODATION')
             """, nativeQuery = true)

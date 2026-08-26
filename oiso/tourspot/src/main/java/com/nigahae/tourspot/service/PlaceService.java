@@ -39,4 +39,19 @@ public class PlaceService {
         return new PlaceListResponse(
                 places, result.getNumber(), result.getSize(), result.getTotalElements());
     }
+
+    public PlaceListResponse getSavedPlaces(
+            Long userId, PlaceCategory category, int page, int size
+    ) {
+        Page<com.nigahae.tourspot.dto.PlaceSummaryRow> result =
+                tourSpotQueryRepository.findSavedPlaces(
+                        userId,
+                        category == null ? "" : category.name(),
+                        PageRequest.of(page, size));
+        List<PlaceSummaryResponse> places = result.getContent().stream()
+                .map(PlaceSummaryResponse::from)
+                .toList();
+        return new PlaceListResponse(
+                places, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
 }
