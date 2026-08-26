@@ -4,6 +4,8 @@ import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
+import com.nigahae.tourspot.dto.PlaceListResponse;
+import com.nigahae.tourspot.domain.PlaceCategory;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.domain.PlaceCategory;
@@ -24,6 +26,56 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "관광지", description = "관광지 조회 및 저장 API")
 public interface TourSpotControllerDocs {
+
+    @Operation(
+            summary = "저장한 장소 목록 조회",
+            description = """
+                    로그인한 사용자가 저장한 관광지, 식당, 숙소를 최신 저장 순으로 조회합니다.
+
+                    - `category`를 생략하면 모든 저장 장소를 조회합니다.
+                    - `TOUR_SPOT`은 `spotId`, `RESTAURANT`와 `ACCOMMODATION`은 `nearbyPlaceId`를 반환합니다.
+                    - 저장 장소가 없으면 빈 목록과 `totalCount=0`을 반환합니다.
+                    """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "저장한 장소 목록 조회 성공",
+                            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                                    {
+                                      "code": 2000,
+                                      "message": "저장한 장소 목록 조회에 성공했습니다.",
+                                      "data": {
+                                        "places": [
+                                          {
+                                            "category": "RESTAURANT",
+                                            "spotId": null,
+                                            "nearbyPlaceId": 101,
+                                            "parentTourSpotId": 35,
+                                            "name": "경주 맛집",
+                                            "img": null,
+                                            "overview": null,
+                                            "address": "경상북도 경주시",
+                                            "latitude": 35.8,
+                                            "longitude": 129.2
+                                          }
+                                        ],
+                                        "page": 0,
+                                        "size": 20,
+                                        "totalCount": 1
+                                      }
+                                    }
+                                    """))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 카테고리 또는 페이지 값"),
+                    @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+            }
+    )
+    CommonResponse<PlaceListResponse> getSavedPlaces(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "장소 종류", example = "RESTAURANT") PlaceCategory category,
+            @Parameter(description = "페이지 번호", example = "0")
+            @Min(value = 0, message = "page") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @Min(value = 1, message = "size")
+            @Max(value = 100, message = "size") int size
+    );
 
     @Operation(
             summary = "숙소·식당 저장",

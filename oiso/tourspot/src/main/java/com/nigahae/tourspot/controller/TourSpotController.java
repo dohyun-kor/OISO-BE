@@ -150,6 +150,21 @@ public class TourSpotController implements TourSpotControllerDocs {
         );
     }
 
+    @GetMapping("/saved")
+    @Override
+    public CommonResponse<PlaceListResponse> getSavedPlaces(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @RequestParam(required = false) PlaceCategory category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "저장한 장소 목록 조회에 성공했습니다.",
+                placeService.getSavedPlaces(user.userId(), category, page, size));
+    }
+
     @PostMapping("/nearby-places/{nearbyPlaceId}/save")
     @Override
     public CommonResponse<SavedNearbyPlaceResponse> saveNearbyPlace(
