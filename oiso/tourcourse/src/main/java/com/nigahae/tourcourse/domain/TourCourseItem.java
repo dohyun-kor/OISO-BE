@@ -87,12 +87,7 @@ public class TourCourseItem {
         this.transportType = transportType;
     }
 
-    public void update(
-            TourCourseItemCategory category, Long spotId, Long nearbyPlaceId,
-            int dayNumber, int itemOrder, TransportType transportType,
-            TourCourseItemStatus status
-    ) {
-        update(category, spotId, nearbyPlaceId, dayNumber, itemOrder, transportType);
+    public void updateStatus(TourCourseItemStatus status) {
         this.status = status;
     }
 

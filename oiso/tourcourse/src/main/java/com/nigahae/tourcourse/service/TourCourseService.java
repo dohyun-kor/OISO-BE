@@ -185,22 +185,7 @@ public class TourCourseService {
                         ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
                         Map.of("field", "itemId", "itemId", itemId)));
 
-        List<UpdateTourCourseItemRequest> updatedItems = course.getItems().stream()
-                .map(item -> item == target
-                        ? new UpdateTourCourseItemRequest(
-                                itemId, request.category(), request.spotId(), request.nearbyPlaceId(),
-                                request.dayNumber(), request.itemOrder(), request.transportType())
-                        : new UpdateTourCourseItemRequest(
-                                item.getItemId(), item.getCategory(), item.getSpotId(), item.getNearbyPlaceId(),
-                                item.getDayNumber(), item.getItemOrder(), item.getTransportType()))
-                .toList();
-        validateUpdateItems(updatedItems);
-        validateUpdatePlaces(updatedItems);
-
-        target.update(
-                request.category(), request.spotId(), request.nearbyPlaceId(),
-                request.dayNumber(), request.itemOrder(),
-                request.transportType(), request.status());
+        target.updateStatus(request.status());
         tourCourseRepository.flush();
 
         return toDetailResponse(course, userId);

@@ -110,6 +110,7 @@ public class TourCourseController implements TourCourseControllerDocs {
     }
 
     @PatchMapping("/{tourCourseId}/items/{itemId}")
+    @Override
     public CommonResponse<TourCourseDetailResponse> patchTourCourseItem(
             @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long tourCourseId,
