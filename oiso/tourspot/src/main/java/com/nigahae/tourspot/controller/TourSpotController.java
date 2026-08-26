@@ -8,6 +8,7 @@ import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
 import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
+import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.domain.PlaceCategory;
@@ -147,6 +148,32 @@ public class TourSpotController implements TourSpotControllerDocs {
                 DELETE_SAVED_SUCCESS_MESSAGE,
                 tourSpotService.deleteSavedTourSpot(user.userId(), parseSpotId(spotId))
         );
+    }
+
+    @PostMapping("/nearby-places/{nearbyPlaceId}/save")
+    @Override
+    public CommonResponse<SavedNearbyPlaceResponse> saveNearbyPlace(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long nearbyPlaceId
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "숙소·식당 저장에 성공했습니다.",
+                tourSpotService.saveNearbyPlace(user.userId(), nearbyPlaceId));
+    }
+
+    @DeleteMapping("/nearby-places/{nearbyPlaceId}/save")
+    @Override
+    public CommonResponse<SavedNearbyPlaceResponse> deleteSavedNearbyPlace(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long nearbyPlaceId
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "저장한 숙소·식당 삭제에 성공했습니다.",
+                tourSpotService.deleteSavedNearbyPlace(user.userId(), nearbyPlaceId));
     }
 
     private Long parseSpotId(String spotId) {

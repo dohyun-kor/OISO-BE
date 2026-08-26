@@ -836,4 +836,20 @@ CREATE TRIGGER "TR_MISSION_SET_UPDATED_AT"
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
+CREATE TABLE IF NOT EXISTS public."UserSavedNearbyPlace"
+(
+    user_id int8 NOT NULL,
+    tour_spot_nearby_course_id int8 NOT NULL,
+    saved_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT "PK_USERSAVEDNEARBYPLACE" PRIMARY KEY (user_id, tour_spot_nearby_course_id),
+    CONSTRAINT "FK_USERSAVEDNEARBYPLACE_USER"
+        FOREIGN KEY (user_id) REFERENCES public."User" (user_id) ON DELETE CASCADE,
+    CONSTRAINT "FK_USERSAVEDNEARBYPLACE_PLACE"
+        FOREIGN KEY (tour_spot_nearby_course_id)
+        REFERENCES public."TourSpotNearbyPlace" (tour_spot_nearby_course_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "IX_USERSAVEDNEARBYPLACE_USER_SAVED_AT"
+    ON public."UserSavedNearbyPlace" (user_id, saved_at DESC);
+
 COMMIT;

@@ -3,6 +3,7 @@ package com.nigahae.tourspot.controller.docs;
 import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
+import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.domain.PlaceCategory;
@@ -23,6 +24,34 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "관광지", description = "관광지 조회 및 저장 API")
 public interface TourSpotControllerDocs {
+
+    @Operation(
+            summary = "숙소·식당 저장",
+            description = "nearbyPlaceId로 숙소 또는 식당을 저장합니다. 이미 저장된 장소는 중복 저장하지 않습니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "숙소·식당 저장 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+                    @ApiResponse(responseCode = "404", description = "숙소·식당을 찾을 수 없음")
+            }
+    )
+    CommonResponse<SavedNearbyPlaceResponse> saveNearbyPlace(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "저장할 숙소·식당의 nearbyPlaceId", example = "101") Long nearbyPlaceId
+    );
+
+    @Operation(
+            summary = "저장한 숙소·식당 삭제",
+            description = "nearbyPlaceId에 해당하는 숙소 또는 식당을 저장 목록에서 삭제합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "저장한 숙소·식당 삭제 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+                    @ApiResponse(responseCode = "404", description = "숙소·식당을 찾을 수 없음")
+            }
+    )
+    CommonResponse<SavedNearbyPlaceResponse> deleteSavedNearbyPlace(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "삭제할 숙소·식당의 nearbyPlaceId", example = "101") Long nearbyPlaceId
+    );
 
     @Operation(
             summary = "저장한 관광지 삭제",
