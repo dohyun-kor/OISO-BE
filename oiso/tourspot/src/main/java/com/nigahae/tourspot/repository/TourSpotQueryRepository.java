@@ -47,7 +47,6 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
-             and detail.spot_id = nearby.spot_id
             where nearby.spot_id = :spotId
               and (nearby.content_type_id in (32, 39)
                    or upper(nearby.category) in ('RESTAURANT', 'FOOD', 'ACCOMMODATION', 'LODGING'))
@@ -92,7 +91,6 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
-             and detail.spot_id = nearby.spot_id
             where nearby.tour_spot_nearby_course_id = :nearbyPlaceId
               and upper(nearby.category) in ('RESTAURANT', 'ACCOMMODATION')
             """, nativeQuery = true)
