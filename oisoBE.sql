@@ -504,17 +504,12 @@ CREATE INDEX IF NOT EXISTS "IX_TOURCOURSE_USER_ID"
 ALTER TABLE public."TourCourse"
     ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING';
 
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint
-        WHERE conname = 'CK_TOURCOURSE_STATUS'
-    ) THEN
-        ALTER TABLE public."TourCourse"
-            ADD CONSTRAINT "CK_TOURCOURSE_STATUS"
-                CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED'));
-    END IF;
-END $$;
+ALTER TABLE public."TourCourse"
+    DROP CONSTRAINT IF EXISTS "CK_TOURCOURSE_STATUS";
+
+ALTER TABLE public."TourCourse"
+    ADD CONSTRAINT "CK_TOURCOURSE_STATUS"
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED'));
 
 
 
