@@ -17,4 +17,7 @@ public class NearbyPlaceReference {
     @Id
     @Column(name = "tour_spot_nearby_course_id")
     private Long nearbyPlaceId;
+
+    @Column(name = "img")
+    private String img;
 }

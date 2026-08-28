@@ -21,7 +21,8 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                         c.title,
                         c.shareYn,
                         c.status,
-                        max(case when item.dayNumber = 1 and item.itemOrder = 1 then spot.img else null end),
+                        max(case when item.dayNumber = 1 and item.itemOrder = 1
+                                 then coalesce(spot.img, nearby.img) else null end),
                         count(item.itemId),
                         c.createdAt,
                         c.updatedAt
@@ -29,6 +30,8 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                     from TourCourse c
                     left join c.items item
                     left join TourCourseSpotReference spot on spot.spotId = item.spotId
+                    left join TourCourseNearbyPlaceReference nearby
+                        on nearby.nearbyPlaceId = item.nearbyPlaceId
                     where c.userId = :userId
                       and (:keyword = '' or lower(c.title) like lower(concat('%', :keyword, '%')))
                     group by c.tourCourseId, c.title, c.shareYn, c.status, c.createdAt, c.updatedAt
@@ -63,8 +66,8 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                 item.tour_spot_nearby_course_id as "nearbyPlaceId",
                 nearby.spot_id as "parentTourSpotId",
                 coalesce(spot.name, nearby.name) as "name",
-                spot.img as "img",
-                spot.overview as "overview",
+                coalesce(spot.img, nearby.img) as "img",
+                coalesce(spot.overview, nearby.overview) as "overview",
                 coalesce(spot.address, nearby.address) as "address",
                 coalesce(spot.map_y, nearby.map_y) as "latitude",
                 coalesce(spot.map_x, nearby.map_x) as "longitude",
