@@ -584,15 +584,11 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
         CHECK (
             transport_type IS NULL
             OR transport_type IN ('WALK', 'BIKE', 'CAR')
-        ),
-
-    CONSTRAINT "CK_TOURCOURSEITEM_FIRST_TRANSPORT"
-        CHECK (
-            (item_order = 1 AND transport_type IS NULL)
-            OR
-            (item_order > 1 AND transport_type IS NOT NULL)
         )
 );
+
+ALTER TABLE public."TourCourseItem"
+    DROP CONSTRAINT IF EXISTS "CK_TOURCOURSEITEM_FIRST_TRANSPORT";
 
 
 CREATE INDEX IF NOT EXISTS "IX_TOURCOURSEITEM_SPOT_ID"

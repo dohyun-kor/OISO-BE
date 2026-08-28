@@ -295,6 +295,11 @@ public class TourCourseService {
                         ErrorCode.TOUR_COURSE_FIRST_ITEM_MOVEMENT,
                         Map.of("field", itemPath + ".transportType"));
             }
+            if (item.itemOrder() > 1 && item.transportType() == null) {
+                throw updateValidationException(
+                        itemPath + ".transportType",
+                        "첫 번째 이후 장소에는 이동 수단이 필요합니다.");
+            }
         }
         for (int expectedDay = 1; expectedDay <= days.size(); expectedDay++) {
             if (!days.contains(expectedDay)) {

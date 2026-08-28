@@ -22,6 +22,9 @@ ALTER TABLE public."TourCourse"
 ALTER TABLE public."TourCourseItem"
     DROP CONSTRAINT IF EXISTS "UK_TOURCOURSEITEM_ORDER";
 
+ALTER TABLE public."TourCourseItem"
+    DROP CONSTRAINT IF EXISTS "CK_TOURCOURSEITEM_FIRST_TRANSPORT";
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tour_course_item_day_order
     ON public."TourCourseItem" (tour_course_id, day_number, item_order)
     WHERE tour_course_id IS NOT NULL;
