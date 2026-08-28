@@ -20,6 +20,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                         c.tourCourseId,
                         c.title,
                         c.shareYn,
+                        c.status,
                         max(case when item.dayNumber = 1 and item.itemOrder = 1 then spot.img else null end),
                         count(item.itemId),
                         c.createdAt,
@@ -30,7 +31,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                     left join TourCourseSpotReference spot on spot.spotId = item.spotId
                     where c.userId = :userId
                       and (:keyword = '' or lower(c.title) like lower(concat('%', :keyword, '%')))
-                    group by c.tourCourseId, c.title, c.shareYn, c.createdAt, c.updatedAt
+                    group by c.tourCourseId, c.title, c.shareYn, c.status, c.createdAt, c.updatedAt
                     """,
             countQuery = """
                     select count(c.tourCourseId)

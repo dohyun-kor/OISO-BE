@@ -473,6 +473,7 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     title          varchar(20) NOT NULL,
     share_yn       bool NOT NULL DEFAULT false,
     shared_password varchar(100) NULL,
+    status         varchar(20) NOT NULL DEFAULT 'PENDING',
 
     created_at     timestamp NOT NULL DEFAULT now(),
     updated_at     timestamp NOT NULL DEFAULT now(),
@@ -499,6 +500,21 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
 
 CREATE INDEX IF NOT EXISTS "IX_TOURCOURSE_USER_ID"
     ON public."TourCourse" (user_id);
+
+ALTER TABLE public."TourCourse"
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING';
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'CK_TOURCOURSE_STATUS'
+    ) THEN
+        ALTER TABLE public."TourCourse"
+            ADD CONSTRAINT "CK_TOURCOURSE_STATUS"
+                CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED'));
+    END IF;
+END $$;
 
 
 

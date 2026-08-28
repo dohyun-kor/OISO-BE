@@ -57,6 +57,7 @@ public interface TourCourseControllerDocs {
                 "tourCourseId": 1,
                 "title": "경주 2일 역사 여행 코스",
                 "shareYn": false,
+                "status": "IN_PROGRESS",
                 "items": [
                   {
                     "itemId": 11,
@@ -106,6 +107,7 @@ public interface TourCourseControllerDocs {
                 "tourCourseId": 1,
                 "title": "수정된 경주 2일 코스",
                 "shareYn": true,
+                "status": "PENDING",
                 "items": [
                   {
                     "itemId": 11,
@@ -278,6 +280,7 @@ public interface TourCourseControllerDocs {
                                         "tourCourseId": 1,
                                         "title": "벚꽃이 흩날리는 경주 산책 코스",
                                         "shareYn": false,
+                                        "status": "IN_PROGRESS",
                                         "items": [
                                           {
                                             "itemId": 18,
@@ -388,6 +391,7 @@ public interface TourCourseControllerDocs {
                                             "tourCourseId": 1,
                                             "title": "경주 2일 역사 여행 코스",
                                             "shareYn": false,
+                                            "status": "IN_PROGRESS",
                                             "thumbnailImg": "https://cdn.example.com/bulguksa.jpg",
                                             "itemCount": 3,
                                             "createdAt": "2026-08-18T10:00:00",
@@ -437,6 +441,7 @@ public interface TourCourseControllerDocs {
                                         "tourCourseId": 1,
                                         "title": "경주 역사 여행 코스",
                                         "shareYn": false,
+                                        "status": "PENDING",
                                         "itemCount": 3,
                                         "createdAt": "2026-08-18T10:00:00"
                                       }

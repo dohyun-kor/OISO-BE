@@ -158,6 +158,7 @@ public class TourCourseService {
         if (!existingItems.isEmpty()) {
             tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
         }
+        course.recalculateStatus();
         return toDetailResponse(course, userId);
     }
 
@@ -186,6 +187,7 @@ public class TourCourseService {
                         Map.of("field", "itemId", "itemId", itemId)));
 
         target.updateStatus(request.status());
+        course.recalculateStatus();
         tourCourseRepository.flush();
 
         return toDetailResponse(course, userId);
