@@ -473,6 +473,7 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     title          varchar(20) NOT NULL,
     share_yn       bool NOT NULL DEFAULT false,
     shared_password varchar(100) NULL,
+    status         varchar(20) NOT NULL DEFAULT 'PENDING',
 
     created_at     timestamp NOT NULL DEFAULT now(),
     updated_at     timestamp NOT NULL DEFAULT now(),
@@ -499,6 +500,16 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
 
 CREATE INDEX IF NOT EXISTS "IX_TOURCOURSE_USER_ID"
     ON public."TourCourse" (user_id);
+
+ALTER TABLE public."TourCourse"
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING';
+
+ALTER TABLE public."TourCourse"
+    DROP CONSTRAINT IF EXISTS "CK_TOURCOURSE_STATUS";
+
+ALTER TABLE public."TourCourse"
+    ADD CONSTRAINT "CK_TOURCOURSE_STATUS"
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED'));
 
 
 
@@ -573,15 +584,11 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
         CHECK (
             transport_type IS NULL
             OR transport_type IN ('WALK', 'BIKE', 'CAR')
-        ),
-
-    CONSTRAINT "CK_TOURCOURSEITEM_FIRST_TRANSPORT"
-        CHECK (
-            (item_order = 1 AND transport_type IS NULL)
-            OR
-            (item_order > 1 AND transport_type IS NOT NULL)
         )
 );
+
+ALTER TABLE public."TourCourseItem"
+    DROP CONSTRAINT IF EXISTS "CK_TOURCOURSEITEM_FIRST_TRANSPORT";
 
 
 CREATE INDEX IF NOT EXISTS "IX_TOURCOURSEITEM_SPOT_ID"

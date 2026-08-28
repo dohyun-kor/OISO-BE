@@ -56,11 +56,16 @@ public class TourDataService implements TourDetailRefresher {
             List<TourContentPayload> tourSpotPayloads = payloads.stream()
                     .filter(payload -> TOUR_SPOT_CONTENT_TYPE_IDS.contains(payload.contentTypeIdAsLong()))
                     .toList();
+            Map<Long, TourContentPayload> tourSpotDetailCache = new HashMap<>();
             for (TourContentPayload payload : tourSpotPayloads) {
                 Long contentId = payload.contentIdAsLong();
                 TourSpot tourSpot = tourSpotRepository.findByContentId(contentId)
                         .orElseGet(TourSpot::create);
                 tourSpot.updateFromList(payload);
+                TourContentPayload detail = contentDetail(payload, tourSpotDetailCache);
+                if (detail != payload) {
+                    tourSpot.updateFromDetail(detail);
+                }
                 tourSpotRepository.save(tourSpot);
             }
 
@@ -99,7 +104,7 @@ public class TourDataService implements TourDetailRefresher {
                             .findBySpotIdAndContentId(tourSpot.getSpotId(), contentId)
                             .orElseGet(() -> TourSpotNearbyPlace.create(tourSpot.getSpotId(), category, payload));
                     place.update(category, payload);
-                    TourContentPayload detail = nearbyDetail(payload, detailCache);
+                    TourContentPayload detail = contentDetail(payload, detailCache);
                     if (detail != payload) place.update(category, detail);
                     nearbyPlaceRepository.save(place);
                     processedCount++;
@@ -109,7 +114,7 @@ public class TourDataService implements TourDetailRefresher {
         return processedCount;
     }
 
-    private TourContentPayload nearbyDetail(
+    private TourContentPayload contentDetail(
             TourContentPayload listPayload, Map<Long, TourContentPayload> detailCache
     ) {
         if (listPayload.overview() != null && !listPayload.overview().isBlank()) return listPayload;
@@ -121,7 +126,7 @@ public class TourDataService implements TourDetailRefresher {
             detailCache.put(contentId, result);
             return result;
         } catch (TourApiException exception) {
-            log.warn("Nearby place detail ingest failed. contentId={}, message={}", contentId, exception.getMessage());
+            log.warn("Tour content detail ingest failed. contentId={}, message={}", contentId, exception.getMessage());
             detailCache.put(contentId, listPayload);
             return listPayload;
         }

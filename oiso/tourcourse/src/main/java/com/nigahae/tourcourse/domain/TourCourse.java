@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -41,6 +43,10 @@ public class TourCourse {
 
     @Column(name = "shared_password", length = 100)
     private String sharedPassword;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private TourCourseStatus status = TourCourseStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -92,6 +98,21 @@ public class TourCourse {
         this.title = title;
         this.shareYn = shareYn;
         this.sharedPassword = sharedPassword;
+    }
+
+    public void recalculateStatus() {
+        boolean allPending = items.stream()
+                .allMatch(item -> item.getStatus() == TourCourseItemStatus.PENDING);
+        boolean allCompleted = !items.isEmpty() && items.stream()
+                .allMatch(item -> item.getStatus() == TourCourseItemStatus.COMPLETED);
+
+        if (allCompleted) {
+            status = TourCourseStatus.COMPLETED;
+        } else if (allPending) {
+            status = TourCourseStatus.PENDING;
+        } else {
+            status = TourCourseStatus.IN_PROGRESS;
+        }
     }
 
     @PrePersist

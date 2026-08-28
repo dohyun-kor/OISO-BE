@@ -158,6 +158,7 @@ public class TourCourseService {
         if (!existingItems.isEmpty()) {
             tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
         }
+        course.recalculateStatus();
         return toDetailResponse(course, userId);
     }
 
@@ -186,6 +187,7 @@ public class TourCourseService {
                         Map.of("field", "itemId", "itemId", itemId)));
 
         target.updateStatus(request.status());
+        course.recalculateStatus();
         tourCourseRepository.flush();
 
         return toDetailResponse(course, userId);
@@ -292,6 +294,11 @@ public class TourCourseService {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_FIRST_ITEM_MOVEMENT,
                         Map.of("field", itemPath + ".transportType"));
+            }
+            if (item.itemOrder() > 1 && item.transportType() == null) {
+                throw updateValidationException(
+                        itemPath + ".transportType",
+                        "첫 번째 이후 장소에는 이동 수단이 필요합니다.");
             }
         }
         for (int expectedDay = 1; expectedDay <= days.size(); expectedDay++) {
