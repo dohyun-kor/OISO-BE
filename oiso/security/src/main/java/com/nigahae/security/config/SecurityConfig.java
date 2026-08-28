@@ -42,6 +42,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/me",
+                                "/api/v1/tour-courses/**",
+                                "/api/v1/users/me/**",
+                                "/api/v1/tour-spots/saved",
+                                "/api/v1/tour-spots/*/save",
+                                "/api/v1/tour-spots/*/stamp-missions/**",
+                                "/api/v1/tour-spots/nearby-places/*/save"
+                        ).authenticated()
                         .requestMatchers(festivalReadRequestMatcher()).permitAll()
                         .requestMatchers(tourSpotReadRequestMatcher()).permitAll()
                         .requestMatchers(nearbyPlaceReadRequestMatcher()).permitAll()
@@ -77,7 +86,7 @@ public class SecurityConfig {
     }
 
     static RequestMatcher tourSpotReadRequestMatcher() {
-        return collectionAndDetailGetRequestMatcher(TOUR_SPOT_API_PATH);
+        return numericCollectionAndDetailGetRequestMatcher(TOUR_SPOT_API_PATH);
     }
 
     static RequestMatcher nearbyPlaceReadRequestMatcher() {
@@ -86,7 +95,7 @@ public class SecurityConfig {
                 return false;
             }
             String path = request.getRequestURI().substring(request.getContextPath().length());
-            return path.matches("^/api/v1/tour-spots/[^/]+/nearby-places$");
+            return path.matches("^/api/v1/tour-spots/\\d+/nearby-places$");
         };
     }
 
@@ -96,7 +105,18 @@ public class SecurityConfig {
                 return false;
             }
             String path = request.getRequestURI().substring(request.getContextPath().length());
-            return path.matches("^/api/v1/nearby-places/[^/]+$");
+            return path.matches("^/api/v1/nearby-places/\\d+$");
+        };
+    }
+
+    private static RequestMatcher numericCollectionAndDetailGetRequestMatcher(String apiPath) {
+        return request -> {
+            if (!HttpMethod.GET.matches(request.getMethod())) {
+                return false;
+            }
+
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            return apiPath.equals(path) || path.matches("^" + apiPath + "/\\d+$");
         };
     }
 

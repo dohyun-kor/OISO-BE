@@ -53,12 +53,17 @@ class SecurityConfigTest {
         MockHttpServletRequest postTourSpot = new MockHttpServletRequest("POST", "/api/v1/tour-spots");
         MockHttpServletRequest postTourSpotDetail = new MockHttpServletRequest("POST", "/api/v1/tour-spots/300");
         MockHttpServletRequest getNestedPath = new MockHttpServletRequest("GET", "/api/v1/tour-spots/300/other");
+        MockHttpServletRequest getSavedPlaces = new MockHttpServletRequest("GET", "/api/v1/tour-spots/saved");
+        MockHttpServletRequest getNonNumericDetail =
+                new MockHttpServletRequest("GET", "/api/v1/tour-spots/not-a-number");
 
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getTourSpots)).isTrue();
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getTourSpotDetail)).isTrue();
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(postTourSpot)).isFalse();
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(postTourSpotDetail)).isFalse();
         assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getNestedPath)).isFalse();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getSavedPlaces)).isFalse();
+        assertThat(SecurityConfig.tourSpotReadRequestMatcher().matches(getNonNumericDetail)).isFalse();
     }
 
     @Test
@@ -69,9 +74,15 @@ class SecurityConfigTest {
                 new MockHttpServletRequest("GET", "/api/v1/tour-spots/1/nearby-places");
         MockHttpServletRequest getNearbyDetail =
                 new MockHttpServletRequest("GET", "/api/v1/tour-spots/1/nearby-places/101");
+        MockHttpServletRequest getNearbyWithNonNumericSpotId =
+                new MockHttpServletRequest("GET", "/api/v1/tour-spots/saved/nearby-places");
+        MockHttpServletRequest getGlobalDetailWithNonNumericId =
+                new MockHttpServletRequest("GET", "/api/v1/nearby-places/not-a-number");
 
         assertThat(SecurityConfig.nearbyPlaceDetailReadRequestMatcher().matches(getGlobalDetail)).isTrue();
         assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearby)).isTrue();
         assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearbyDetail)).isFalse();
+        assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearbyWithNonNumericSpotId)).isFalse();
+        assertThat(SecurityConfig.nearbyPlaceDetailReadRequestMatcher().matches(getGlobalDetailWithNonNumericId)).isFalse();
     }
 }
