@@ -28,7 +28,8 @@ public class MyPageQueryRepository {
                      WHERE saved_story.user_id = :userId) AS saved_story_count,
                     (SELECT COUNT(*)
                      FROM public."Memo" memo
-                     WHERE memo.user_id = :userId) AS memo_count
+                     WHERE memo.user_id = :userId
+                       AND memo.spot_id IS NOT NULL) AS memo_count
                 """;
 
         return jdbcTemplate.queryForObject(
@@ -99,13 +100,16 @@ public class MyPageQueryRepository {
     public List<MemoItemRow> findMemos(Long userId) {
         String sql = """
                 SELECT memo.history_id,
+                       memo.spot_id,
                        memo.review,
-                       course.title
+                       memo.updated_at,
+                       spot.name,
+                       spot.img
                 FROM public."Memo" memo
-                LEFT JOIN public."TourCourse" course
-                  ON course.tour_course_id = memo.tour_course_id
+                JOIN public."TourSpot" spot
+                  ON spot.spot_id = memo.spot_id
                 WHERE memo.user_id = :userId
-                ORDER BY memo.history_id DESC
+                ORDER BY memo.updated_at DESC, memo.history_id DESC
                 """;
 
         return jdbcTemplate.query(
@@ -113,8 +117,11 @@ public class MyPageQueryRepository {
                 userParameters(userId),
                 (resultSet, rowNumber) -> new MemoItemRow(
                         resultSet.getLong("history_id"),
+                        resultSet.getLong("spot_id"),
                         resultSet.getString("review"),
-                        resultSet.getString("title")
+                        resultSet.getString("name"),
+                        resultSet.getString("img"),
+                        resultSet.getObject("updated_at", java.time.OffsetDateTime.class)
                 )
         );
     }
@@ -144,8 +151,14 @@ public class MyPageQueryRepository {
 
     public record MemoItemRow(
             Long memoId,
+            Long spotId,
             String content,
-            String courseTitle
+            String spotName,
+            String spotImage,
+            java.time.OffsetDateTime updatedAt
     ) {
+        public MemoItemRow(Long memoId, String content, String spotName) {
+            this(memoId, null, content, spotName, null, null);
+        }
     }
 }

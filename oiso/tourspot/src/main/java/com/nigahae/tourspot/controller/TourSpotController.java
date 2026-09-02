@@ -10,6 +10,8 @@ import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
+import com.nigahae.tourspot.dto.TourSpotMemoRequest;
+import com.nigahae.tourspot.dto.TourSpotMemoResponse;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.domain.PlaceCategory;
 import com.nigahae.tourspot.domain.StampMissionType;
@@ -23,6 +25,7 @@ import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.nigahae.common.constant.ErrorCode;
@@ -54,6 +58,40 @@ public class TourSpotController implements TourSpotControllerDocs {
 
     private final TourSpotService tourSpotService;
     private final PlaceService placeService;
+
+    @PutMapping("/{spotId}/memo")
+    @Operation(summary = "내 관광지 메모 저장", description = "내 관광지 메모를 새로 작성하거나 기존 메모를 수정합니다.")
+    public CommonResponse<TourSpotMemoResponse> saveMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId,
+            @Valid @RequestBody TourSpotMemoRequest request
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "관광지 메모가 저장되었습니다.",
+                tourSpotService.saveMemo(user.userId(), parseSpotId(spotId), request.content()));
+    }
+
+    @GetMapping("/{spotId}/memo")
+    @Operation(summary = "내 관광지 메모 조회", description = "현재 로그인한 사용자가 작성한 관광지 메모만 조회합니다.")
+    public CommonResponse<TourSpotMemoResponse> getMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "관광지 메모 조회에 성공했습니다.",
+                tourSpotService.getMemo(user.userId(), parseSpotId(spotId)));
+    }
+
+    @DeleteMapping("/{spotId}/memo")
+    @Operation(summary = "내 관광지 메모 삭제", description = "현재 로그인한 사용자가 작성한 관광지 메모만 삭제합니다.")
+    public CommonResponse<TourSpotMemoResponse> deleteMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable String spotId
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "관광지 메모가 삭제되었습니다.",
+                tourSpotService.deleteMemo(user.userId(), parseSpotId(spotId)));
+    }
 
     @GetMapping("/{spotId}")
     @Override
@@ -200,6 +238,12 @@ public class TourSpotController implements TourSpotControllerDocs {
             return parsedSpotId;
         } catch (NumberFormatException exception) {
             throw new InvalidTourSpotIdException();
+        }
+    }
+
+    private void validateAuthenticatedUser(AuthenticatedUser user) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
         }
     }
 }

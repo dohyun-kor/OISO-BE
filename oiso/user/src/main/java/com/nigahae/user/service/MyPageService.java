@@ -51,8 +51,11 @@ public class MyPageService {
                         myPageQueryRepository.findMemos(userId).stream()
                                 .map(row -> new MyPageResponse.MemoItem(
                                         row.memoId(),
+                                        row.spotId(),
                                         row.content(),
-                                        row.courseTitle()
+                                        row.spotName(),
+                                        row.spotImage(),
+                                        row.updatedAt()
                                 ))
                                 .toList()
                 )
