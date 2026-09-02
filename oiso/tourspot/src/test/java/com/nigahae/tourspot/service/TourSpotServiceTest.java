@@ -77,12 +77,12 @@ class TourSpotServiceTest {
         TourSpotMemoResponse.Memo memo =
                 new TourSpotMemoResponse.Memo(10L, "조용한 시간대", now, now);
         when(tourSpotQueryRepository.existsById(24L)).thenReturn(true);
-        when(tourSpotMemoRepository.save(7L, 24L, "조용한 시간대")).thenReturn(memo);
+        when(tourSpotMemoRepository.save(7L, 24L, "조용한 시간대", null)).thenReturn(memo);
 
-        TourSpotMemoResponse response = tourSpotService.saveMemo(7L, 24L, "조용한 시간대");
+        TourSpotMemoResponse response = tourSpotService.saveMemo(7L, 24L, "조용한 시간대", null);
 
         assertThat(response).isEqualTo(new TourSpotMemoResponse(24L, memo));
-        verify(tourSpotMemoRepository).save(7L, 24L, "조용한 시간대");
+        verify(tourSpotMemoRepository).save(7L, 24L, "조용한 시간대", null);
     }
 
     @Test

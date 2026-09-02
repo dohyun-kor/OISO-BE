@@ -9,8 +9,12 @@ public record TourSpotMemoResponse(
     public record Memo(
             Long memoId,
             String content,
+            String imageUrl,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt
     ) {
+        public Memo(Long memoId, String content, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+            this(memoId, content, null, createdAt, updatedAt);
+        }
     }
 }

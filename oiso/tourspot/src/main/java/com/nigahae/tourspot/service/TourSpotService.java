@@ -14,6 +14,7 @@ import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
 import com.nigahae.tourspot.dto.TourSpotMemoResponse;
+import com.nigahae.tourspot.dto.TourSpotMemoListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
 import com.nigahae.tourspot.domain.StampMissionClear;
 import com.nigahae.tourspot.domain.StampMissionType;
@@ -52,12 +53,16 @@ public class TourSpotService {
     private final TourSpotMemoRepository tourSpotMemoRepository;
 
     @Transactional
-    public TourSpotMemoResponse saveMemo(Long userId, Long spotId, String content) {
+    public TourSpotMemoResponse saveMemo(Long userId, Long spotId, String content, String imageUrl) {
         validateTourSpotExists(spotId);
         return new TourSpotMemoResponse(
                 spotId,
-                tourSpotMemoRepository.save(userId, spotId, content)
+                tourSpotMemoRepository.save(userId, spotId, content, imageUrl)
         );
+    }
+
+    public TourSpotMemoListResponse getMemos(Long userId, int page, int size) {
+        return tourSpotMemoRepository.findAll(userId, page, size);
     }
 
     public TourSpotMemoResponse getMemo(Long userId, Long spotId) {

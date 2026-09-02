@@ -50,10 +50,11 @@ public record MyPageResponse(
             String content,
             String spotName,
             String spotImage,
+            String memoImage,
             java.time.OffsetDateTime updatedAt
     ) {
         public MemoItem(Long memoId, String content, String spotName) {
-            this(memoId, null, content, spotName, null, null);
+            this(memoId, null, content, spotName, null, null, null);
         }
     }
 }

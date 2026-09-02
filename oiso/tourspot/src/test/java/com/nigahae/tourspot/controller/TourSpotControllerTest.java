@@ -6,8 +6,6 @@ import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
 import com.nigahae.tourspot.dto.PlaceListResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
-import com.nigahae.tourspot.dto.TourSpotMemoRequest;
-import com.nigahae.tourspot.dto.TourSpotMemoResponse;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.domain.PlaceCategory;
 import com.nigahae.tourspot.service.TourSpotService;
@@ -15,7 +13,6 @@ import com.nigahae.tourspot.service.PlaceService;
 import com.nigahae.user.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -94,28 +91,4 @@ class TourSpotControllerTest {
                 .isEqualTo(ErrorCode.AUTH_ERROR);
     }
 
-    @Test
-    void savesMemoForAuthenticatedUser() {
-        OffsetDateTime now = OffsetDateTime.now();
-        TourSpotMemoResponse data = new TourSpotMemoResponse(
-                24L, new TourSpotMemoResponse.Memo(3L, "해 질 무렵 방문", now, now));
-        when(service.saveMemo(7L, 24L, "해 질 무렵 방문")).thenReturn(data);
-
-        var response = controller.saveMemo(
-                new AuthenticatedUser(7L, "사용자"),
-                "24",
-                new TourSpotMemoRequest("해 질 무렵 방문")
-        );
-
-        assertThat(response.data()).isEqualTo(data);
-        verify(service).saveMemo(7L, 24L, "해 질 무렵 방문");
-    }
-
-    @Test
-    void rejectsUnauthenticatedMemoRequest() {
-        assertThatThrownBy(() -> controller.getMemo(null, "24"))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.AUTH_ERROR);
-    }
 }

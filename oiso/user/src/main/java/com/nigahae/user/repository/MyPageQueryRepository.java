@@ -102,6 +102,7 @@ public class MyPageQueryRepository {
                 SELECT memo.history_id,
                        memo.spot_id,
                        memo.review,
+                       memo.img AS memo_img,
                        memo.updated_at,
                        spot.name,
                        spot.img
@@ -121,6 +122,7 @@ public class MyPageQueryRepository {
                         resultSet.getString("review"),
                         resultSet.getString("name"),
                         resultSet.getString("img"),
+                        resultSet.getString("memo_img"),
                         resultSet.getObject("updated_at", java.time.OffsetDateTime.class)
                 )
         );
@@ -155,10 +157,11 @@ public class MyPageQueryRepository {
             String content,
             String spotName,
             String spotImage,
+            String memoImage,
             java.time.OffsetDateTime updatedAt
     ) {
         public MemoItemRow(Long memoId, String content, String spotName) {
-            this(memoId, null, content, spotName, null, null);
+            this(memoId, null, content, spotName, null, null, null);
         }
     }
 }

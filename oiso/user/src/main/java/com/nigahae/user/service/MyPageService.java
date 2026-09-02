@@ -55,6 +55,7 @@ public class MyPageService {
                                         row.content(),
                                         row.spotName(),
                                         row.spotImage(),
+                                        row.memoImage(),
                                         row.updatedAt()
                                 ))
                                 .toList()
