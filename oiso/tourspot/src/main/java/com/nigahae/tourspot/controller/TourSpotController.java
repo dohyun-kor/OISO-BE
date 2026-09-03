@@ -202,4 +202,5 @@ public class TourSpotController implements TourSpotControllerDocs {
             throw new InvalidTourSpotIdException();
         }
     }
+
 }

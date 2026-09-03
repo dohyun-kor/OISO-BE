@@ -7,6 +7,7 @@ import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
 import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -345,6 +346,36 @@ public interface TourCourseControllerDocs {
                             }
                             """)))
             @RequestBody PatchTourCourseItemRequest request
+    );
+
+    @Operation(
+            summary = "관광 코스 상태 변경",
+            description = "소유한 관광 코스 자체의 상태를 변경합니다. 아이템 상태는 변경하지 않습니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "관광 코스 상태 변경 성공"),
+                    @ApiResponse(responseCode = "400", description = "관광 코스 ID 또는 상태 값 오류"),
+                    @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = AUTH_FAILURE))),
+                    @ApiResponse(responseCode = "403", description = "코스 수정 권한 없음"),
+                    @ApiResponse(responseCode = "404", description = "관광 코스를 찾을 수 없음",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(value = COURSE_NOT_FOUND)))
+            }
+    )
+    CommonResponse<TourCourseDetailResponse> patchTourCourseStatus(
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser user,
+            @Parameter(description = "상태를 변경할 관광 코스 ID", required = true, example = "1")
+            Long tourCourseId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료) 중 하나입니다.",
+                    content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                            {
+                              "status": "IN_PROGRESS"
+                            }
+                            """)))
+            @RequestBody PatchTourCourseStatusRequest request
     );
 
     @Operation(

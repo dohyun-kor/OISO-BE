@@ -6,6 +6,8 @@ import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.TourCourseSummaryResponse;
 import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
+import com.nigahae.tourcourse.domain.TourCourseStatus;
 import com.nigahae.tourcourse.service.TourCourseService;
 import com.nigahae.user.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
@@ -106,5 +108,19 @@ class TourCourseControllerTest {
         assertThat(response.message()).isEqualTo("관광 코스 삭제에 성공했습니다.");
         assertThat(response.data()).isNull();
         verify(service).deleteTourCourse(7L, 1L);
+    }
+
+    @Test
+    void changesTourCourseStatus() {
+        PatchTourCourseStatusRequest request =
+                new PatchTourCourseStatusRequest(TourCourseStatus.IN_PROGRESS);
+        TourCourseDetailResponse data = mock(TourCourseDetailResponse.class);
+        when(service.patchTourCourseStatus(7L, 1L, request)).thenReturn(data);
+
+        var response = controller.patchTourCourseStatus(
+                new AuthenticatedUser(7L, "사용자"), 1L, request);
+
+        assertThat(response.data()).isEqualTo(data);
+        verify(service).patchTourCourseStatus(7L, 1L, request);
     }
 }

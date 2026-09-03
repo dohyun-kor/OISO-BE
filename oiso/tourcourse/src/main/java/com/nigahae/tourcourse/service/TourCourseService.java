@@ -14,6 +14,7 @@ import com.nigahae.tourcourse.dto.TourCourseItemDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
 import com.nigahae.tourcourse.domain.TourCourseItem;
 import com.nigahae.tourcourse.domain.TourCourseItemCategory;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
@@ -158,7 +159,6 @@ public class TourCourseService {
         if (!existingItems.isEmpty()) {
             tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
         }
-        course.recalculateStatus();
         return toDetailResponse(course, userId);
     }
 
@@ -187,9 +187,27 @@ public class TourCourseService {
                         Map.of("field", "itemId", "itemId", itemId)));
 
         target.updateStatus(request.status());
-        course.recalculateStatus();
         tourCourseRepository.flush();
 
+        return toDetailResponse(course, userId);
+    }
+
+    @Transactional
+    public TourCourseDetailResponse patchTourCourseStatus(
+            Long userId, Long tourCourseId, PatchTourCourseStatusRequest request
+    ) {
+        validateCourseId(tourCourseId);
+        if (request == null) {
+            throw updateValidationException("request", "요청 본문이 필요합니다.");
+        }
+        if (request.status() == null) {
+            throw updateValidationException("status", "관광 코스 상태는 필수입니다.");
+        }
+
+        TourCourse course = getOwnedCourse(
+                userId, tourCourseId, ErrorCode.TOUR_COURSE_UPDATE_FORBIDDEN);
+        course.updateStatus(request.status());
+        tourCourseRepository.flush();
         return toDetailResponse(course, userId);
     }
 

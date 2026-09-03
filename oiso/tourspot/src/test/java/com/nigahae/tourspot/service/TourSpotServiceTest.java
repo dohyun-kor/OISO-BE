@@ -7,6 +7,7 @@ import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.dto.TourSpotMemoResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceRow;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.domain.StampMissionClear;
@@ -16,6 +17,7 @@ import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import com.nigahae.tourspot.repository.StampMissionClearRepository;
 import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
+import com.nigahae.tourspot.repository.TourSpotMemoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,6 +55,8 @@ class TourSpotServiceTest {
 
     @Mock
     private StampMissionClearRepository stampMissionClearRepository;
+    @Mock
+    private TourSpotMemoRepository tourSpotMemoRepository;
 
     private TourSpotService tourSpotService;
 
@@ -61,8 +66,31 @@ class TourSpotServiceTest {
                 tourSpotQueryRepository,
                 userSavedTourSpotRepository,
                 tourDetailRefresher,
-                stampMissionClearRepository
+                stampMissionClearRepository,
+                tourSpotMemoRepository
         );
+    }
+
+    @Test
+    void savesPersonalMemoForTourSpot() {
+        OffsetDateTime now = OffsetDateTime.now();
+        TourSpotMemoResponse.Memo memo =
+                new TourSpotMemoResponse.Memo(10L, "조용한 시간대", now, now);
+        when(tourSpotQueryRepository.existsById(24L)).thenReturn(true);
+        when(tourSpotMemoRepository.save(7L, 24L, "조용한 시간대", null)).thenReturn(memo);
+
+        TourSpotMemoResponse response = tourSpotService.saveMemo(7L, 24L, "조용한 시간대", null);
+
+        assertThat(response).isEqualTo(new TourSpotMemoResponse(24L, memo));
+        verify(tourSpotMemoRepository).save(7L, 24L, "조용한 시간대", null);
+    }
+
+    @Test
+    void rejectsMemoForUnknownTourSpot() {
+        when(tourSpotQueryRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> tourSpotService.getMemo(7L, 999L))
+                .isInstanceOf(TourSpotNotFoundException.class);
     }
 
     @Test

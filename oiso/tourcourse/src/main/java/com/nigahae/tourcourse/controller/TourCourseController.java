@@ -10,6 +10,7 @@ import com.nigahae.tourcourse.dto.TourCourseListResponse;
 import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
 import com.nigahae.tourcourse.service.TourCourseService;
 import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -124,6 +125,23 @@ public class TourCourseController implements TourCourseControllerDocs {
                 LIST_SUCCESS_CODE,
                 UPDATE_SUCCESS_MESSAGE,
                 tourCourseService.patchTourCourseItem(user.userId(), tourCourseId, itemId, request)
+        );
+    }
+
+    @PatchMapping("/{tourCourseId}/status")
+    @Override
+    public CommonResponse<TourCourseDetailResponse> patchTourCourseStatus(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long tourCourseId,
+            @RequestBody(required = false) PatchTourCourseStatusRequest request
+    ) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_ERROR);
+        }
+        return new CommonResponse<>(
+                LIST_SUCCESS_CODE,
+                UPDATE_SUCCESS_MESSAGE,
+                tourCourseService.patchTourCourseStatus(user.userId(), tourCourseId, request)
         );
     }
 

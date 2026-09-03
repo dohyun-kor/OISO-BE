@@ -13,6 +13,7 @@ import com.nigahae.tourspot.service.PlaceService;
 import com.nigahae.user.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -89,4 +90,5 @@ class TourSpotControllerTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.AUTH_ERROR);
     }
+
 }

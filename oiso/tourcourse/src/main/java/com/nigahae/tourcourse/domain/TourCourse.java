@@ -100,19 +100,8 @@ public class TourCourse {
         this.sharedPassword = sharedPassword;
     }
 
-    public void recalculateStatus() {
-        boolean allPending = items.stream()
-                .allMatch(item -> item.getStatus() == TourCourseItemStatus.PENDING);
-        boolean allCompleted = !items.isEmpty() && items.stream()
-                .allMatch(item -> item.getStatus() == TourCourseItemStatus.COMPLETED);
-
-        if (allCompleted) {
-            status = TourCourseStatus.COMPLETED;
-        } else if (allPending) {
-            status = TourCourseStatus.PENDING;
-        } else {
-            status = TourCourseStatus.IN_PROGRESS;
-        }
+    public void updateStatus(TourCourseStatus status) {
+        this.status = status;
     }
 
     @PrePersist

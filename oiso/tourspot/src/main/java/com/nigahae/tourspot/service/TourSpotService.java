@@ -13,6 +13,8 @@ import com.nigahae.tourspot.dto.SaveTourSpotResponse;
 import com.nigahae.tourspot.dto.SavedNearbyPlaceResponse;
 import com.nigahae.tourspot.dto.TourSpotDetailResponse;
 import com.nigahae.tourspot.dto.TourSpotListResponse;
+import com.nigahae.tourspot.dto.TourSpotMemoResponse;
+import com.nigahae.tourspot.dto.TourSpotMemoListResponse;
 import com.nigahae.tourspot.dto.TourSpotSummary;
 import com.nigahae.tourspot.domain.StampMissionClear;
 import com.nigahae.tourspot.domain.StampMissionType;
@@ -23,6 +25,7 @@ import com.nigahae.tourspot.exception.TourSpotNotFoundException;
 import com.nigahae.tourspot.repository.TourSpotQueryRepository;
 import com.nigahae.tourspot.repository.StampMissionClearRepository;
 import com.nigahae.tourspot.repository.UserSavedTourSpotRepository;
+import com.nigahae.tourspot.repository.TourSpotMemoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,6 +50,35 @@ public class TourSpotService {
     private final UserSavedTourSpotRepository userSavedTourSpotRepository;
     private final TourDetailRefresher tourDetailRefresher;
     private final StampMissionClearRepository stampMissionClearRepository;
+    private final TourSpotMemoRepository tourSpotMemoRepository;
+
+    @Transactional
+    public TourSpotMemoResponse saveMemo(Long userId, Long spotId, String content, String imageUrl) {
+        validateTourSpotExists(spotId);
+        return new TourSpotMemoResponse(
+                spotId,
+                tourSpotMemoRepository.save(userId, spotId, content, imageUrl)
+        );
+    }
+
+    public TourSpotMemoListResponse getMemos(Long userId, int page, int size) {
+        return tourSpotMemoRepository.findAll(userId, page, size);
+    }
+
+    public TourSpotMemoResponse getMemo(Long userId, Long spotId) {
+        validateTourSpotExists(spotId);
+        return new TourSpotMemoResponse(
+                spotId,
+                tourSpotMemoRepository.find(userId, spotId).orElse(null)
+        );
+    }
+
+    @Transactional
+    public TourSpotMemoResponse deleteMemo(Long userId, Long spotId) {
+        validateTourSpotExists(spotId);
+        tourSpotMemoRepository.delete(userId, spotId);
+        return new TourSpotMemoResponse(spotId, null);
+    }
 
     @Transactional
     public SaveTourSpotResponse saveTourSpot(Long userId, Long spotId) {

@@ -46,8 +46,15 @@ public record MyPageResponse(
 
     public record MemoItem(
             Long memoId,
+            Long spotId,
             String content,
-            String courseTitle
+            String spotName,
+            String spotImage,
+            String memoImage,
+            java.time.OffsetDateTime updatedAt
     ) {
+        public MemoItem(Long memoId, String content, String spotName) {
+            this(memoId, null, content, spotName, null, null, null);
+        }
     }
 }
