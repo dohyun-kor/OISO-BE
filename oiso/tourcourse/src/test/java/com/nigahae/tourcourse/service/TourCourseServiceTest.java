@@ -12,6 +12,8 @@ import com.nigahae.tourcourse.dto.TourCourseListRow;
 import com.nigahae.tourcourse.dto.TourCourseItemDetailRow;
 import com.nigahae.tourcourse.dto.UpdateTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
+import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
+import com.nigahae.tourcourse.domain.TourCourseStatus;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
 import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
@@ -435,6 +437,22 @@ class TourCourseServiceTest {
                     assertThat(exception.getMessage()).isEqualTo("관광 코스 제목은 필수입니다.");
                     assertThat(exception.getData()).isEqualTo(Map.of("field", "title"));
                 });
+    }
+
+    @Test
+    void changesOwnedTourCourseStatusWithoutChangingItems() {
+        TourCourse course = new TourCourse(7L, "코스", false, null);
+        course.addItem(1L, 1, null);
+        ReflectionTestUtils.setField(course, "tourCourseId", 1L);
+        when(tourCourseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(tourCourseRepository.findDetailItems(1L, 7L)).thenReturn(List.of());
+
+        var response = tourCourseService.patchTourCourseStatus(
+                7L, 1L, new PatchTourCourseStatusRequest(TourCourseStatus.COMPLETED));
+
+        assertThat(course.getStatus()).isEqualTo(TourCourseStatus.COMPLETED);
+        assertThat(response.status()).isEqualTo(TourCourseStatus.COMPLETED);
+        verify(tourCourseRepository).flush();
     }
 
     private TourCourseItemDetailRow detailRow(
