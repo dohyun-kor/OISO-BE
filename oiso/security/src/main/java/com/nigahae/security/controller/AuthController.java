@@ -14,18 +14,25 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "인증", description = "인증 토큰 갱신, 사용자 확인 및 로그아웃 API")
 public class AuthController {
+    public static final String OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE =
+            "oauth2_redirect_uri";
+    @Value("${app.oauth2.allowed-redirect-uris}")
+    private String allowedRedirectUrisProperty;
     public record MeResponse(Long userId, String nickname) {
     }
 
@@ -49,6 +56,38 @@ public class AuthController {
         cookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN,
                 jwtTokenProvider.createAccessToken(userId, nickname), cookieUtil.getAccessTokenMaxAge());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/kakao")
+    @Operation(
+            summary = "카카오 로그인",
+            description = "로그인 완료 후 이동할 프론트 주소를 저장하고 카카오 OAuth2 로그인을 시작합니다."
+    )
+    public void kakaoLogin(
+            @RequestParam String redirectUri,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+
+        Set<String> allowedRedirectUris =
+                Arrays.stream(allowedRedirectUrisProperty.split(","))
+                        .map(String::trim)
+                        .collect(Collectors.toSet());
+
+        if (!allowedRedirectUris.contains(redirectUri)) {
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "허용되지 않은 redirectUri입니다."
+            );
+            return;
+        }
+
+        request.getSession().setAttribute(
+                OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE,
+                redirectUri
+        );
+
+        response.sendRedirect("/oauth2/authorization/kakao");
     }
 
     @GetMapping("/me")

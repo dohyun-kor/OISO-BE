@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/api/v1/tour-spots/saved",
                                 "/api/v1/tour-spots/*/save",
                                 "/api/v1/memos/**",
+                                "/api/v1/story-cards/**",
                                 "/api/v1/tour-spots/*/stamp-missions/**",
                                 "/api/v1/tour-spots/nearby-places/*/save"
                         ).authenticated()
@@ -63,6 +64,7 @@ public class SecurityConfig {
                                 "/api/auth/logout",
                                 "/login/**",
                                 "/oauth2/**",
+                                "/api/auth/kakao",
                                 "/error",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",

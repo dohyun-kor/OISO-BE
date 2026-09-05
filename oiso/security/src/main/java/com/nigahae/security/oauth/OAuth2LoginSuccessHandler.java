@@ -1,5 +1,6 @@
 package com.nigahae.security.oauth;
 
+import com.nigahae.security.controller.AuthController;
 import com.nigahae.security.jwt.JwtTokenProvider;
 import com.nigahae.security.util.CookieUtil;
 import com.nigahae.user.AuthenticatedUser;
@@ -22,7 +23,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Value("${app.oauth2.success-redirect-uri}")
-    private String redirectUri;
+    private String defaultRedirectUri;
 
     private final KakaoUserInfoParser kakaoUserInfoParser;
     private final UserAuthenticationService userAuthenticationService;
@@ -46,6 +47,23 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 jwtTokenProvider.createAccessToken(user.userId(), user.nickname()), cookieUtil.getAccessTokenMaxAge());
         cookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN,
                 jwtTokenProvider.createRefreshToken(user.userId(), user.nickname()), cookieUtil.getRefreshTokenMaxAge());
-        response.sendRedirect(redirectUri);
+        Object savedRedirectUri = request.getSession()
+                .getAttribute(
+                        AuthController.OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE
+                );
+
+        String targetRedirectUri;
+
+        if (savedRedirectUri instanceof String uri) {
+            targetRedirectUri = uri;
+
+            request.getSession().removeAttribute(
+                    AuthController.OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE
+            );
+        } else {
+            targetRedirectUri = defaultRedirectUri;
+        }
+
+        response.sendRedirect(targetRedirectUri);
     }
 }
