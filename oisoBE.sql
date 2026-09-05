@@ -221,10 +221,12 @@ CREATE TABLE IF NOT EXISTS public."TourStory"
     title      varchar(255) NOT NULL,
     sub_title  varchar(255) NULL,
     summary    text NULL,
+    intro      text NULL,
+    story_title varchar(255) NULL,
     story      text NULL,
     img        varchar(2048) NULL,
     tip        text NULL,
-    "comment"  text NULL,
+    did_you_know text NULL,
 
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -244,6 +246,18 @@ CREATE TABLE IF NOT EXISTS public."TourStory"
 
 CREATE INDEX IF NOT EXISTS "IX_TOURSTORY_SPOT_ID"
     ON public."TourStory" (spot_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "UK_TOURSTORY_SPOT_ID"
+    ON public."TourStory" (spot_id);
+
+ALTER TABLE public."TourStory"
+    ADD COLUMN IF NOT EXISTS intro text NULL;
+
+ALTER TABLE public."TourStory"
+    ADD COLUMN IF NOT EXISTS story_title varchar(255) NULL;
+
+ALTER TABLE public."TourStory"
+    ADD COLUMN IF NOT EXISTS did_you_know text NULL;
 
 
 
