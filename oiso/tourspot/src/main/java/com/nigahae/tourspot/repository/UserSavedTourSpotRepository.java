@@ -6,6 +6,8 @@ public interface UserSavedTourSpotRepository {
 
     void delete(Long userId, Long spotId);
 
+    boolean exists(Long userId, Long spotId);
+
     void saveNearbyPlaceIfAbsent(Long userId, Long nearbyPlaceId);
 
     void deleteNearbyPlace(Long userId, Long nearbyPlaceId);

@@ -14,6 +14,10 @@ public record TourSpotDetailResponse(
     }
 
     public static TourSpotDetailResponse from(TourSpot tourSpot, StampProgressResponse stampProgress) {
-        return new TourSpotDetailResponse(TourSpotDetail.from(tourSpot), stampProgress);
+        return from(tourSpot, stampProgress, false);
+    }
+
+    public static TourSpotDetailResponse from(TourSpot tourSpot, StampProgressResponse stampProgress, boolean like) {
+        return new TourSpotDetailResponse(TourSpotDetail.from(tourSpot, like), stampProgress);
     }
 }

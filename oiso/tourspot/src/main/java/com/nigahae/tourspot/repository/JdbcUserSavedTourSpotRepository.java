@@ -40,6 +40,13 @@ public class JdbcUserSavedTourSpotRepository implements UserSavedTourSpotReposit
     }
 
     @Override
+    public boolean exists(Long userId, Long spotId) {
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM public.\"UserSavedTourSpot\" WHERE user_id = ? AND spot_id = ?)",
+                Boolean.class, userId, spotId));
+    }
+
+    @Override
     public void saveNearbyPlaceIfAbsent(Long userId, Long nearbyPlaceId) {
         jdbcTemplate.update(SAVE_NEARBY_PLACE_IF_ABSENT_SQL, userId, nearbyPlaceId);
     }

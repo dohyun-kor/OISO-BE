@@ -122,7 +122,8 @@ public class TourSpotService {
                 .orElseThrow(() -> new TourSpotNotFoundException(spotId));
 
         StampProgressResponse progress = userId == null ? null : getStampProgress(userId, spotId);
-        return TourSpotDetailResponse.from(tourSpot, progress);
+        boolean like = userId != null && userSavedTourSpotRepository.exists(userId, spotId);
+        return TourSpotDetailResponse.from(tourSpot, progress, like);
     }
 
     public TourSpotDetailResponse getTourSpot(Long spotId) {

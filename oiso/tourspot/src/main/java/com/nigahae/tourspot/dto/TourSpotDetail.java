@@ -38,6 +38,10 @@ public record TourSpotDetail(
         String tel
 ) {
     public static TourSpotDetail from(TourSpot tourSpot) {
+        return from(tourSpot, false);
+    }
+
+    public static TourSpotDetail from(TourSpot tourSpot, boolean like) {
         return new TourSpotDetail(
                 tourSpot.getSpotId(),
                 tourSpot.getName(),
@@ -46,7 +50,7 @@ public record TourSpotDetail(
                 tourSpot.getAddress(),
                 tourSpot.getCanParking(),
                 tourSpot.getCanPet(),
-                false,
+                like,
                 tourSpot.getCrowdLevel(),
                 tourSpot.getOverview(),
                 tourSpot.getHomepage(),
