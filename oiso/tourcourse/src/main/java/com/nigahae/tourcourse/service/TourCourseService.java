@@ -22,6 +22,8 @@ import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
 import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.nigahae.security.jwt.JwtTokenProvider;
+import com.nigahae.tourcourse.dto.VerifyTourCoursePasswordResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -53,6 +55,38 @@ public class TourCourseService {
     private final TourSpotReferenceRepository tourSpotReferenceRepository;
     private final NearbyPlaceReferenceRepository nearbyPlaceReferenceRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Transactional(readOnly = true)
+    public VerifyTourCoursePasswordResponse verifyPassword(Long tourCourseId, String password) {
+        validateCourseId(tourCourseId);
+        TourCourse course = tourCourseRepository.findById(tourCourseId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        if (!course.isShareYn()) {
+            return new VerifyTourCoursePasswordResponse(true, null);
+        }
+        boolean verified = password != null && course.getSharedPassword() != null
+                && passwordEncoder.matches(password, course.getSharedPassword());
+        return new VerifyTourCoursePasswordResponse(
+                verified,
+                verified ? jwtTokenProvider.createCourseAccessToken(tourCourseId) : null);
+    }
+
+    @Transactional(readOnly = true)
+    public TourCourseDetailResponse getPublicTourCourseDetail(
+            Long tourCourseId, String courseAccessToken, Long userId) {
+        validateCourseId(tourCourseId);
+        TourCourse course = tourCourseRepository.findById(tourCourseId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        if (course.isShareYn()) {
+            boolean valid = courseAccessToken != null
+                    && jwtTokenProvider.validateToken(courseAccessToken, JwtTokenProvider.COURSE_ACCESS);
+            if (!valid || !tourCourseId.equals(jwtTokenProvider.getCourseId(courseAccessToken))) {
+                throw new CustomException(ErrorCode.TOUR_COURSE_FORBIDDEN);
+            }
+        }
+        return toDetailResponse(course, userId);
+    }
 
     @Transactional
     public CreateTourCourseResponse create(Long userId, CreateTourCourseRequest request) {
@@ -94,14 +128,18 @@ public class TourCourseService {
                 normalizedKeyword,
                 PageRequest.of(page, size, parsedSort)
         );
-        if (result.isEmpty()) {
-            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-
         List<TourCourseSummaryResponse> courses = result.getContent().stream()
                 .map(TourCourseSummaryResponse::from)
                 .toList();
         return new TourCourseListResponse(courses, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TourCourseSummaryResponse> getRandomFeaturedCourses(int size) {
+        int normalizedSize = Math.max(1, Math.min(size, 20));
+        return tourCourseRepository.findRandomFeaturedCourses(PageRequest.of(0, normalizedSize)).stream()
+                .map(TourCourseSummaryResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

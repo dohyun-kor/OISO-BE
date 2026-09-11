@@ -523,6 +523,7 @@ CREATE TABLE IF NOT EXISTS public."TourCourse"
     user_id        int8 NOT NULL,
     title          varchar(20) NOT NULL,
     share_yn       bool NOT NULL DEFAULT false,
+    featured_yn    bool NOT NULL DEFAULT false,
     shared_password varchar(100) NULL,
     status         varchar(20) NOT NULL DEFAULT 'PENDING',
 
@@ -554,6 +555,9 @@ CREATE INDEX IF NOT EXISTS "IX_TOURCOURSE_USER_ID"
 
 ALTER TABLE public."TourCourse"
     ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'PENDING';
+
+ALTER TABLE public."TourCourse"
+    ADD COLUMN IF NOT EXISTS featured_yn bool NOT NULL DEFAULT false;
 
 ALTER TABLE public."TourCourse"
     DROP CONSTRAINT IF EXISTS "CK_TOURCOURSE_STATUS";

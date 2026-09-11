@@ -41,6 +41,9 @@ public class TourCourse {
     @Column(name = "share_yn", nullable = false)
     private boolean shareYn;
 
+    @Column(name = "featured_yn", nullable = false)
+    private boolean featuredYn;
+
     @Column(name = "shared_password", length = 100)
     private String sharedPassword;
 
