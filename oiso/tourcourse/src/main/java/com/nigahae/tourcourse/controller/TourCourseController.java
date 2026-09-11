@@ -11,6 +11,8 @@ import com.nigahae.tourcourse.dto.TourCourseDetailResponse;
 import com.nigahae.tourcourse.dto.UpdateTourCourseRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
+import com.nigahae.tourcourse.dto.VerifyTourCoursePasswordRequest;
+import com.nigahae.tourcourse.dto.VerifyTourCoursePasswordResponse;
 import com.nigahae.tourcourse.service.TourCourseService;
 import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,6 +44,27 @@ public class TourCourseController implements TourCourseControllerDocs {
     private static final String DELETE_SUCCESS_MESSAGE = "관광 코스 삭제에 성공했습니다.";
 
     private final TourCourseService tourCourseService;
+
+    @PostMapping("/{tourCourseId}/password/verify")
+    public CommonResponse<VerifyTourCoursePasswordResponse> verifyTourCoursePassword(
+            @PathVariable Long tourCourseId,
+            @RequestBody VerifyTourCoursePasswordRequest request
+    ) {
+        String password = request == null ? null : request.password();
+        return new CommonResponse<>(2000, "코스 비밀번호 확인이 완료되었습니다.",
+                tourCourseService.verifyPassword(tourCourseId, password));
+    }
+
+    @GetMapping("/{tourCourseId}/public")
+    public CommonResponse<TourCourseDetailResponse> getPublicTourCourseDetail(
+            @PathVariable Long tourCourseId,
+            @RequestHeader(value = "X-Course-Access-Token", required = false) String accessToken,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return new CommonResponse<>(2000, DETAIL_SUCCESS_MESSAGE,
+                tourCourseService.getPublicTourCourseDetail(
+                        tourCourseId, accessToken, user == null ? null : user.userId()));
+    }
 
     @PostMapping
     @Override

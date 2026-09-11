@@ -43,6 +43,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/api/v1/tour-courses/*/password/verify",
+                                "/api/v1/tour-courses/*/public"
+                        ).permitAll()
+                        .requestMatchers(
                                 "/api/auth/me",
                                 "/api/v1/tour-courses/**",
                                 "/api/v1/users/me/**",
