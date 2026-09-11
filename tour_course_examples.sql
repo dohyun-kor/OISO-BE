@@ -3,6 +3,9 @@
 -- user_id=1 계정이 존재한다는 전제입니다. 운영 계정 ID가 다르면 아래 1을 변경하세요.
 BEGIN;
 
+ALTER TABLE public."TourCourse"
+    ADD COLUMN IF NOT EXISTS featured_yn boolean NOT NULL DEFAULT false;
+
 WITH c AS (
   INSERT INTO public."TourCourse" (user_id, title, share_yn, shared_password, status)
   VALUES (1, '경주 핵심 유적 산책', true, 'OISO2026', 'PENDING') RETURNING tour_course_id
