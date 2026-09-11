@@ -13,6 +13,8 @@ import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
 import com.nigahae.tourcourse.dto.VerifyTourCoursePasswordRequest;
 import com.nigahae.tourcourse.dto.VerifyTourCoursePasswordResponse;
+import com.nigahae.tourcourse.dto.TourCourseSummaryResponse;
+import java.util.List;
 import com.nigahae.tourcourse.service.TourCourseService;
 import com.nigahae.user.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestHeader;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,7 +52,26 @@ public class TourCourseController implements TourCourseControllerDocs {
 
     private final TourCourseService tourCourseService;
 
+    @GetMapping("/featured")
+    @Operation(summary = "홈 화면 추천 코스 랜덤 조회", description = "추천 대상으로 지정된 공개 관광코스 중 요청마다 무작위로 코스를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "추천 코스 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "size는 1 이상이어야 합니다.")
+    })
+    public CommonResponse<List<TourCourseSummaryResponse>> getRandomFeaturedCourses(
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return new CommonResponse<>(2000, "추천 관광코스 조회가 완료되었습니다.",
+                tourCourseService.getRandomFeaturedCourses(size));
+    }
+
     @PostMapping("/{tourCourseId}/password/verify")
+    @Operation(summary = "공유 코스 비밀번호 확인", description = "공유 관광코스의 비밀번호를 확인하고 성공 시 10분 유효한 코스 전용 접근 토큰을 발급합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 확인 결과",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\":2000,\"message\":\"코스 비밀번호 확인이 완료되었습니다.\",\"data\":{\"verified\":true,\"accessToken\":\"eyJ...\"}}"))),
+            @ApiResponse(responseCode = "404", description = "코스를 찾을 수 없음")
+    })
     public CommonResponse<VerifyTourCoursePasswordResponse> verifyTourCoursePassword(
             @PathVariable Long tourCourseId,
             @RequestBody VerifyTourCoursePasswordRequest request
@@ -56,6 +82,11 @@ public class TourCourseController implements TourCourseControllerDocs {
     }
 
     @GetMapping("/{tourCourseId}/public")
+    @Operation(summary = "공유 코스 공개 상세조회", description = "비밀번호가 없는 공개 코스는 바로 조회하며, 비밀번호가 있는 코스는 X-Course-Access-Token 헤더가 필요합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "공개 코스 상세조회 성공"),
+            @ApiResponse(responseCode = "403", description = "코스 접근 토큰이 없거나 유효하지 않음")
+    })
     public CommonResponse<TourCourseDetailResponse> getPublicTourCourseDetail(
             @PathVariable Long tourCourseId,
             @RequestHeader(value = "X-Course-Access-Token", required = false) String accessToken,

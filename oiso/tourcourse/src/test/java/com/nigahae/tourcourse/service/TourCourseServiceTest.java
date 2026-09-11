@@ -253,13 +253,16 @@ class TourCourseServiceTest {
     }
 
     @Test
-    void rejectsEmptyCourseResult() {
+    void returnsEmptyCourseResult() {
         when(tourCourseRepository.findMyTourCourses(eq(7L), eq(""), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        assertThatThrownBy(() -> tourCourseService.getMyTourCourses(7L, 0, 10, "createdAt,desc", null))
-                .isInstanceOfSatisfying(CustomException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND));
+        var response = tourCourseService.getMyTourCourses(7L, 0, 10, "createdAt,desc", null);
+
+        assertThat(response.tourCourses()).isEmpty();
+        assertThat(response.page()).isZero();
+        assertThat(response.size()).isEqualTo(10);
+        assertThat(response.totalCount()).isZero();
     }
 
     @Test

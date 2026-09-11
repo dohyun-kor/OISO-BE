@@ -128,14 +128,18 @@ public class TourCourseService {
                 normalizedKeyword,
                 PageRequest.of(page, size, parsedSort)
         );
-        if (result.isEmpty()) {
-            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-
         List<TourCourseSummaryResponse> courses = result.getContent().stream()
                 .map(TourCourseSummaryResponse::from)
                 .toList();
         return new TourCourseListResponse(courses, result.getNumber(), result.getSize(), result.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TourCourseSummaryResponse> getRandomFeaturedCourses(int size) {
+        int normalizedSize = Math.max(1, Math.min(size, 20));
+        return tourCourseRepository.findRandomFeaturedCourses(PageRequest.of(0, normalizedSize)).stream()
+                .map(TourCourseSummaryResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

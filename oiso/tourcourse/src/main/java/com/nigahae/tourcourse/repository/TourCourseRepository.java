@@ -14,6 +14,22 @@ import java.util.List;
 
 public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
 
+    @Query("""
+            select new com.nigahae.tourcourse.dto.TourCourseListRow(
+                c.tourCourseId, c.title, c.shareYn, c.status,
+                max(case when item.dayNumber = 1 and item.itemOrder = 1
+                         then coalesce(spot.img, nearby.img) else null end),
+                count(item.itemId), c.createdAt, c.updatedAt)
+            from TourCourse c
+            left join c.items item
+            left join TourCourseSpotReference spot on spot.spotId = item.spotId
+            left join TourCourseNearbyPlaceReference nearby on nearby.nearbyPlaceId = item.nearbyPlaceId
+            where c.featuredYn = true
+            group by c.tourCourseId, c.title, c.shareYn, c.status, c.createdAt, c.updatedAt
+            order by function('random')
+            """)
+    List<TourCourseListRow> findRandomFeaturedCourses(org.springframework.data.domain.Pageable pageable);
+
     @Query(
             value = """
                     select new com.nigahae.tourcourse.dto.TourCourseListRow(
