@@ -6,6 +6,8 @@ import com.nigahae.common.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,20 @@ public class RecommendationController {
     private final RecommendationService recommendationService;
 
     @PostMapping("/courses")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                    {
+                      "travelTime": "ONE_DAY",
+                      "travelCompanion": "FAMILY",
+                      "preferredTravelTheme": "HISTORY_CULTURE",
+                      "transportationMode": "CAR",
+                      "latitude": 35.8562,
+                      "longitude": 129.2248,
+                      "withPet": false
+                    }
+                    """))
+    )
     @Operation(summary = "선호정보 기반 관광코스 추천", description = "Spring이 내부 추천 서버로 요청을 중계하고 추천 결과를 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "추천 성공"),
