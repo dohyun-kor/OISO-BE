@@ -19,11 +19,11 @@ public class NearbyPlaceController implements NearbyPlaceControllerDocs {
 
     private final TourSpotService tourSpotService;
 
-    @GetMapping("/{nearbyPlaceId}")
     public CommonResponse<NearbyPlaceResponse> getNearbyPlace(@PathVariable Long nearbyPlaceId) {
         return getNearbyPlace(null, nearbyPlaceId);
     }
 
+    @GetMapping("/{nearbyPlaceId}")
     @Override
     public CommonResponse<NearbyPlaceResponse> getNearbyPlace(
             @AuthenticationPrincipal AuthenticatedUser user,
