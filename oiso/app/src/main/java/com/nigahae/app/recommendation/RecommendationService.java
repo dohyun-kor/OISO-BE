@@ -4,9 +4,11 @@ import com.nigahae.app.recommendation.RecommendationDtos.RecommendationRequest;
 import com.nigahae.app.recommendation.RecommendationDtos.RecommendationResponse;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
+import com.nigahae.common.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -21,7 +23,7 @@ public class RecommendationService {
 
     public RecommendationResponse recommend(RecommendationRequest request) {
         try {
-            return restClientBuilder.baseUrl(baseUrl).build()
+            CommonResponse<RecommendationResponse> response = restClientBuilder.baseUrl(baseUrl).build()
                     .post().uri("/api/v1/recommendations/courses")
                     .body(request)
                     .retrieve()
@@ -29,7 +31,11 @@ public class RecommendationService {
                         throw new CustomException(res.getStatusCode().is5xxServerError()
                                 ? ErrorCode.RECOMMENDATION_UNAVAILABLE : ErrorCode.RECOMMENDATION_UNAVAILABLE);
                     })
-                    .body(RecommendationResponse.class);
+                    .body(new ParameterizedTypeReference<CommonResponse<RecommendationResponse>>() {});
+            if (response == null || response.data() == null) {
+                throw new CustomException(ErrorCode.RECOMMENDATION_UNAVAILABLE);
+            }
+            return response.data();
         } catch (ResourceAccessException e) {
             throw new CustomException(ErrorCode.RECOMMENDATION_TIMEOUT);
         } catch (RuntimeException e) {
