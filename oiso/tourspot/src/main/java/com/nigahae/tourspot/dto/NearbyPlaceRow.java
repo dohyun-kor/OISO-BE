@@ -22,4 +22,5 @@ public interface NearbyPlaceRow {
     String getPetInfo();
     String getFirstMenu();
     String getTreatMenu();
+    Boolean getLike();
 }

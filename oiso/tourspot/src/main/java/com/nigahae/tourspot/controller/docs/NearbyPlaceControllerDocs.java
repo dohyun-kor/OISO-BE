@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.nigahae.user.AuthenticatedUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "주변 장소", description = "식당·숙소 상세 조회 API")
 public interface NearbyPlaceControllerDocs {
@@ -20,6 +22,7 @@ public interface NearbyPlaceControllerDocs {
             }
     )
     CommonResponse<NearbyPlaceResponse> getNearbyPlace(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @Parameter(
                     description = "전역 고유 주변 장소 ID",
                     required = true,
