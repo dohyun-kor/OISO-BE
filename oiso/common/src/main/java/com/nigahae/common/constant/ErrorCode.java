@@ -107,6 +107,16 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST,
             "첫 번째 관광지는 이동 정보를 가질 수 없습니다."
     ),
+    RECOMMENDATION_UNAVAILABLE(
+            5503,
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "추천 서버를 사용할 수 없습니다."
+    ),
+    RECOMMENDATION_TIMEOUT(
+            5504,
+            HttpStatus.GATEWAY_TIMEOUT,
+            "추천 서버 응답 시간이 초과되었습니다."
+    ),
     TOUR_COURSE_NEGATIVE_DISTANCE(
             4000,
             HttpStatus.BAD_REQUEST,

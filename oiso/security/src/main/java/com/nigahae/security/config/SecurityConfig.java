@@ -45,7 +45,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/tour-courses/*/password/verify",
                                 "/api/v1/tour-courses/*/public",
-                                "/api/v1/tour-courses/featured"
+                                "/api/v1/tour-courses/featured",
+                                "/api/v1/recommendations/courses"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/auth/me",
