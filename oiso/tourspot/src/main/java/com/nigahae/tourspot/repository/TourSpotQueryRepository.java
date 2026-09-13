@@ -152,15 +152,20 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                    detail.open_time as "openTime", detail.rest_date as "restDate",
                    detail.reservation_info as "reservationInfo", detail.inquiry_info as "inquiryInfo",
                    detail.parking_info as "parkingInfo", detail.pet_info as "petInfo",
-                   detail.first_menu as "firstMenu", detail.treat_menu as "treatMenu"
+                   detail.first_menu as "firstMenu", detail.treat_menu as "treatMenu",
+                   case when favorite.user_id is not null then true else false end as "like"
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
+            left join "UserSavedNearbyPlace" favorite
+              on favorite.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
+             and (:userId is not null and favorite.user_id = :userId)
             where nearby.tour_spot_nearby_course_id = :nearbyPlaceId
               and upper(nearby.category) in ('RESTAURANT', 'ACCOMMODATION')
             """, nativeQuery = true)
     Optional<NearbyPlaceRow> findNearbyPlace(
-            @Param("nearbyPlaceId") Long nearbyPlaceId
+            @Param("nearbyPlaceId") Long nearbyPlaceId,
+            @Param("userId") Long userId
     );
 
     @Query(value = """

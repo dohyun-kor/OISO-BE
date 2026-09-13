@@ -96,14 +96,14 @@ public class TourSpotService {
 
     @Transactional
     public SavedNearbyPlaceResponse saveNearbyPlace(Long userId, Long nearbyPlaceId) {
-        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId);
+        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId, userId);
         userSavedTourSpotRepository.saveNearbyPlaceIfAbsent(userId, nearbyPlaceId);
         return new SavedNearbyPlaceResponse(nearbyPlaceId, place.category(), true);
     }
 
     @Transactional
     public SavedNearbyPlaceResponse deleteSavedNearbyPlace(Long userId, Long nearbyPlaceId) {
-        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId);
+        NearbyPlaceResponse place = getNearbyPlace(nearbyPlaceId, userId);
         userSavedTourSpotRepository.deleteNearbyPlace(userId, nearbyPlaceId);
         return new SavedNearbyPlaceResponse(nearbyPlaceId, place.category(), false);
     }
@@ -187,8 +187,12 @@ public class TourSpotService {
     }
 
     public NearbyPlaceResponse getNearbyPlace(Long nearbyPlaceId) {
-        return tourSpotQueryRepository.findNearbyPlace(nearbyPlaceId)
-                .map(NearbyPlaceResponse::from)
+        return getNearbyPlace(nearbyPlaceId, null);
+    }
+
+    public NearbyPlaceResponse getNearbyPlace(Long nearbyPlaceId, Long userId) {
+        return tourSpotQueryRepository.findNearbyPlace(nearbyPlaceId, userId)
+                .map(row -> NearbyPlaceResponse.from(row, Boolean.TRUE.equals(row.getLike())))
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 

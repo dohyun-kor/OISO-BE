@@ -17,6 +17,7 @@ import com.nigahae.tourcourse.dto.PatchTourCourseItemRequest;
 import com.nigahae.tourcourse.dto.PatchTourCourseStatusRequest;
 import com.nigahae.tourcourse.domain.TourCourseItem;
 import com.nigahae.tourcourse.domain.TourCourseItemCategory;
+import com.nigahae.tourcourse.config.EncryptedTourCoursePasswordEncoder;
 import com.nigahae.tourcourse.repository.TourCourseRepository;
 import com.nigahae.tourcourse.repository.TourSpotReferenceRepository;
 import com.nigahae.tourcourse.repository.NearbyPlaceReferenceRepository;
@@ -56,6 +57,8 @@ public class TourCourseService {
     private final NearbyPlaceReferenceRepository nearbyPlaceReferenceRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    @org.springframework.beans.factory.annotation.Autowired
+    private EncryptedTourCoursePasswordEncoder encryptedPasswordEncoder;
 
     @Transactional(readOnly = true)
     public VerifyTourCoursePasswordResponse verifyPassword(Long tourCourseId, String password) {
@@ -78,6 +81,10 @@ public class TourCourseService {
         validateCourseId(tourCourseId);
         TourCourse course = tourCourseRepository.findById(tourCourseId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TOUR_COURSE_NOT_FOUND));
+        // Only shared courses (or administrator-curated featured examples) are public.
+        if (!course.isShareYn() && !course.isFeaturedYn()) {
+            throw new CustomException(ErrorCode.TOUR_COURSE_FORBIDDEN);
+        }
         if (course.isShareYn()) {
             boolean valid = courseAccessToken != null
                     && jwtTokenProvider.validateToken(courseAccessToken, JwtTokenProvider.COURSE_ACCESS);
@@ -279,7 +286,15 @@ public class TourCourseService {
                 .stream()
                 .map(TourCourseItemDetailResponse::from)
                 .toList();
-        return TourCourseDetailResponse.from(course, items);
+        String sharedPassword = null;
+        if (course.getSharedPassword() != null) {
+            try {
+                sharedPassword = encryptedPasswordEncoder.decrypt(course.getSharedPassword());
+            } catch (RuntimeException ignored) {
+                // Existing BCrypt values cannot be decrypted; they must be reset by the owner.
+            }
+        }
+        return TourCourseDetailResponse.from(course, items, sharedPassword);
     }
 
     private void validateUpdateRequest(UpdateTourCourseRequest request) {
