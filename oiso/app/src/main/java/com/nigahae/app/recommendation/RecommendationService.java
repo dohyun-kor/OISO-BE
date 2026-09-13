@@ -8,10 +8,12 @@ import com.nigahae.common.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -26,8 +28,11 @@ public class RecommendationService {
     public RecommendationResponse recommend(RecommendationRequest request) {
         try {
             log.info("Calling recommendation server: baseUrl={}", baseUrl);
-            CommonResponse<RecommendationResponse> response = restClientBuilder.baseUrl(baseUrl).build()
+            CommonResponse<RecommendationResponse> response = restClientBuilder
+                    .requestFactory(new SimpleClientHttpRequestFactory())
+                    .baseUrl(baseUrl).build()
                     .post().uri("/api/v1/recommendations/courses")
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
