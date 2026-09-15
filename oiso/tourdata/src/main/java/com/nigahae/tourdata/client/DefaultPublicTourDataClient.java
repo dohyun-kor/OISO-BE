@@ -116,6 +116,15 @@ public class DefaultPublicTourDataClient implements PublicTourDataClient {
         return results;
     }
 
+    @Override
+    public JsonNode fetchDetailInfo(Long contentId, Long contentTypeId) {
+        validateServiceKey();
+        JsonNode body = requestPage(buildDetailInfoUri(contentId, contentTypeId, 1));
+        JsonNode items = body.path("items").path("item");
+        if (items.isArray()) return items.isEmpty() ? objectMapper.createObjectNode() : items.get(0);
+        return items.isObject() ? items : objectMapper.createObjectNode();
+    }
+
     private List<TourContentPayload> fetchByContentType(String contentTypeId) {
         List<TourContentPayload> results = new ArrayList<>();
         int pageNo = 1;

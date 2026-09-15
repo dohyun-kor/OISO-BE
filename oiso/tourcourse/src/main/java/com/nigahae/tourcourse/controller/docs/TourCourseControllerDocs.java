@@ -461,7 +461,7 @@ public interface TourCourseControllerDocs {
 
     @Operation(
             summary = "관광 코스 생성",
-            description = "인증된 사용자가 관광지와 주변 식당·숙소를 조합해 1~10개 항목의 다일 관광 코스를 생성합니다. dayNumber와 각 일차의 itemOrder는 1부터 연속이어야 합니다.",
+            description = "인증된 사용자가 관광지와 주변 식당·숙소를 조합해 1~25개 항목의 다일 관광 코스를 생성합니다. dayNumber와 각 일차의 itemOrder는 1부터 연속이어야 합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "관광 코스 생성 성공",
                             content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """

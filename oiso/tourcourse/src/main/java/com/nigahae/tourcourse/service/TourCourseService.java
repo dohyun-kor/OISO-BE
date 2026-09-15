@@ -42,7 +42,7 @@ import java.util.Map;
 public class TourCourseService {
 
     private static final int MAX_TITLE_LENGTH = 20;
-    private static final int MAX_ITEM_COUNT = 10;
+    private static final int MAX_ITEM_COUNT = 25;
     private static final String PASSWORD_PATTERN = "\\d{1,5}";
     private static final int MAX_PAGE_SIZE = 100;
     private static final int ITEM_ORDER_OFFSET = 1_000;

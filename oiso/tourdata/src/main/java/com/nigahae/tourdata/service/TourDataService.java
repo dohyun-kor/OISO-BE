@@ -18,6 +18,9 @@ import com.nigahae.tourdata.repository.TourSpotRepository;
 import com.nigahae.tourdata.repository.TourSpotNearbyPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,6 +52,8 @@ public class TourDataService implements TourDetailRefresher {
     private final FestivalInfoRepository festivalInfoRepository;
     private final AccommodationRoomStore accommodationRoomStore;
     private final TourDataExecutionRepository executionRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
 
     public TourDataResult refreshTourSpots() {
         return execute(TourDataJobType.TOUR_SPOTS, () -> {
@@ -81,6 +86,29 @@ public class TourDataService implements TourDetailRefresher {
         });
     }
 
+    /** 기존에 저장된 주변 장소를 기준으로 상세정보만 재수집한다. */
+    public TourDataResult refreshNearbyPlaceDetails() {
+        return execute(TourDataJobType.TOUR_SPOTS, () -> {
+            int processed = 0;
+            Map<Long, TourContentPayload> cache = new HashMap<>();
+            for (TourSpotNearbyPlace place : nearbyPlaceRepository.findAll()) {
+                if (!"ACCOMMODATION".equalsIgnoreCase(place.getCategory())) continue;
+                if (place.getContentId() == null) continue;
+                TourContentPayload detail = nearbyContentDetail(
+                        new TourContentPayload(String.valueOf(place.getContentId()),
+                                String.valueOf(place.getContentTypeId()), place.getName(), null, null,
+                                place.getAddress(), place.getMapX() == null ? null : String.valueOf(place.getMapX()),
+                                place.getMapY() == null ? null : String.valueOf(place.getMapY()),
+                                place.getImg(), place.getOverview(), place.getHomepageUrl(), null, null), cache);
+                JsonNode detailInfo = publicTourDataClient.fetchDetailInfo(
+                        place.getContentId(), place.getContentTypeId());
+                saveNearbyPlaceDetail(place.getNearbyPlaceId(), detailInfo);
+                processed++;
+            }
+            return TourDataResult.success(processed);
+        });
+    }
+
     private int refreshNearbyPlaces(List<TourSpot> tourSpots, List<TourContentPayload> candidates) {
         int processedCount = 0;
         Map<Long, TourContentPayload> detailCache = new HashMap<>();
@@ -104,14 +132,79 @@ public class TourDataService implements TourDetailRefresher {
                             .findBySpotIdAndContentId(tourSpot.getSpotId(), contentId)
                             .orElseGet(() -> TourSpotNearbyPlace.create(tourSpot.getSpotId(), category, payload));
                     place.update(category, payload);
-                    TourContentPayload detail = contentDetail(payload, detailCache);
+                    // 주변 식당·숙소는 목록 응답에 상세 필드가 없을 수 있으므로
+                    // overview 유무와 관계없이 detailCommon2를 조회한다.
+                    TourContentPayload detail = nearbyContentDetail(payload, detailCache);
                     if (detail != payload) place.update(category, detail);
-                    nearbyPlaceRepository.save(place);
+                    TourSpotNearbyPlace savedPlace = nearbyPlaceRepository.save(place);
+                    JsonNode detailInfo = publicTourDataClient.fetchDetailInfo(
+                            savedPlace.getContentId(), savedPlace.getContentTypeId());
+                    saveNearbyPlaceDetail(savedPlace.getNearbyPlaceId(), detailInfo);
                     processedCount++;
                 }
             }
         }
         return processedCount;
+    }
+
+    private void saveNearbyPlaceDetail(Long nearbyPlaceId, JsonNode n) {
+        if (nearbyPlaceId == null || n == null || n.isMissingNode() || n.isNull()) return;
+        try {
+            jdbcTemplate.update("""
+                    INSERT INTO public."NearbyPlaceDetail"
+                    (tour_spot_nearby_course_id, open_time, rest_date, reservation_info,
+                     inquiry_info, parking_info, pet_info, first_menu, treat_menu,
+                     first_menu_price, treat_menu_price, menu_source, menu_updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+                    ON CONFLICT (tour_spot_nearby_course_id) DO UPDATE SET
+                      open_time=COALESCE(EXCLUDED.open_time, "NearbyPlaceDetail".open_time),
+                      rest_date=COALESCE(EXCLUDED.rest_date, "NearbyPlaceDetail".rest_date),
+                      reservation_info=COALESCE(EXCLUDED.reservation_info, "NearbyPlaceDetail".reservation_info),
+                      inquiry_info=COALESCE(EXCLUDED.inquiry_info, "NearbyPlaceDetail".inquiry_info),
+                      parking_info=COALESCE(EXCLUDED.parking_info, "NearbyPlaceDetail".parking_info),
+                      pet_info=COALESCE(EXCLUDED.pet_info, "NearbyPlaceDetail".pet_info),
+                      first_menu=COALESCE(EXCLUDED.first_menu, "NearbyPlaceDetail".first_menu),
+                      treat_menu=COALESCE(EXCLUDED.treat_menu, "NearbyPlaceDetail".treat_menu),
+                      first_menu_price=COALESCE(EXCLUDED.first_menu_price, "NearbyPlaceDetail".first_menu_price),
+                      treat_menu_price=COALESCE(EXCLUDED.treat_menu_price, "NearbyPlaceDetail".treat_menu_price),
+                      menu_source=COALESCE(EXCLUDED.menu_source, "NearbyPlaceDetail".menu_source),
+                      menu_updated_at=now()
+                    """,
+                    first(n,"usetime", "usetimeid"), first(n,"restdate", "restdateid"), first(n,"reservationinfo", "reservation"),
+                    first(n,"infocenterfood", "infocenter"), first(n,"parkingfood", "parking"), first(n,"chkpet", "petinfo"),
+                    text(n,"firstmenu"), text(n,"treatmenu"), number(n,"firstmenuprice"),
+                    number(n,"treatmenuprice"), "KOREA_TOUR_API");
+        } catch (Exception e) {
+            log.error("Nearby place detail ingest failed. nearbyPlaceId={}, payload={}, message={}",
+                    nearbyPlaceId, n, e.getMessage(), e);
+        }
+    }
+
+    private TourContentPayload nearbyContentDetail(TourContentPayload payload, Map<Long, TourContentPayload> cache) {
+        Long contentId = payload.contentIdAsLong();
+        if (cache.containsKey(contentId)) return cache.get(contentId);
+        try {
+            TourContentPayload detail = publicTourDataClient.fetchTourContentDetail(contentId);
+            TourContentPayload result = detail == null ? payload : detail;
+            cache.put(contentId, result);
+            return result;
+        } catch (TourApiException e) {
+            log.warn("Nearby place detail fetch failed. contentId={}, message={}", contentId, e.getMessage());
+            cache.put(contentId, payload);
+            return payload;
+        }
+    }
+
+    private static String text(JsonNode node, String key) {
+        JsonNode v = node.get(key); return v == null || v.isNull() || v.asText().isBlank() ? null : v.asText();
+    }
+    private static String first(JsonNode node, String... keys) {
+        for (String key : keys) { String value = text(node, key); if (value != null) return value; }
+        return null;
+    }
+    private static Long number(JsonNode node, String key) {
+        String v = text(node,key); if (v == null) return null;
+        try { return Long.valueOf(v.replaceAll("[^0-9-]", "")); } catch (Exception e) { return null; }
     }
 
     private TourContentPayload contentDetail(

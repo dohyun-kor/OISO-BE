@@ -1,0 +1,2 @@
+-- restaurant_menu_seed.sql에 통합됨.
+-- 테스트 시드와 중복 실행하지 않도록 별도 UPDATE는 제거했다.
