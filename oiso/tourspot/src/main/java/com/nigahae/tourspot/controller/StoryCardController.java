@@ -6,6 +6,8 @@ import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.SavedStoryCardListResponse;
 import com.nigahae.tourspot.dto.SavedStoryCardResponse;
 import com.nigahae.tourspot.dto.StoryCardDetailResponse;
+import com.nigahae.tourspot.dto.StoryCardSummaryResponse;
+import java.util.List;
 import com.nigahae.tourspot.service.StoryCardService;
 import com.nigahae.user.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class StoryCardController {
 
     private final StoryCardService storyCardService;
+
+    @GetMapping("/featured")
+    @Operation(summary = "홈 화면 스토리카드 랜덤 조회",
+            description = "로그인 없이 전체 스토리카드 중 중복 없이 랜덤 조회합니다. 기본 5개, 최대 20개이며 데이터가 부족하면 존재하는 개수만 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "랜덤 스토리카드 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "size는 1~20 사이여야 합니다.")
+    })
+    public CommonResponse<List<StoryCardSummaryResponse>> getFeatured(
+            @RequestParam(defaultValue = "5") @Min(1) @Max(20) int size
+    ) {
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "추천 스토리카드 조회에 성공했습니다.",
+                storyCardService.getRandomCards(size));
+    }
 
     @GetMapping("/tour-spots/{spotId}")
     @Operation(

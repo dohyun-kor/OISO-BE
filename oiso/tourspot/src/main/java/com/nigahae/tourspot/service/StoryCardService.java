@@ -5,6 +5,8 @@ import com.nigahae.common.exception.CustomException;
 import com.nigahae.tourspot.dto.SavedStoryCardListResponse;
 import com.nigahae.tourspot.dto.SavedStoryCardResponse;
 import com.nigahae.tourspot.dto.StoryCardDetailResponse;
+import com.nigahae.tourspot.dto.StoryCardSummaryResponse;
+import java.util.List;
 import com.nigahae.tourspot.repository.StoryCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,13 @@ import java.util.Map;
 public class StoryCardService {
 
     private final StoryCardRepository storyCardRepository;
+
+    public List<StoryCardSummaryResponse> getRandomCards(int size) {
+        if (size < 1 || size > 20) {
+            throw new CustomException(ErrorCode.VALIDATION_ERROR, Map.of("field", "size"));
+        }
+        return storyCardRepository.findRandom(size);
+    }
 
     @Transactional
     public SavedStoryCardResponse save(Long userId, Long storyId) {

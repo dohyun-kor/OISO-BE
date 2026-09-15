@@ -2,6 +2,7 @@ package com.nigahae.tourspot.repository;
 
 import com.nigahae.tourspot.dto.SavedStoryCardListResponse;
 import com.nigahae.tourspot.dto.StoryCardDetailResponse;
+import com.nigahae.tourspot.dto.StoryCardSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -15,6 +16,21 @@ import java.util.Optional;
 public class JdbcStoryCardRepository implements StoryCardRepository {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+
+    @Override
+    public List<StoryCardSummaryResponse> findRandom(int size) {
+        return jdbcTemplate.query("""
+                SELECT story.story_id, story.spot_id, spot.name AS tour_spot_name,
+                       story.title, story.sub_title, story.summary, story.img
+                FROM public."TourStory" story
+                JOIN public."TourSpot" spot ON spot.spot_id = story.spot_id
+                ORDER BY random()
+                LIMIT :limit
+                """, new MapSqlParameterSource("limit", size), (rs, rowNumber) ->
+                new StoryCardSummaryResponse(rs.getLong("story_id"), rs.getLong("spot_id"),
+                        rs.getString("tour_spot_name"), rs.getString("title"),
+                        rs.getString("sub_title"), rs.getString("summary"), rs.getString("img")));
+    }
 
     @Override
     public boolean existsById(Long storyId) {
