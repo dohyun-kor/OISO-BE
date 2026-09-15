@@ -61,4 +61,13 @@ class MemoControllerTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.AUTH_ERROR);
     }
+    @Test
+    void rejectsUnauthenticatedNearbyMemoOperations() {
+        assertThatThrownBy(() -> controller.saveNearbyMemo(null, 101L, new TourSpotMemoRequest("memo")))
+                .isInstanceOf(CustomException.class);
+        assertThatThrownBy(() -> controller.getNearbyMemo(null, 101L))
+                .isInstanceOf(CustomException.class);
+        assertThatThrownBy(() -> controller.deleteNearbyMemo(null, 101L))
+                .isInstanceOf(CustomException.class);
+    }
 }

@@ -21,11 +21,11 @@ class NearbyPlaceControllerTest {
                 null, "경주시", null, null, 39,
                 129.1, 35.1, null, null, null, null,
                 null, null, null, null);
-        when(service.getNearbyPlace(101L)).thenReturn(response);
+        when(service.getNearbyPlace(101L, null)).thenReturn(response);
 
         var result = new NearbyPlaceController(service).getNearbyPlace(101L);
 
         assertThat(result.data()).isEqualTo(response);
-        verify(service).getNearbyPlace(101L);
+        verify(service).getNearbyPlace(101L, null);
     }
 }

@@ -12,5 +12,9 @@ public interface TourSpotMemoRepository {
 
     boolean delete(Long userId, Long spotId);
 
+    TourSpotMemoResponse.Memo saveNearby(Long userId, Long nearbyPlaceId, String content, String imageUrl);
+    Optional<TourSpotMemoResponse.Memo> findNearby(Long userId, Long nearbyPlaceId);
+    boolean deleteNearby(Long userId, Long nearbyPlaceId);
+
     TourSpotMemoListResponse findAll(Long userId, int page, int size);
 }

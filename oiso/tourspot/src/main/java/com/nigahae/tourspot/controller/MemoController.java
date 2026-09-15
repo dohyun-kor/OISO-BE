@@ -4,6 +4,7 @@ import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.exception.CustomException;
 import com.nigahae.common.response.CommonResponse;
 import com.nigahae.tourspot.dto.TourSpotMemoRequest;
+import com.nigahae.tourspot.dto.NearbyPlaceMemoResponse;
 import com.nigahae.tourspot.dto.TourSpotMemoResponse;
 import com.nigahae.tourspot.dto.TourSpotMemoListResponse;
 import com.nigahae.tourspot.exception.InvalidTourSpotIdException;
@@ -32,13 +33,13 @@ import jakarta.validation.constraints.Min;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/memos")
-@Tag(name = "메모", description = "로그인한 사용자만 볼 수 있는 관광지별 개인 메모 API")
+@Tag(name = "메모", description = "로그인한 사용자만 볼 수 있는 관광지·식당·숙소별 개인 메모 API")
 public class MemoController {
 
     private final TourSpotService tourSpotService;
 
     @GetMapping
-    @Operation(summary = "내 메모 목록 조회", description = "현재 로그인한 사용자가 작성한 관광지 메모를 최근 수정 순으로 조회합니다.")
+    @Operation(summary = "내 메모 목록 조회", description = "현재 로그인한 사용자가 작성한 관광지·식당·숙소 메모를 최근 수정 순으로 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "메모 목록 조회 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 페이지 값"),
@@ -105,6 +106,40 @@ public class MemoController {
         validateAuthenticatedUser(user);
         return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "관광지 메모가 삭제되었습니다.",
                 tourSpotService.deleteMemo(user.userId(), parseSpotId(spotId)));
+    }
+
+    @PutMapping("/nearby-places/{nearbyPlaceId}")
+    @Operation(summary = "식당·숙소 메모 저장", description = "로그인한 사용자 본인의 메모를 저장합니다.")
+    public CommonResponse<NearbyPlaceMemoResponse> saveNearbyMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable @Min(1) Long nearbyPlaceId,
+            @Valid @RequestBody TourSpotMemoRequest request
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "식당·숙소 메모 저장에 성공했습니다.",
+                tourSpotService.saveNearbyMemo(user.userId(), nearbyPlaceId, request.content(), request.imageUrl()));
+    }
+
+    @GetMapping("/nearby-places/{nearbyPlaceId}")
+    @Operation(summary = "식당·숙소 메모 조회", description = "로그인한 사용자 본인의 메모를 조회합니다.")
+    public CommonResponse<NearbyPlaceMemoResponse> getNearbyMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable @Min(1) Long nearbyPlaceId
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "식당·숙소 메모 조회에 성공했습니다.",
+                tourSpotService.getNearbyMemo(user.userId(), nearbyPlaceId));
+    }
+
+    @DeleteMapping("/nearby-places/{nearbyPlaceId}")
+    @Operation(summary = "식당·숙소 메모 삭제", description = "로그인한 사용자 본인의 메모를 삭제합니다.")
+    public CommonResponse<NearbyPlaceMemoResponse> deleteNearbyMemo(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable @Min(1) Long nearbyPlaceId
+    ) {
+        validateAuthenticatedUser(user);
+        return new CommonResponse<>(CommonResponse.SUCCESS_CODE, "식당·숙소 메모 삭제에 성공했습니다.",
+                tourSpotService.deleteNearbyMemo(user.userId(), nearbyPlaceId));
     }
 
     private void validateAuthenticatedUser(AuthenticatedUser user) {
