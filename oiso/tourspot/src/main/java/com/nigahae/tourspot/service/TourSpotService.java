@@ -7,6 +7,7 @@ import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourspot.domain.TourSpot;
 import com.nigahae.tourspot.domain.NearbyPlaceCategory;
 import com.nigahae.tourspot.dto.DeleteSavedTourSpotResponse;
+import com.nigahae.tourspot.dto.NearbyPlaceMemoResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceListResponse;
 import com.nigahae.tourspot.dto.NearbyPlaceResponse;
 import com.nigahae.tourspot.dto.SaveTourSpotResponse;
@@ -59,6 +60,26 @@ public class TourSpotService {
                 spotId,
                 tourSpotMemoRepository.save(userId, spotId, content, imageUrl)
         );
+    }
+
+    @Transactional
+    public NearbyPlaceMemoResponse saveNearbyMemo(Long userId, Long nearbyPlaceId, String content, String imageUrl) {
+        getNearbyPlace(nearbyPlaceId, userId);
+        return new NearbyPlaceMemoResponse(nearbyPlaceId,
+                tourSpotMemoRepository.saveNearby(userId, nearbyPlaceId, content, imageUrl));
+    }
+
+    public NearbyPlaceMemoResponse getNearbyMemo(Long userId, Long nearbyPlaceId) {
+        getNearbyPlace(nearbyPlaceId, userId);
+        return new NearbyPlaceMemoResponse(nearbyPlaceId,
+                tourSpotMemoRepository.findNearby(userId, nearbyPlaceId).orElse(null));
+    }
+
+    @Transactional
+    public NearbyPlaceMemoResponse deleteNearbyMemo(Long userId, Long nearbyPlaceId) {
+        getNearbyPlace(nearbyPlaceId, userId);
+        tourSpotMemoRepository.deleteNearby(userId, nearbyPlaceId);
+        return new NearbyPlaceMemoResponse(nearbyPlaceId, null);
     }
 
     public TourSpotMemoListResponse getMemos(Long userId, int page, int size) {

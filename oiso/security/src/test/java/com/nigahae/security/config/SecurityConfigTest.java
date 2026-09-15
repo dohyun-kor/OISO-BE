@@ -85,4 +85,12 @@ class SecurityConfigTest {
         assertThat(SecurityConfig.nearbyPlaceReadRequestMatcher().matches(getNearbyWithNonNumericSpotId)).isFalse();
         assertThat(SecurityConfig.nearbyPlaceDetailReadRequestMatcher().matches(getGlobalDetailWithNonNumericId)).isFalse();
     }
+    @Test
+    void featuredStoryCardsPermitOnlyPublicGetPath() {
+        var matcher = SecurityConfig.storyCardFeaturedReadRequestMatcher();
+        assertThat(matcher.matches(new MockHttpServletRequest("GET", "/api/v1/story-cards/featured"))).isTrue();
+        assertThat(matcher.matches(new MockHttpServletRequest("POST", "/api/v1/story-cards/featured"))).isFalse();
+        assertThat(matcher.matches(new MockHttpServletRequest("GET", "/api/v1/story-cards/saved"))).isFalse();
+        assertThat(matcher.matches(new MockHttpServletRequest("GET", "/api/v1/story-cards/3/save"))).isFalse();
+    }
 }

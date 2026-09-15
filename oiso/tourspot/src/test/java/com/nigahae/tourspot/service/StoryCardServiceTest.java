@@ -62,4 +62,12 @@ class StoryCardServiceTest {
 
         assertThat(service.getDetailBySpotId(7L, 24L)).isEqualTo(expected);
     }
+    @Test
+    void randomCardsAllowEmptyResultsAndValidateSize() {
+        when(repository.findRandom(5)).thenReturn(List.of());
+        assertThat(service.getRandomCards(5)).isEmpty();
+        verify(repository).findRandom(5);
+        assertThatThrownBy(() -> service.getRandomCards(0)).isInstanceOf(CustomException.class);
+        assertThatThrownBy(() -> service.getRandomCards(21)).isInstanceOf(CustomException.class);
+    }
 }

@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(storyCardFeaturedReadRequestMatcher()).permitAll()
                         .requestMatchers(
                                 "/api/v1/tour-courses/*/password/verify",
                                 "/api/v1/tour-courses/*/public",
@@ -88,6 +89,12 @@ public class SecurityConfig {
                         .successHandler(successHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    static RequestMatcher storyCardFeaturedReadRequestMatcher() {
+        return request -> HttpMethod.GET.matches(request.getMethod())
+                && "/api/v1/story-cards/featured".equals(
+                        request.getRequestURI().substring(request.getContextPath().length()));
     }
 
     static RequestMatcher festivalReadRequestMatcher() {

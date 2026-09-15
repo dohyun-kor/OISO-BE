@@ -202,6 +202,43 @@ class TourSpotServiceTest {
                 .isEqualTo(NearbyPlaceCategory.RESTAURANT);
     }
 
+    @Test
+    void savesAndReadsPersonalNearbyMemo() {
+        NearbyPlaceRow row = mock(NearbyPlaceRow.class);
+        when(row.getCategory()).thenReturn("RESTAURANT");
+        when(tourSpotQueryRepository.findNearbyPlace(101L, 7L)).thenReturn(Optional.of(row));
+        var now = OffsetDateTime.now();
+        var memo = new TourSpotMemoResponse.Memo(12L, "good food", "image.jpg", now, now);
+        when(tourSpotMemoRepository.saveNearby(7L, 101L, "good food", "image.jpg")).thenReturn(memo);
+        when(tourSpotMemoRepository.findNearby(7L, 101L)).thenReturn(Optional.of(memo));
+        assertThat(tourSpotService.saveNearbyMemo(7L, 101L, "good food", "image.jpg").memo()).isEqualTo(memo);
+        assertThat(tourSpotService.getNearbyMemo(7L, 101L).memo()).isEqualTo(memo);
+        verify(tourSpotMemoRepository).saveNearby(7L, 101L, "good food", "image.jpg");
+    }
+
+    @Test
+    void missingNearbyMemoIsNullAndDeleteUsesCurrentUser() {
+        NearbyPlaceRow row = mock(NearbyPlaceRow.class);
+        when(row.getCategory()).thenReturn("ACCOMMODATION");
+        when(tourSpotQueryRepository.findNearbyPlace(102L, 8L)).thenReturn(Optional.of(row));
+        when(tourSpotMemoRepository.findNearby(8L, 102L)).thenReturn(Optional.empty());
+        assertThat(tourSpotService.getNearbyMemo(8L, 102L).memo()).isNull();
+        assertThat(tourSpotService.deleteNearbyMemo(8L, 102L).memo()).isNull();
+        verify(tourSpotMemoRepository).deleteNearby(8L, 102L);
+    }
+
+    @Test
+    void rejectsMemoOperationsForUnknownNearbyPlace() {
+        when(tourSpotQueryRepository.findNearbyPlace(999L, 7L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> tourSpotService.saveNearbyMemo(7L, 999L, "memo", null))
+                .isInstanceOf(CustomException.class);
+        assertThatThrownBy(() -> tourSpotService.getNearbyMemo(7L, 999L))
+                .isInstanceOf(CustomException.class);
+        assertThatThrownBy(() -> tourSpotService.deleteNearbyMemo(7L, 999L))
+                .isInstanceOf(CustomException.class);
+        org.mockito.Mockito.verifyNoInteractions(tourSpotMemoRepository);
+    }
+
     private TourSpot tourSpot(Long id, String name) {
         return TourSpot.builder()
                 .spotId(id)

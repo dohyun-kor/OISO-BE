@@ -13,6 +13,8 @@ public record TourSpotMemoListResponse(
     public record Item(
             Long memoId,
             Long spotId,
+            Long nearbyPlaceId,
+            String category,
             String spotName,
             String spotImage,
             String content,

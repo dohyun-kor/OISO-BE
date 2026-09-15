@@ -63,4 +63,18 @@ class StoryCardControllerTest {
         assertThat(response.data()).isEqualTo(data);
         verify(service).getDetailBySpotId(7L, 24L);
     }
+    @Test
+    void featuredEndpointWorksWithoutAuthenticationAndUsesDefaultSize() throws Exception {
+        when(service.getRandomCards(5)).thenReturn(List.of(
+                new com.nigahae.tourspot.dto.StoryCardSummaryResponse(
+                        3L, 24L, "spot", "title", "subtitle", "summary", "image.jpg")));
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
+                .standaloneSetup(controller).build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/v1/story-cards/featured"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data[0].storyId").value(3))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data[0].imageUrl").value("image.jpg"));
+        verify(service).getRandomCards(5);
+    }
 }
