@@ -491,6 +491,10 @@ CREATE TABLE IF NOT EXISTS public."NearbyPlaceDetail"
 
     first_menu                 text NULL,
     treat_menu                 text NULL,
+    first_menu_price           int8 NULL,
+    treat_menu_price           int8 NULL,
+    menu_source                text NULL,
+    menu_updated_at            timestamptz NULL,
     packing_info               text NULL,
     kids_facility_info         text NULL,
 
@@ -641,6 +645,23 @@ CREATE TABLE IF NOT EXISTS public."TourCourseItem"
             OR transport_type IN ('WALK', 'BIKE', 'CAR')
         )
 );
+
+CREATE TABLE IF NOT EXISTS public."NearbyPlaceMenu"
+(
+    nearby_place_menu_id          bigserial PRIMARY KEY,
+    tour_spot_nearby_course_id    int8 NOT NULL,
+    menu_name                     text NOT NULL,
+    price                         int8 NULL,
+    image_url                     text NULL,
+    source                        text NULL,
+    updated_at                    timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT "FK_NEARBYPACEMENU_PLACE" FOREIGN KEY (tour_spot_nearby_course_id)
+        REFERENCES public."TourSpotNearbyPlace" (tour_spot_nearby_course_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "IDX_NEARBYPACEMENU_PLACE"
+    ON public."NearbyPlaceMenu" (tour_spot_nearby_course_id);
+CREATE UNIQUE INDEX IF NOT EXISTS "UK_NEARBYPACEMENU_PLACE_NAME"
+    ON public."NearbyPlaceMenu" (tour_spot_nearby_course_id, menu_name);
 
 ALTER TABLE public."TourCourseItem"
     DROP CONSTRAINT IF EXISTS "CK_TOURCOURSEITEM_FIRST_TRANSPORT";

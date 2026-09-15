@@ -5,6 +5,7 @@ import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.domain.TourDataJobType;
 import com.nigahae.tourdata.service.TourDataResult;
 import com.nigahae.tourdata.service.TourDataRunner;
+import com.nigahae.tourdata.service.TourDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,6 +26,7 @@ public class TourDataController {
 
     private final TourDataRunner tourDataRunner;
     private final TourDetailRefresher tourDetailRefresher;
+    private final TourDataService tourDataService;
 
     @Operation(summary = "관광지 데이터 동기화", description = "지역 기반 관광지 조회 결과를 관광지 데이터에 반영합니다.")
     @ApiResponses({
@@ -36,6 +38,12 @@ public class TourDataController {
     @PostMapping("/tour-spots/refresh")
     public ResponseEntity<TourDataResult> refreshTourSpots() {
         return response(tourDataRunner.run(TourDataJobType.TOUR_SPOTS, "manual-api"));
+    }
+
+    @Operation(summary = "주변 식당·숙소 상세정보 수집", description = "한국관광공사 목록과 상세 API를 다시 호출해 주변 식당·숙소 및 상세정보를 저장합니다.")
+    @PostMapping("/nearby/refresh")
+    public ResponseEntity<TourDataResult> refreshNearbyPlaces() {
+        return response(tourDataService.refreshNearbyPlaceDetails());
     }
 
     @Operation(summary = "축제 데이터 동기화", description = "축제 조회 결과를 축제 정보 데이터에 반영합니다.")

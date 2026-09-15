@@ -2,6 +2,7 @@ package com.nigahae.tourdata.client;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public interface PublicTourDataClient {
 
@@ -12,4 +13,6 @@ public interface PublicTourDataClient {
     TourContentPayload fetchTourContentDetail(Long contentId);
 
     List<AccommodationRoomPayload> fetchAccommodationRooms(Long contentId, Long contentTypeId);
+
+    JsonNode fetchDetailInfo(Long contentId, Long contentTypeId);
 }
