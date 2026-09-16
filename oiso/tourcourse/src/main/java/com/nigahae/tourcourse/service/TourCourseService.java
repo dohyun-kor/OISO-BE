@@ -183,7 +183,11 @@ public class TourCourseService {
                 .collect(java.util.stream.Collectors.toSet());
 
         if (!existingItems.isEmpty()) {
-            tourCourseRepository.offsetItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
+            // Flush managed entities so both the database and Hibernate snapshots use
+            // temporary orders, including items whose final order will not change.
+            existingItems.values().forEach(item ->
+                    item.updateOrder(item.getItemOrder() + ITEM_ORDER_OFFSET));
+            tourCourseRepository.flush();
         }
         course.getItems().removeIf(item ->
                 item.getItemId() != null && !retainedItemIds.contains(item.getItemId()));
@@ -196,14 +200,11 @@ public class TourCourseService {
             } else {
                 existingItems.get(item.itemId()).update(
                         item.category(), item.spotId(), item.nearbyPlaceId(),
-                        item.dayNumber(), item.itemOrder() + ITEM_ORDER_OFFSET, item.transportType());
+                        item.dayNumber(), item.itemOrder(), item.transportType());
             }
         }
 
         tourCourseRepository.flush();
-        if (!existingItems.isEmpty()) {
-            tourCourseRepository.restoreItemOrders(tourCourseId, ITEM_ORDER_OFFSET);
-        }
         return toDetailResponse(course, userId);
     }
 
@@ -354,16 +355,25 @@ public class TourCourseService {
             if (!dayOrders.add(item.itemOrder())) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_ORDER_DUPLICATED,
+                        itemPath + ".itemOrder: " + item.dayNumber() + "일차의 " + item.itemOrder() + "번 순서가 중복되었습니다.",
                         Map.of("field", itemPath + ".itemOrder"));
             }
-            if (item.itemId() != null && (item.itemId() < 1 || !itemIds.add(item.itemId()))) {
+            if (item.itemId() != null && item.itemId() < 1) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        itemPath + ".itemId: 기존 항목 ID는 1 이상이어야 하며, 새 장소는 null로 입력해야 합니다.",
+                        Map.of("field", itemPath + ".itemId", "itemId", item.itemId()));
+            }
+            if (item.itemId() != null && !itemIds.add(item.itemId())) {
+                throw new CustomException(
+                        ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        itemPath + ".itemId: 동일한 기존 항목 ID를 중복해서 입력할 수 없습니다.",
                         Map.of("field", itemPath + ".itemId", "itemId", item.itemId()));
             }
             if (item.itemOrder() == 1 && item.transportType() != null) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_FIRST_ITEM_MOVEMENT,
+                        itemPath + ".transportType: 각 일차의 첫 번째 장소는 이동 수단을 null로 입력해야 합니다.",
                         Map.of("field", itemPath + ".transportType"));
             }
             if (item.itemOrder() > 1 && item.transportType() == null) {
@@ -382,6 +392,7 @@ public class TourCourseService {
                 if (!entry.getValue().contains(expected)) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_ORDER_NOT_CONSECUTIVE,
+                        "itemOrder: " + entry.getKey() + "일차의 " + expected + "번 순서가 누락되었습니다. 순서는 1부터 연속이어야 합니다.",
                             Map.of("field", "itemOrder", "dayNumber", entry.getKey()));
                 }
             }
@@ -418,7 +429,7 @@ public class TourCourseService {
 
     private CustomException updateValidationException(String field, String message) {
         return new CustomException(
-                ErrorCode.INVALID_TOUR_COURSE_UPDATE, message, Map.of("field", field));
+                ErrorCode.INVALID_TOUR_COURSE_UPDATE, field + ": " + message, Map.of("field", field));
     }
 
     private void validateUpdatePlaces(List<UpdateTourCourseItemRequest> items) {
@@ -440,12 +451,15 @@ public class TourCourseService {
                     && !existingSpotIds.contains(item.spotId())) {
                 throw new CustomException(
                         ErrorCode.TOUR_SPOT_NOT_FOUND,
+                        "items[" + index + "].spotId: 관광지 ID " + item.spotId() + "에 해당하는 관광지가 없습니다.",
                         Map.of("field", "items[" + index + "].spotId", "spotId", item.spotId()));
             }
             if (item.category() != TourCourseItemCategory.TOUR_SPOT
                     && !existingNearbyPlaceIds.contains(item.nearbyPlaceId())) {
                 throw new CustomException(
                         ErrorCode.RESOURCE_NOT_FOUND,
+                        "items[" + index + "].nearbyPlaceId: 주변 장소 ID " + item.nearbyPlaceId()
+                                + "에 해당하는 식당·숙소가 없습니다. 주변 장소 조회 응답의 nearbyPlaceId를 확인해 주세요.",
                         Map.of("field", "items[" + index + "].nearbyPlaceId",
                                 "nearbyPlaceId", item.nearbyPlaceId()));
             }
@@ -461,6 +475,8 @@ public class TourCourseService {
             if (itemId != null && !existingItems.containsKey(itemId)) {
                 throw new CustomException(
                         ErrorCode.TOUR_COURSE_ITEM_NOT_BELONG,
+                        "items[" + index + "].itemId: 항목 ID " + itemId
+                                + "는 이 코스에 속하지 않습니다. 기존 항목은 코스 상세 조회의 itemId를, 새 장소는 null을 입력해 주세요.",
                         Map.of("field", "items[" + index + "].itemId", "itemId", itemId));
             }
         }
