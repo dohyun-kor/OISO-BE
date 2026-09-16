@@ -127,6 +127,11 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST,
             "이동시간은 0 이상이어야 합니다."
     ),
+    TOUR_COURSE_SAVE_CONFLICT(
+            4009,
+            HttpStatus.CONFLICT,
+            "관광 코스 저장 중 데이터 충돌이 발생했습니다."
+    ),
     INTERNAL_SERVER_ERROR(
             ErrorCategory.SERVER,
             ErrorDomain.COMMON,

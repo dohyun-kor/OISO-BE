@@ -7,7 +7,7 @@ import com.nigahae.common.constant.ErrorCode;
  *
  * @param code 애플리케이션 오류 코드
  * @param message 오류 메시지
- * @param data 오류 응답 데이터. 항상 {@code null}입니다.
+ * @param data 오류 필드 등 추가 정보. 추가 정보가 없으면 {@code null}입니다.
  */
 public record CommonError(int code, String message, Object data) {
 

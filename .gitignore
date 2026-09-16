@@ -62,6 +62,7 @@ out/
 .idea/**/aws.xml
 
 # Generated files
+/.tmp/
 .idea/**/contentModel.xml
 
 # Sensitive or high-churn files

@@ -87,6 +87,10 @@ public class TourCourseItem {
         this.transportType = transportType;
     }
 
+    public void updateOrder(int itemOrder) {
+        this.itemOrder = itemOrder;
+    }
+
     public void updateStatus(TourCourseItemStatus status) {
         this.status = status;
     }

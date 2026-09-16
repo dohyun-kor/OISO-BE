@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
@@ -111,26 +110,4 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
             @Param("userId") Long userId
     );
 
-    @Modifying(flushAutomatically = true)
-    @Query(value = """
-            update "TourCourseItem"
-            set item_order = item_order + :offset
-            where tour_course_id = :tourCourseId
-            """, nativeQuery = true)
-    void offsetItemOrders(
-            @Param("tourCourseId") Long tourCourseId,
-            @Param("offset") int offset
-    );
-
-    @Modifying(flushAutomatically = true)
-    @Query(value = """
-            update "TourCourseItem"
-            set item_order = item_order - :offset
-            where tour_course_id = :tourCourseId
-              and item_order > :offset
-            """, nativeQuery = true)
-    void restoreItemOrders(
-            @Param("tourCourseId") Long tourCourseId,
-            @Param("offset") int offset
-    );
 }

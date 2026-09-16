@@ -258,7 +258,7 @@ class TourCourseServiceTest {
     @Test
     void returnsEmptyCourseResult() {
         when(tourCourseRepository.findMyTourCourses(eq(7L), eq(""), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+                .thenAnswer(invocation -> new PageImpl<>(List.of(), invocation.getArgument(2), 0));
 
         var response = tourCourseService.getMyTourCourses(7L, 0, 10, "createdAt,desc", null);
 
@@ -393,8 +393,8 @@ class TourCourseServiceTest {
         assertThat(course.getTitle()).isEqualTo("수정된 코스");
         assertThat(course.getItems()).hasSize(2);
         assertThat(course.getItems()).noneMatch(item -> Long.valueOf(12L).equals(item.getItemId()));
-        verify(tourCourseRepository).offsetItemOrders(1L, 1_000);
-        verify(tourCourseRepository).restoreItemOrders(1L, 1_000);
+        assertThat(course.getItems()).extracting(TourCourseItem::getItemOrder)
+                .containsExactlyInAnyOrder(1, 2);
     }
 
     @Test
@@ -440,8 +440,36 @@ class TourCourseServiceTest {
         assertThatThrownBy(() -> tourCourseService.updateTourCourse(7L, 1L, request))
                 .isInstanceOfSatisfying(CustomException.class, exception -> {
                     assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_TOUR_COURSE_UPDATE);
-                    assertThat(exception.getMessage()).isEqualTo("관광 코스 제목은 필수입니다.");
+                    assertThat(exception.getMessage()).isEqualTo("title: 관광 코스 제목은 필수입니다.");
                     assertThat(exception.getData()).isEqualTo(Map.of("field", "title"));
+                });
+    }
+
+    @Test
+    void explainsMissingNearbyPlaceWithItsIdAndField() {
+        when(tourCourseRepository.findById(1L)).thenReturn(Optional.of(new TourCourse(7L, "코스", false, null)));
+        when(nearbyPlaceReferenceRepository.findExistingIds(List.of(3318L))).thenReturn(Set.of());
+        var request = new UpdateTourCourseRequest("코스", false, null, List.of(
+                new UpdateTourCourseItemRequest(null, TourCourseItemCategory.RESTAURANT,
+                        null, 3318L, 1, 1, null)));
+        assertThatThrownBy(() -> tourCourseService.updateTourCourse(7L, 1L, request))
+                .isInstanceOfSatisfying(CustomException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);
+                    assertThat(exception.getMessage()).contains("items[0].nearbyPlaceId", "3318", "없습니다");
+                    assertThat(exception.getData()).isEqualTo(Map.of("field", "items[0].nearbyPlaceId", "nearbyPlaceId", 3318L));
+                });
+    }
+
+    @Test
+    void explainsDuplicateItemIdSeparatelyFromForeignItem() {
+        when(tourCourseRepository.findById(1L)).thenReturn(Optional.of(new TourCourse(7L, "코스", false, null)));
+        var request = new UpdateTourCourseRequest("코스", false, null, List.of(
+                new UpdateTourCourseItemRequest(297L, 160L, 1, null),
+                new UpdateTourCourseItemRequest(297L, 265L, 2, TransportType.CAR)));
+        assertThatThrownBy(() -> tourCourseService.updateTourCourse(7L, 1L, request))
+                .isInstanceOfSatisfying(CustomException.class, exception -> {
+                    assertThat(exception.getMessage()).contains("items[1].itemId", "중복");
+                    assertThat(exception.getData()).isEqualTo(Map.of("field", "items[1].itemId", "itemId", 297L));
                 });
     }
 

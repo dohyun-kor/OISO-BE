@@ -1,5 +1,8 @@
 package com.nigahae.common.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.nigahae.common.constant.ErrorCode;
 import com.nigahae.common.error.CommonError;
 import jakarta.validation.ConstraintViolationException;
@@ -14,6 +17,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.Arrays;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -59,11 +65,62 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             MissingServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class,
-            HttpMessageNotReadableException.class
+            MethodArgumentTypeMismatchException.class
     })
     public ResponseEntity<CommonError> handleInvalidRequest(Exception exception) {
+        if (exception instanceof MissingServletRequestParameterException missing) {
+            return invalidField(missing.getParameterName(), "필수 요청 파라미터가 누락되었습니다.", Map.of());
+        }
+        if (exception instanceof MethodArgumentTypeMismatchException mismatch) {
+            return invalidField(mismatch.getName(), "요청 파라미터의 자료형이 올바르지 않습니다.", Map.of());
+        }
         return errorResponse(ErrorCode.VALIDATION_ERROR);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<CommonError> handleUnreadableBody(HttpMessageNotReadableException exception) {
+        Throwable cause = exception.getCause();
+        while (cause != null) {
+            if (cause instanceof MismatchedInputException mismatch) {
+                String field = jsonPath(mismatch);
+                Class<?> target = mismatch.getTargetType();
+                if (mismatch instanceof InvalidFormatException && target != null && target.isEnum()) {
+                    var allowed = Arrays.stream(target.getEnumConstants())
+                            .map(value -> ((Enum<?>) value).name()).toList();
+                    return invalidField(field, "허용된 값은 " + String.join(", ", allowed) + "입니다.",
+                            Map.of("allowedValues", allowed));
+                }
+                String expected = target == Integer.class || target == Long.class
+                        || target == int.class || target == long.class ? "정수"
+                        : target == Boolean.class || target == boolean.class ? "true 또는 false"
+                        : target == String.class ? "문자열"
+                        : target != null && (target.isArray() || java.util.Collection.class.isAssignableFrom(target))
+                        ? "배열" : "올바른 JSON 자료형";
+                return invalidField(field, expected + " 형식으로 입력해야 합니다.", Map.of());
+            }
+            cause = cause.getCause();
+        }
+        return invalidField("request", "요청 본문이 없거나 JSON 문법이 올바르지 않습니다.", Map.of());
+    }
+
+    private String jsonPath(JsonMappingException exception) {
+        StringBuilder path = new StringBuilder();
+        for (JsonMappingException.Reference reference : exception.getPath()) {
+            if (reference.getFieldName() != null) {
+                if (!path.isEmpty()) path.append('.');
+                path.append(reference.getFieldName());
+            } else if (reference.getIndex() >= 0) {
+                path.append('[').append(reference.getIndex()).append(']');
+            }
+        }
+        return path.isEmpty() ? "request" : path.toString();
+    }
+
+    private ResponseEntity<CommonError> invalidField(String field, String message, Map<String, Object> details) {
+        Map<String, Object> data = new java.util.HashMap<>(details);
+        data.put("field", field);
+        return ResponseEntity.badRequest().body(CommonError.from(
+                ErrorCode.VALIDATION_ERROR, field + ": " + message, data));
     }
 
     @ExceptionHandler(CustomException.class)
