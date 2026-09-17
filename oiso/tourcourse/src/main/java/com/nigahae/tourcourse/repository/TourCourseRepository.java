@@ -15,7 +15,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
 
     @Query("""
             select new com.nigahae.tourcourse.dto.TourCourseListRow(
-                c.tourCourseId, case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end, c.shareYn, c.status,
+                c.tourCourseId, case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} = true and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end, c.shareYn, c.status,
                 max(case when item.dayNumber = 1 and item.itemOrder = 1
                          then coalesce(spot.img, nearby.img) else null end),
                 count(item.itemId), c.createdAt, c.updatedAt)
@@ -33,7 +33,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
             value = """
                     select new com.nigahae.tourcourse.dto.TourCourseListRow(
                         c.tourCourseId,
-                        case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end,
+                        case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} = true and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end,
                         c.shareYn,
                         c.status,
                         max(case when item.dayNumber = 1 and item.itemOrder = 1
