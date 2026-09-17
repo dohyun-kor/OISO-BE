@@ -88,9 +88,9 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             SELECT t
             FROM TourSpotReadModel t
             WHERE (t.contentTypeId IS NULL OR t.contentTypeId IN (12, 14, 15, 25, 28))
-              AND (LOWER((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.nameEn), ''), t.name) else t.name end)) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.addressEn), ''), t.address) else t.address end), '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.overviewEn), ''), t.overview) else t.overview end), '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (LOWER((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} = true then coalesce(nullif(trim(t.nameEn), ''), t.name) else t.name end)) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} = true then coalesce(nullif(trim(t.addressEn), ''), t.address) else t.address end), '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} = true then coalesce(nullif(trim(t.overviewEn), ''), t.overview) else t.overview end), '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
     Page<TourSpot> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
