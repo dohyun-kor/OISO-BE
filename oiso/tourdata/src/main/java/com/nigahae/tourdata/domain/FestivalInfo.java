@@ -76,7 +76,7 @@ public class FestivalInfo implements Persistable<Long> {
     }
 
     public String getName() {
-        return tourSpot.getName();
+        return tourSpot.getLocalizedName();
     }
 
     public String getImg() {
@@ -84,11 +84,11 @@ public class FestivalInfo implements Persistable<Long> {
     }
 
     public String getAddress() {
-        return tourSpot.getAddress();
+        return tourSpot.getLocalizedAddress();
     }
 
     public String getOverview() {
-        return tourSpot.getOverview();
+        return tourSpot.getLocalizedOverview();
     }
 
     public String getHomepage() {

@@ -15,7 +15,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
 
     @Query("""
             select new com.nigahae.tourcourse.dto.TourCourseListRow(
-                c.tourCourseId, c.title, c.shareYn, c.status,
+                c.tourCourseId, case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end, c.shareYn, c.status,
                 max(case when item.dayNumber = 1 and item.itemOrder = 1
                          then coalesce(spot.img, nearby.img) else null end),
                 count(item.itemId), c.createdAt, c.updatedAt)
@@ -24,7 +24,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
             left join TourCourseSpotReference spot on spot.spotId = item.spotId
             left join TourCourseNearbyPlaceReference nearby on nearby.nearbyPlaceId = item.nearbyPlaceId
             where c.featuredYn = true
-            group by c.tourCourseId, c.title, c.shareYn, c.status, c.createdAt, c.updatedAt
+            group by c.tourCourseId, c.title, c.titleEn, c.featuredYn, c.shareYn, c.status, c.createdAt, c.updatedAt
             order by function('random')
             """)
     List<TourCourseListRow> findRandomFeaturedCourses(org.springframework.data.domain.Pageable pageable);
@@ -33,7 +33,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
             value = """
                     select new com.nigahae.tourcourse.dto.TourCourseListRow(
                         c.tourCourseId,
-                        c.title,
+                        case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} and c.featuredYn = true then coalesce(nullif(trim(c.titleEn), ''), c.title) else c.title end,
                         c.shareYn,
                         c.status,
                         max(case when item.dayNumber = 1 and item.itemOrder = 1
@@ -49,7 +49,7 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                         on nearby.nearbyPlaceId = item.nearbyPlaceId
                     where c.userId = :userId
                       and (:keyword = '' or lower(c.title) like lower(concat('%', :keyword, '%')))
-                    group by c.tourCourseId, c.title, c.shareYn, c.status, c.createdAt, c.updatedAt
+                    group by c.tourCourseId, c.title, c.titleEn, c.featuredYn, c.shareYn, c.status, c.createdAt, c.updatedAt
                     """,
             countQuery = """
                     select count(c.tourCourseId)
@@ -80,10 +80,10 @@ public interface TourCourseRepository extends JpaRepository<TourCourse, Long> {
                 item.spot_id as "spotId",
                 item.tour_spot_nearby_course_id as "nearbyPlaceId",
                 nearby.spot_id as "parentTourSpotId",
-                coalesce(spot.name, nearby.name) as "name",
+                case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.name_en), ''), spot.name, nullif(trim(nearby.name_en), ''), nearby.name) else coalesce(spot.name, nearby.name) end as "name",
                 coalesce(spot.img, nearby.img) as "img",
-                coalesce(spot.overview, nearby.overview) as "overview",
-                coalesce(spot.address, nearby.address) as "address",
+                case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.overview_en), ''), spot.overview, nullif(trim(nearby.overview_en), ''), nearby.overview) else coalesce(spot.overview, nearby.overview) end as "overview",
+                case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.address_en), ''), spot.address, nullif(trim(nearby.address_en), ''), nearby.address) else coalesce(spot.address, nearby.address) end as "address",
                 coalesce(spot.map_y, nearby.map_y) as "latitude",
                 coalesce(spot.map_x, nearby.map_x) as "longitude",
                 case

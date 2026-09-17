@@ -118,4 +118,10 @@ public class TourCourse {
     private void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+    @Column(name = "title_en", columnDefinition = "text")
+    private String titleEn;
+
+    public String getLocalizedTitle() {
+        return featuredYn ? com.nigahae.common.i18n.ApiLanguage.choose(title, titleEn) : title;
+    }
 }

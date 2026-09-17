@@ -20,10 +20,10 @@ public record TourSpotSummary(
     public static TourSpotSummary from(TourSpot tourSpot) {
         return new TourSpotSummary(
                 tourSpot.getSpotId(),
-                tourSpot.getName(),
+                tourSpot.getLocalizedName(),
                 tourSpot.getImg(),
-                tourSpot.getOverview(),
-                tourSpot.getAddress(),
+                tourSpot.getLocalizedOverview(),
+                tourSpot.getLocalizedAddress(),
                 false
         );
     }

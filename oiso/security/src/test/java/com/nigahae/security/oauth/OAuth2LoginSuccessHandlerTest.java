@@ -34,7 +34,7 @@ class OAuth2LoginSuccessHandlerTest {
         when(jwt.createRefreshToken(9L, "닉네임")).thenReturn("refresh.jwt");
         OAuth2LoginSuccessHandler handler = new OAuth2LoginSuccessHandler(
                 new KakaoUserInfoParser(), users, jwt, cookies);
-        ReflectionTestUtils.setField(handler, "redirectUri", "http://localhost:3000/");
+        ReflectionTestUtils.setField(handler, "defaultRedirectUri", "http://localhost:3000/");
         var principal = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority("ROLE_USER")),
                 Map.of("id", 123L, "properties", Map.of("nickname", "닉네임")), "id");
         var authentication = new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "kakao");

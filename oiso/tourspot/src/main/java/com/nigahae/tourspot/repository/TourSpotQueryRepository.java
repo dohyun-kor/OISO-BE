@@ -24,7 +24,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                 select 'TOUR_SPOT' as category, spot.spot_id as spot_id,
                        cast(null as bigint) as nearby_place_id,
                        cast(null as bigint) as parent_tour_spot_id,
-                       spot.name, spot.img, spot.overview, spot.address,
+                       (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name, spot.img, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.overview_en), ''), spot.overview) else spot.overview end) as overview, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.address_en), ''), spot.address) else spot.address end) as address,
                        spot.map_y as latitude, spot.map_x as longitude,
                        favorite.saved_at
                 from "UserSavedTourSpot" favorite
@@ -40,7 +40,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                        cast(null as bigint) as spot_id,
                        nearby.tour_spot_nearby_course_id as nearby_place_id,
                        nearby.spot_id as parent_tour_spot_id,
-                       nearby.name, nearby.img, nearby.overview, nearby.address,
+                       (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.name_en), ''), nearby.name) else nearby.name end) as name, nearby.img, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.overview_en), ''), nearby.overview) else nearby.overview end) as overview, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.address_en), ''), nearby.address) else nearby.address end) as address,
                        nearby.map_y as latitude, nearby.map_x as longitude,
                        favorite.saved_at
                 from "UserSavedNearbyPlace" favorite
@@ -88,9 +88,9 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             SELECT t
             FROM TourSpotReadModel t
             WHERE (t.contentTypeId IS NULL OR t.contentTypeId IN (12, 14, 15, 25, 28))
-              AND (LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(COALESCE(t.address, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(COALESCE(t.overview, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (LOWER((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.nameEn), ''), t.name) else t.name end)) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.addressEn), ''), t.address) else t.address end), '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(COALESCE((case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(t.overviewEn), ''), t.overview) else t.overview end), '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
     Page<TourSpot> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
@@ -101,14 +101,14 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
-                   nearby.name as "name", nearby.img as "img", nearby.overview as "overview",
-                   nearby.mood as "mood", nearby.address as "address",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.name_en), ''), nearby.name) else nearby.name end) as "name", nearby.img as "img", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.overview_en), ''), nearby.overview) else nearby.overview end) as "overview",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.mood_en), ''), nearby.mood) else nearby.mood end) as "mood", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.address_en), ''), nearby.address) else nearby.address end) as "address",
                    nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
-                   detail.open_time as "openTime", detail.rest_date as "restDate",
-                   detail.reservation_info as "reservationInfo", detail.inquiry_info as "inquiryInfo",
-                   detail.parking_info as "parkingInfo", detail.pet_info as "petInfo",
-                   detail.first_menu as "firstMenu", detail.treat_menu as "treatMenu"
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.open_time_en), ''), detail.open_time) else detail.open_time end) as "openTime", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.rest_date_en), ''), detail.rest_date) else detail.rest_date end) as "restDate",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.reservation_info_en), ''), detail.reservation_info) else detail.reservation_info end) as "reservationInfo", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.inquiry_info_en), ''), detail.inquiry_info) else detail.inquiry_info end) as "inquiryInfo",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.parking_info_en), ''), detail.parking_info) else detail.parking_info end) as "parkingInfo", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.pet_info_en), ''), detail.pet_info) else detail.pet_info end) as "petInfo",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.first_menu_en), ''), detail.first_menu) else detail.first_menu end) as "firstMenu", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.treat_menu_en), ''), detail.treat_menu) else detail.treat_menu end) as "treatMenu"
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
               on detail.tour_spot_nearby_course_id = nearby.tour_spot_nearby_course_id
@@ -145,14 +145,14 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                      when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                      when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                    end as "category",
-                   nearby.name as "name", nearby.img as "img", nearby.overview as "overview",
-                   nearby.mood as "mood", nearby.address as "address",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.name_en), ''), nearby.name) else nearby.name end) as "name", nearby.img as "img", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.overview_en), ''), nearby.overview) else nearby.overview end) as "overview",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.mood_en), ''), nearby.mood) else nearby.mood end) as "mood", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.address_en), ''), nearby.address) else nearby.address end) as "address",
                    nearby.homepage_url as "homepageUrl", nearby.content_id as "contentId",
                    nearby.content_type_id as "contentTypeId", nearby.map_x as "mapX", nearby.map_y as "mapY",
-                   detail.open_time as "openTime", detail.rest_date as "restDate",
-                   detail.reservation_info as "reservationInfo", detail.inquiry_info as "inquiryInfo",
-                   detail.parking_info as "parkingInfo", detail.pet_info as "petInfo",
-                   detail.first_menu as "firstMenu", detail.treat_menu as "treatMenu",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.open_time_en), ''), detail.open_time) else detail.open_time end) as "openTime", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.rest_date_en), ''), detail.rest_date) else detail.rest_date end) as "restDate",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.reservation_info_en), ''), detail.reservation_info) else detail.reservation_info end) as "reservationInfo", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.inquiry_info_en), ''), detail.inquiry_info) else detail.inquiry_info end) as "inquiryInfo",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.parking_info_en), ''), detail.parking_info) else detail.parking_info end) as "parkingInfo", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.pet_info_en), ''), detail.pet_info) else detail.pet_info end) as "petInfo",
+                   (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.first_menu_en), ''), detail.first_menu) else detail.first_menu end) as "firstMenu", (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(detail.treat_menu_en), ''), detail.treat_menu) else detail.treat_menu end) as "treatMenu",
                    case when favorite.user_id is not null then true else false end as "like"
             from "TourSpotNearbyPlace" nearby
             left join "NearbyPlaceDetail" detail
@@ -177,8 +177,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             from (
                 select 'TOUR_SPOT' as category, spot.spot_id as spot_id,
                        cast(null as bigint) as nearby_place_id,
-                       cast(null as bigint) as parent_tour_spot_id, spot.name as name,
-                       spot.img as img, spot.overview as overview, spot.address as address,
+                       cast(null as bigint) as parent_tour_spot_id, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name,
+                       spot.img as img, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.overview_en), ''), spot.overview) else spot.overview end) as overview, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.address_en), ''), spot.address) else spot.address end) as address,
                        spot.map_y as latitude, spot.map_x as longitude
                 from "TourSpot" spot
                 where spot.content_type_id is null or spot.content_type_id in (12, 14, 15, 25, 28)
@@ -190,8 +190,8 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                        cast(null as bigint) as spot_id,
                        nearby.tour_spot_nearby_course_id as nearby_place_id,
                        nearby.spot_id as parent_tour_spot_id,
-                       nearby.name as name, nearby.img as img,
-                       nearby.overview as overview, nearby.address as address,
+                       (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.name_en), ''), nearby.name) else nearby.name end) as name, nearby.img as img,
+                       (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.overview_en), ''), nearby.overview) else nearby.overview end) as overview, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.address_en), ''), nearby.address) else nearby.address end) as address,
                        nearby.map_y as latitude, nearby.map_x as longitude
                 from (
                     select distinct on (source.content_id) source.*
@@ -211,7 +211,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
             countQuery = """
             select count(*)
             from (
-                select 'TOUR_SPOT' as category, spot.name, spot.address, spot.overview
+                select 'TOUR_SPOT' as category, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.address_en), ''), spot.address) else spot.address end) as address, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(spot.overview_en), ''), spot.overview) else spot.overview end) as overview
                 from "TourSpot" spot
                 where spot.content_type_id is null or spot.content_type_id in (12, 14, 15, 25, 28)
                 union all
@@ -219,7 +219,7 @@ public interface TourSpotQueryRepository extends JpaRepository<TourSpot, Long> {
                          when nearby.content_type_id = 39 or upper(nearby.category) in ('RESTAURANT', 'FOOD') then 'RESTAURANT'
                          when nearby.content_type_id = 32 or upper(nearby.category) in ('ACCOMMODATION', 'LODGING') then 'ACCOMMODATION'
                        end as category,
-                       nearby.name, nearby.address, nearby.overview
+                       (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.name_en), ''), nearby.name) else nearby.name end) as name, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.address_en), ''), nearby.address) else nearby.address end) as address, (case when :#{T(com.nigahae.common.i18n.ApiLanguage).isEnglish()} then coalesce(nullif(trim(nearby.overview_en), ''), nearby.overview) else nearby.overview end) as overview
                 from (
                     select distinct on (source.content_id) source.*
                     from "TourSpotNearbyPlace" source

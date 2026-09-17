@@ -40,6 +40,10 @@ public class LocationService {
     }
     private String durationText(int seconds) {
         int minutes = (int) Math.ceil(seconds / 60.0);
+        if (com.nigahae.common.i18n.ApiLanguage.isEnglish()) {
+            return minutes < 60 ? minutes + " min" : (minutes / 60) + " hr"
+                    + (minutes % 60 == 0 ? "" : " " + minutes % 60 + " min");
+        }
         return minutes < 60 ? minutes + "분" : (minutes / 60) + "시간" + (minutes % 60 == 0 ? "" : " " + minutes % 60 + "분");
     }
 }

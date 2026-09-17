@@ -112,7 +112,7 @@ public class JdbcTourSpotMemoRepository implements TourSpotMemoRepository {
 
     @Override
     public TourSpotMemoListResponse findAll(Long userId, int page, int size) {
-        MapSqlParameterSource parameters = new MapSqlParameterSource()
+        MapSqlParameterSource parameters = new MapSqlParameterSource().addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish())
                 .addValue("userId", userId)
                 .addValue("limit", size)
                 .addValue("offset", (long) page * size);
@@ -121,7 +121,7 @@ public class JdbcTourSpotMemoRepository implements TourSpotMemoRepository {
                        memo.created_at, memo.updated_at, memo.nearby_place_id,
                        CASE WHEN memo.spot_id IS NOT NULL THEN 'TOUR_SPOT'
                             ELSE upper(nearby.category) END AS category,
-                       coalesce(spot.name, nearby.name) AS name,
+                       coalesce((case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name, nearby.name) AS name,
                        coalesce(spot.img, nearby.img) AS spot_img
                 FROM public."Memo" memo
                 LEFT JOIN public."TourSpot" spot ON spot.spot_id = memo.spot_id
@@ -150,14 +150,14 @@ public class JdbcTourSpotMemoRepository implements TourSpotMemoRepository {
                 LEFT JOIN public."TourSpotNearbyPlace" nearby
                     ON nearby.tour_spot_nearby_course_id = memo.nearby_place_id
                 WHERE memo.user_id = :userId AND (spot.spot_id IS NOT NULL OR nearby.tour_spot_nearby_course_id IS NOT NULL)
-                """, new MapSqlParameterSource("userId", userId), Long.class);
+                """, new MapSqlParameterSource("userId", userId).addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish()), Long.class);
         long total = totalElements == null ? 0 : totalElements;
         int totalPages = total == 0 ? 0 : (int) ((total + size - 1) / size);
         return new TourSpotMemoListResponse(content, page, size, total, totalPages);
     }
 
     private MapSqlParameterSource parameters(Long userId, Long spotId) {
-        return new MapSqlParameterSource()
+        return new MapSqlParameterSource().addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish())
                 .addValue("userId", userId)
                 .addValue("spotId", spotId);
     }
