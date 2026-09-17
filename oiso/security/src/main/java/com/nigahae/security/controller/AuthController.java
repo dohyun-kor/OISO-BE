@@ -113,6 +113,6 @@ public class AuthController {
     public ResponseEntity<String> logout(HttpServletResponse response) {
         cookieUtil.deleteCookie(response, CookieUtil.ACCESS_TOKEN);
         cookieUtil.deleteCookie(response, CookieUtil.REFRESH_TOKEN);
-        return ResponseEntity.ok("로그아웃 되었습니다.");
+        return ResponseEntity.ok(com.nigahae.common.i18n.ApiMessages.translate("로그아웃 되었습니다."));
     }
 }

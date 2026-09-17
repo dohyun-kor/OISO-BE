@@ -11,6 +11,10 @@ import com.nigahae.common.constant.ErrorCode;
  */
 public record CommonError(int code, String message, Object data) {
 
+    public CommonError {
+        message = com.nigahae.common.i18n.ApiMessages.translate(message);
+    }
+
     public static CommonError from(ErrorCode errorCode) {
         return from(errorCode, errorCode.getMessage());
     }

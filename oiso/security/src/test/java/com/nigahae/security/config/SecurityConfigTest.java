@@ -21,7 +21,7 @@ class SecurityConfigTest {
                 mock(OAuth2LoginSuccessHandler.class),
                 mock(JwtAuthenticationFilter.class)
         );
-        ReflectionTestUtils.setField(securityConfig, "allowedOrigin", "http://localhost:3000");
+        ReflectionTestUtils.setField(securityConfig, "allowedOrigins", "http://localhost:3000");
 
         CorsConfiguration configuration = ((UrlBasedCorsConfigurationSource)
                 securityConfig.corsConfigurationSource())

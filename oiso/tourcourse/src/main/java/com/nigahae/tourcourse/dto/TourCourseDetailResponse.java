@@ -45,7 +45,7 @@ public record TourCourseDetailResponse(
     ) {
         return new TourCourseDetailResponse(
                 course.getTourCourseId(),
-                course.getTitle(),
+                course.getLocalizedTitle(),
                 course.isShareYn(),
                 sharedPassword,
                 course.getStatus(),

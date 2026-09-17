@@ -20,13 +20,13 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
     @Override
     public List<StoryCardSummaryResponse> findRandom(int size) {
         return jdbcTemplate.query("""
-                SELECT story.story_id, story.spot_id, spot.name AS tour_spot_name,
-                       story.title, story.sub_title, story.summary, story.img
+                SELECT story.story_id, story.spot_id, (case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) AS tour_spot_name,
+                       (case when :english then coalesce(nullif(trim(story.title_en), ''), story.title) else story.title end) as title, (case when :english then coalesce(nullif(trim(story.sub_title_en), ''), story.sub_title) else story.sub_title end) as sub_title, (case when :english then coalesce(nullif(trim(story.summary_en), ''), story.summary) else story.summary end) as summary, story.img
                 FROM public."TourStory" story
                 JOIN public."TourSpot" spot ON spot.spot_id = story.spot_id
                 ORDER BY random()
                 LIMIT :limit
-                """, new MapSqlParameterSource("limit", size), (rs, rowNumber) ->
+                """, new MapSqlParameterSource("limit", size).addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish()), (rs, rowNumber) ->
                 new StoryCardSummaryResponse(rs.getLong("story_id"), rs.getLong("spot_id"),
                         rs.getString("tour_spot_name"), rs.getString("title"),
                         rs.getString("sub_title"), rs.getString("summary"), rs.getString("img")));
@@ -38,7 +38,7 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
                 SELECT EXISTS (
                     SELECT 1 FROM public."TourStory" WHERE story_id = :storyId
                 )
-                """, new MapSqlParameterSource("storyId", storyId), Boolean.class);
+                """, new MapSqlParameterSource("storyId", storyId).addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish()), Boolean.class);
         return Boolean.TRUE.equals(exists);
     }
 
@@ -61,13 +61,13 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
 
     @Override
     public SavedStoryCardListResponse findSaved(Long userId, int page, int size) {
-        MapSqlParameterSource parameters = new MapSqlParameterSource()
+        MapSqlParameterSource parameters = new MapSqlParameterSource().addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish())
                 .addValue("userId", userId)
                 .addValue("limit", size)
                 .addValue("offset", (long) page * size);
         List<SavedStoryCardListResponse.Item> content = jdbcTemplate.query("""
-                SELECT story.story_id, story.spot_id, spot.name AS tour_spot_name,
-                       story.title, story.sub_title, story.summary, story.img,
+                SELECT story.story_id, story.spot_id, (case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) AS tour_spot_name,
+                       (case when :english then coalesce(nullif(trim(story.title_en), ''), story.title) else story.title end) as title, (case when :english then coalesce(nullif(trim(story.sub_title_en), ''), story.sub_title) else story.sub_title end) as sub_title, (case when :english then coalesce(nullif(trim(story.summary_en), ''), story.summary) else story.summary end) as summary, story.img,
                        saved.saved_at
                 FROM public."UserSavedTourStory" saved
                 JOIN public."TourStory" story ON story.story_id = saved.story_id
@@ -88,7 +88,7 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
         Long totalElements = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM public."UserSavedTourStory"
                 WHERE user_id = :userId
-                """, new MapSqlParameterSource("userId", userId), Long.class);
+                """, new MapSqlParameterSource("userId", userId).addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish()), Long.class);
         long total = totalElements == null ? 0 : totalElements;
         int totalPages = total == 0 ? 0 : (int) ((total + size - 1) / size);
         return new SavedStoryCardListResponse(content, page, size, total, totalPages);
@@ -97,10 +97,10 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
     @Override
     public Optional<StoryCardDetailResponse> findBySpotId(Long userId, Long spotId) {
         List<StoryCardRow> rows = jdbcTemplate.query("""
-                SELECT story.story_id, story.spot_id, spot.name AS tour_spot_name,
-                       story.title, story.sub_title, story.summary, story.intro,
-                       story.story_title, story.story, story.img, story.tip,
-                       story.did_you_know,
+                SELECT story.story_id, story.spot_id, (case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) AS tour_spot_name,
+                       (case when :english then coalesce(nullif(trim(story.title_en), ''), story.title) else story.title end) as title, (case when :english then coalesce(nullif(trim(story.sub_title_en), ''), story.sub_title) else story.sub_title end) as sub_title, (case when :english then coalesce(nullif(trim(story.summary_en), ''), story.summary) else story.summary end) as summary, (case when :english then coalesce(nullif(trim(story.intro_en), ''), story.intro) else story.intro end) as intro,
+                       (case when :english then coalesce(nullif(trim(story.story_title_en), ''), story.story_title) else story.story_title end) as story_title, (case when :english then coalesce(nullif(trim(story.story_en), ''), story.story) else story.story end) as story, story.img, (case when :english then coalesce(nullif(trim(story.tip_en), ''), story.tip) else story.tip end) as tip,
+                       (case when :english then coalesce(nullif(trim(story.did_you_know_en), ''), story.did_you_know) else story.did_you_know end) as did_you_know,
                        EXISTS (
                            SELECT 1 FROM public."UserSavedTourStory" saved
                            WHERE saved.user_id = :userId AND saved.story_id = story.story_id
@@ -108,7 +108,7 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
                 FROM public."TourStory" story
                 JOIN public."TourSpot" spot ON spot.spot_id = story.spot_id
                 WHERE story.spot_id = :spotId
-                """, new MapSqlParameterSource()
+                """, new MapSqlParameterSource().addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish())
                 .addValue("userId", userId)
                 .addValue("spotId", spotId), (resultSet, rowNumber) -> new StoryCardRow(
                 resultSet.getLong("story_id"),
@@ -130,12 +130,12 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
         }
         StoryCardRow row = rows.get(0);
         List<String> hashtags = jdbcTemplate.queryForList("""
-                SELECT hashtag.name
+                SELECT (case when :english then coalesce(nullif(trim(hashtag.name_en), ''), hashtag.name) else hashtag.name end) as name
                 FROM public."StoryCard_HashTag" mapping
                 JOIN public."HashTag" hashtag ON hashtag.hashtag_id = mapping.hashtag_id
                 WHERE mapping.story_id = :storyId
-                ORDER BY hashtag.name
-                """, new MapSqlParameterSource("storyId", row.storyId()), String.class);
+                ORDER BY (case when :english then coalesce(nullif(trim(hashtag.name_en), ''), hashtag.name) else hashtag.name end)
+                """, new MapSqlParameterSource("storyId", row.storyId()).addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish()), String.class);
         return Optional.of(new StoryCardDetailResponse(
                 row.storyId(), row.spotId(), row.tourSpotName(), row.title(), row.subTitle(),
                 row.summary(), row.intro(), row.storyTitle(), row.story(), row.imageUrl(),
@@ -144,7 +144,7 @@ public class JdbcStoryCardRepository implements StoryCardRepository {
     }
 
     private MapSqlParameterSource ids(Long userId, Long storyId) {
-        return new MapSqlParameterSource()
+        return new MapSqlParameterSource().addValue("english", com.nigahae.common.i18n.ApiLanguage.isEnglish())
                 .addValue("userId", userId)
                 .addValue("storyId", storyId);
     }

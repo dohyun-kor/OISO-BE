@@ -104,7 +104,7 @@ public class MyPageQueryRepository {
                        memo.review,
                        memo.img AS memo_img,
                        memo.updated_at,
-                       spot.name,
+                       (case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name,
                        spot.img
                 FROM public."Memo" memo
                 JOIN public."TourSpot" spot

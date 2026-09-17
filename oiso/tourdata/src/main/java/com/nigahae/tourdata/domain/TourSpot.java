@@ -91,4 +91,32 @@ public class TourSpot {
         this.homepage = payload.homepage();
     }
 
+    @Column(name = "name_en", columnDefinition = "text")
+    private String nameEn;
+
+    public String getLocalizedName() {
+        return com.nigahae.common.i18n.ApiLanguage.choose(name, nameEn);
+    }
+
+    @Column(name = "content_en", columnDefinition = "text")
+    private String contentEn;
+
+    public String getLocalizedContent() {
+        return com.nigahae.common.i18n.ApiLanguage.choose(content, contentEn);
+    }
+
+    @Column(name = "overview_en", columnDefinition = "text")
+    private String overviewEn;
+
+    public String getLocalizedOverview() {
+        return com.nigahae.common.i18n.ApiLanguage.choose(overview, overviewEn);
+    }
+
+    @Column(name = "address_en", columnDefinition = "text")
+    private String addressEn;
+
+    public String getLocalizedAddress() {
+        return com.nigahae.common.i18n.ApiLanguage.choose(address, addressEn);
+    }
+
 }

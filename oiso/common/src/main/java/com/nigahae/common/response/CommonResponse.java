@@ -10,6 +10,10 @@ package com.nigahae.common.response;
  */
 public record CommonResponse<T>(int code, String message, T data) {
 
+    public CommonResponse {
+        message = com.nigahae.common.i18n.ApiMessages.translate(message);
+    }
+
     public static final int SUCCESS_CODE = 0;
     public static final String SUCCESS_MESSAGE = "정상 처리 되었습니다.";
 

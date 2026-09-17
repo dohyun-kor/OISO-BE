@@ -41,5 +41,8 @@ public class TourSpotExceptionHandler {
     }
 
     public record TourSpotErrorResponse(int code, String message, Object data) {
+        public TourSpotErrorResponse {
+            message = com.nigahae.common.i18n.ApiMessages.translate(message);
+        }
     }
 }

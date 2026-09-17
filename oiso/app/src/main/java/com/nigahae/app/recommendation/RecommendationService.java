@@ -33,6 +33,7 @@ public class RecommendationService {
                     .baseUrl(baseUrl).build()
                     .post().uri("/api/v1/recommendations/courses")
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Accept-Language", com.nigahae.common.i18n.ApiLanguage.isEnglish() ? "en" : "ko")
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {

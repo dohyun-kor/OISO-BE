@@ -2,6 +2,8 @@ package com.nigahae.security.config;
 
 import com.nigahae.security.jwt.JwtAuthenticationFilter;
 import com.nigahae.security.oauth.OAuth2LoginSuccessHandler;
+import com.nigahae.security.oauth.OAuth2DiagnosticFilter;
+import com.nigahae.security.oauth.OAuth2LoginFailureHandler;
 import com.nigahae.security.oauth.OAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -86,7 +89,9 @@ public class SecurityConfig {
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                         request -> request.getRequestURI().startsWith("/api/")))
                 .oauth2Login(oauth -> oauth.userInfoEndpoint(user -> user.userService(oAuth2UserService))
-                        .successHandler(successHandler))
+                        .successHandler(successHandler)
+                        .failureHandler(new OAuth2LoginFailureHandler()))
+                .addFilterBefore(new OAuth2DiagnosticFilter(), OAuth2AuthorizationRequestRedirectFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
