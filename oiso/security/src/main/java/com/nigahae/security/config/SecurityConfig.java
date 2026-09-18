@@ -2,6 +2,7 @@ package com.nigahae.security.config;
 
 import com.nigahae.security.jwt.JwtAuthenticationFilter;
 import com.nigahae.security.oauth.OAuth2LoginSuccessHandler;
+import com.nigahae.security.oauth.OAuth2LoginFailureHandler;
 import com.nigahae.security.oauth.OAuth2DiagnosticFilter;
 import com.nigahae.security.oauth.OAuth2LoginFailureHandler;
 import com.nigahae.security.oauth.OAuth2UserService;
@@ -35,6 +36,7 @@ public class SecurityConfig {
 
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2LoginSuccessHandler successHandler;
+    private final OAuth2LoginFailureHandler failureHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${app.cors.allowed-origins}") private String allowedOrigins;
@@ -90,7 +92,7 @@ public class SecurityConfig {
                         request -> request.getRequestURI().startsWith("/api/")))
                 .oauth2Login(oauth -> oauth.userInfoEndpoint(user -> user.userService(oAuth2UserService))
                         .successHandler(successHandler)
-                        .failureHandler(new OAuth2LoginFailureHandler()))
+                        .failureHandler(failureHandler))
                 .addFilterBefore(new OAuth2DiagnosticFilter(), OAuth2AuthorizationRequestRedirectFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

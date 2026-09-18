@@ -2,6 +2,7 @@ package com.nigahae.security.config;
 
 import com.nigahae.security.jwt.JwtAuthenticationFilter;
 import com.nigahae.security.oauth.OAuth2LoginSuccessHandler;
+import com.nigahae.security.oauth.OAuth2LoginFailureHandler;
 import com.nigahae.security.oauth.OAuth2UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -19,6 +20,7 @@ class SecurityConfigTest {
         SecurityConfig securityConfig = new SecurityConfig(
                 mock(OAuth2UserService.class),
                 mock(OAuth2LoginSuccessHandler.class),
+                mock(OAuth2LoginFailureHandler.class),
                 mock(JwtAuthenticationFilter.class)
         );
         ReflectionTestUtils.setField(securityConfig, "allowedOrigins", "http://localhost:3000");
