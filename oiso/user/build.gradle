@@ -19,4 +19,5 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     compileOnly 'org.projectlombok:lombok'
+    testRuntimeOnly 'com.h2database:h2'
 }
