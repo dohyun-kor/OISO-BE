@@ -121,7 +121,7 @@ public class JdbcTourSpotMemoRepository implements TourSpotMemoRepository {
                        memo.created_at, memo.updated_at, memo.nearby_place_id,
                        CASE WHEN memo.spot_id IS NOT NULL THEN 'TOUR_SPOT'
                             ELSE upper(nearby.category) END AS category,
-                       coalesce((case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end) as name, nearby.name) AS name,
+                       coalesce((case when :english then coalesce(nullif(trim(spot.name_en), ''), spot.name) else spot.name end), nearby.name) AS name,
                        coalesce(spot.img, nearby.img) AS spot_img
                 FROM public."Memo" memo
                 LEFT JOIN public."TourSpot" spot ON spot.spot_id = memo.spot_id

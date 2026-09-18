@@ -1,5 +1,6 @@
 package com.nigahae.user.repository;
 
+import com.nigahae.common.i18n.ApiLanguage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -129,7 +130,8 @@ public class MyPageQueryRepository {
     }
 
     private MapSqlParameterSource userParameters(Long userId) {
-        return new MapSqlParameterSource("userId", userId);
+        return new MapSqlParameterSource("userId", userId)
+                .addValue("english", ApiLanguage.isEnglish());
     }
 
     public record Counts(
