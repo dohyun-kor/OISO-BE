@@ -46,4 +46,26 @@ class OAuth2LoginSuccessHandlerTest {
         assertThat(response.getHeaders("Set-Cookie")).hasSize(2)
                 .allSatisfy(header -> assertThat(header).contains("HttpOnly", "SameSite=Lax"));
     }
+
+    @Test
+    void localRegistrationReturnsToLocalFrontend() throws Exception {
+        UserAuthenticationService users = mock(UserAuthenticationService.class);
+        JwtTokenProvider jwt = mock(JwtTokenProvider.class);
+        CookieUtil cookies = mock(CookieUtil.class);
+        when(users.loginOrRegister("kakao", "123", "tester", null, null))
+                .thenReturn(new AuthenticatedUser(9L, "tester"));
+        OAuth2LoginSuccessHandler handler = new OAuth2LoginSuccessHandler(
+                new KakaoUserInfoParser(), users, jwt, cookies);
+        ReflectionTestUtils.setField(handler, "defaultRedirectUri", "https://oiso-fe.vercel.app/login-success");
+        ReflectionTestUtils.setField(handler, "localRedirectUri", "http://localhost:5173/login-success");
+        var principal = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                Map.of("id", 123L, "properties", Map.of("nickname", "tester")), "id");
+        var authentication = new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "kakao-local");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(new MockHttpServletRequest(), response, authentication);
+
+        assertThat(response.getRedirectedUrl()).isEqualTo("http://localhost:5173/login-success");
+        verify(users).loginOrRegister("kakao", "123", "tester", null, null);
+    }
 }

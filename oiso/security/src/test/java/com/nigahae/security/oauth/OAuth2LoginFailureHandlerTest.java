@@ -11,7 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class OAuth2LoginFailureHandlerTest {
     private final OAuth2LoginFailureHandler handler =
-            new OAuth2LoginFailureHandler("https://oiso-fe.vercel.app/login-success");
+            new OAuth2LoginFailureHandler("https://oiso-fe.vercel.app/login-success",
+                    "http://localhost:5173/login-success");
     private final OAuth2AuthenticationException failure =
             new OAuth2AuthenticationException(new OAuth2Error("invalid_state"));
 
@@ -36,5 +37,16 @@ class OAuth2LoginFailureHandlerTest {
         assertThat(response.getRedirectedUrl()).isEqualTo("http://localhost:5173/login?error");
         assertThat(request.getSession().getAttribute(AuthController.OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE))
                 .isNull();
+    }
+
+    @Test
+    void redirectsLocalCallbackToLocalLoginEvenWithoutSession() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET",
+                "/login/oauth2/code/kakao-local");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationFailure(request, response, failure);
+
+        assertThat(response.getRedirectedUrl()).isEqualTo("http://localhost:5173/login?error");
     }
 }

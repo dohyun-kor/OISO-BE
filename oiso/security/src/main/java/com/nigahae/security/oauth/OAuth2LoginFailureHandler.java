@@ -19,9 +19,12 @@ import java.net.URI;
 @Component
 public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHandler {
     private final String defaultRedirectUri;
+    private final String localRedirectUri;
 
-    public OAuth2LoginFailureHandler(@Value("${app.oauth2.success-redirect-uri}") String defaultRedirectUri) {
+    public OAuth2LoginFailureHandler(@Value("${app.oauth2.success-redirect-uri}") String defaultRedirectUri,
+                                     @Value("${app.oauth2.local-success-redirect-uri}") String localRedirectUri) {
         this.defaultRedirectUri = defaultRedirectUri;
+        this.localRedirectUri = localRedirectUri;
     }
 
     @Override
@@ -43,7 +46,16 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
         if (session != null) {
             session.removeAttribute(AuthController.OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE);
         }
-        String redirectUri = requestedRedirectUri instanceof String uri ? uri : defaultRedirectUri;
+        boolean localLogin = request.getRequestURI().equals(
+                request.getContextPath() + "/login/oauth2/code/kakao-local");
+        String redirectUri;
+        if (localLogin) {
+            redirectUri = localRedirectUri;
+        } else if (requestedRedirectUri instanceof String uri) {
+            redirectUri = uri;
+        } else {
+            redirectUri = defaultRedirectUri;
+        }
         String loginUri = URI.create(redirectUri).resolve("/login?error").toString();
         getRedirectStrategy().sendRedirect(request, response, loginUri);
     }

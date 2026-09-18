@@ -24,6 +24,8 @@ import java.io.IOException;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Value("${app.oauth2.success-redirect-uri}")
     private String defaultRedirectUri;
+    @Value("${app.oauth2.local-success-redirect-uri}")
+    private String localRedirectUri;
 
     private final KakaoUserInfoParser kakaoUserInfoParser;
     private final UserAuthenticationService userAuthenticationService;
@@ -34,7 +36,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-        if (!"kakao".equals(oauthToken.getAuthorizedClientRegistrationId())) {
+        String registrationId = oauthToken.getAuthorizedClientRegistrationId();
+        boolean localLogin = "kakao-local".equals(registrationId);
+        if (!"kakao".equals(registrationId) && !localLogin) {
             throw new OAuth2AuthenticationException(new OAuth2Error("unsupported_provider"),
                     "Only Kakao login is currently supported");
         }
@@ -54,7 +58,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String targetRedirectUri;
 
-        if (savedRedirectUri instanceof String uri) {
+        if (localLogin) {
+            targetRedirectUri = localRedirectUri;
+            request.getSession().removeAttribute(AuthController.OAUTH2_REDIRECT_URI_SESSION_ATTRIBUTE);
+        } else if (savedRedirectUri instanceof String uri) {
             targetRedirectUri = uri;
 
             request.getSession().removeAttribute(
