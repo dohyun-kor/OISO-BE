@@ -83,6 +83,21 @@ class TourIngestServiceTest {
     }
 
     @Test
+    void refreshTourSpotsPreservesExistingImageWhenApiImageIsMissing() {
+        TourSpot existing = TourSpot.create();
+        existing.updateFromList(new TourContentPayload(
+                "100", "12", "Place 100", "1", "2", "Address",
+                "127", "37", "https://example.com/manual.jpg", null, null, null, "{}"));
+        when(publicTourDataClient.fetchAllTourContents()).thenReturn(List.of(payload("100", "12")));
+        when(tourSpotRepository.findByContentId(100L)).thenReturn(Optional.of(existing));
+
+        tourDataService.refreshTourSpots();
+
+        assertThat(existing.getImg()).isEqualTo("https://example.com/manual.jpg");
+        verify(tourSpotRepository).save(existing);
+    }
+
+    @Test
     void refreshTourSpotsSeparatesRestaurantIntoNearbyPlaceByDistance() {
         TourSpot destination = tourSpot("100", "12");
         TourContentPayload restaurant = payloadAt("200", "39", "127.001", "37.001");

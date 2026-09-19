@@ -5,6 +5,7 @@ import com.nigahae.tourdata.TourDetailRefreshResult;
 import com.nigahae.tourdata.domain.TourDataJobType;
 import com.nigahae.tourdata.service.TourDataResult;
 import com.nigahae.tourdata.service.TourDataRunner;
+import com.nigahae.tourdata.service.TourDataService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ class TourIngestControllerTest {
 
     private final TourDataRunner runner = mock(TourDataRunner.class);
     private final TourDetailRefresher detailRefresher = mock(TourDetailRefresher.class);
-    private final TourDataController controller = new TourDataController(runner, detailRefresher);
+    private final TourDataController controller = new TourDataController(runner, detailRefresher, mock(TourDataService.class));
 
     @Test
     void controllerExposesOnlySeparatedRefreshPaths() {

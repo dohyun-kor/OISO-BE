@@ -78,7 +78,9 @@ public class TourSpot {
         this.contentId = payload.contentIdAsLong();
         this.contentTypeId = payload.contentTypeIdAsLong();
         this.name = payload.title();
-        this.img = payload.firstImage();
+        if (payload.firstImage() != null && !payload.firstImage().isBlank()) {
+            this.img = payload.firstImage();
+        }
         this.address = payload.address();
         this.mapX = payload.mapXAsDouble();
         this.mapY = payload.mapYAsDouble();
