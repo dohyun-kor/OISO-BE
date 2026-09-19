@@ -568,7 +568,7 @@ ALTER TABLE public."TourCourse"
 
 ALTER TABLE public."TourCourse"
     ADD CONSTRAINT "CK_TOURCOURSE_STATUS"
-        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED'));
+        CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'));
 
 
 

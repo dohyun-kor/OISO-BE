@@ -482,10 +482,10 @@ class TourCourseServiceTest {
         when(tourCourseRepository.findDetailItems(1L, 7L)).thenReturn(List.of());
 
         var response = tourCourseService.patchTourCourseStatus(
-                7L, 1L, new PatchTourCourseStatusRequest(TourCourseStatus.COMPLETED));
+                7L, 1L, new PatchTourCourseStatusRequest(TourCourseStatus.CANCELED));
 
-        assertThat(course.getStatus()).isEqualTo(TourCourseStatus.COMPLETED);
-        assertThat(response.status()).isEqualTo(TourCourseStatus.COMPLETED);
+        assertThat(course.getStatus()).isEqualTo(TourCourseStatus.CANCELED);
+        assertThat(response.status()).isEqualTo(TourCourseStatus.CANCELED);
         verify(tourCourseRepository).flush();
     }
 

@@ -267,7 +267,7 @@ public interface TourCourseControllerDocs {
                     로그인한 사용자가 소유한 관광 코스의 특정 아이템 진행 상태만 변경합니다.
 
                     - `tourCourseId`와 `itemId`가 모두 일치하는 아이템만 변경됩니다.
-                    - `status`는 `PENDING`, `IN_PROGRESS`, `COMPLETED` 중 하나입니다.
+                    - `status`는 `PENDING`, `IN_PROGRESS`, `COMPLETED`, `CANCELED` 중 하나입니다.
                     - 장소, 일차, 순서, 이동 수단 등 다른 정보는 변경하지 않습니다.
                     - 수정 후 코스 전체 상세 정보를 반환합니다.
                     """,
@@ -339,7 +339,7 @@ public interface TourCourseControllerDocs {
             @Parameter(description = "수정할 코스 아이템 ID", required = true, example = "18") Long itemId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    description = "변경할 진행 상태입니다. PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료)를 사용할 수 있습니다.",
+                    description = "변경할 진행 상태입니다. PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료), CANCELED(취소)를 사용할 수 있습니다.",
                     content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
                             {
                               "status": "IN_PROGRESS"
@@ -369,7 +369,7 @@ public interface TourCourseControllerDocs {
             Long tourCourseId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    description = "PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료) 중 하나입니다.",
+                    description = "PENDING(진행 전), IN_PROGRESS(진행 중), COMPLETED(완료), CANCELED(취소) 중 하나입니다.",
                     content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
                             {
                               "status": "IN_PROGRESS"
